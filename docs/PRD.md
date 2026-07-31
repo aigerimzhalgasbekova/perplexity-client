@@ -74,6 +74,7 @@ Rationale: the stream carries structured payloads with an explicit terminal sign
 - **Headless (established by M0):** `--headless=new` is *not* challenged — three of three probe runs completed queries normally, against a headed control. Queries run headless; only `login` is visible.
 - **Session lifecycle:** `pplx login` opens a real, visible Chrome window on the tool's own profile directory for a one-time manual login (handles whatever auth the account needs — password, SSO, 2FA — without the tool ever touching credentials). **The profile directory is what actually carries the session**, and it is portable — M0 drove a copied profile from a temp directory successfully. `storage_state` is still exported to `session.json` for inspection and for the atomic write-back below, but it is not the thing that keeps the login alive. On clean exit of any run, the possibly-rotated state is written back atomically under the advisory lock, so cookie rotation extends session life instead of being discarded. On expiry, revocation, or a bot-detection challenge, the tool fails loudly and instructs the user to re-run `login`.
 - **Session state check (established by M1):** neither cookie presence nor an HTTP status code can tell `ok` from `expired` — Perplexity serves anonymous visitors a `pplx.session-id` cookie and answers `200` on every `/rest/` endpoint without a login. The discriminator is NextAuth's `GET /api/auth/session`: `{"user": {...}}` when signed in, `{}` when not. It also answers `200 {}` from *behind* a Cloudflare interstitial, so `challenged` must be decided before that probe is trusted, or a block reads as `expired` and sends the user to re-login for nothing. Evidence: `spike/probe_status.py`.
+- **Rate limits (established by M2):** Perplexity states no rate to its own account. `GET /rest/rate-limit/status` reports `available` per mode and `remaining_detail.kind == "not_provided"` for `pro_search` and `research`; no reset time, window or `Retry-After` appears there or on `/rest/user/settings`. Pacing is therefore a local floor by design, and the endpoint serves as a pre-flight exhaustion gate. Evidence: `spike/probe_rate_limit.py`, `docs/M2-findings.md`.
 - **Copying a live profile** requires deleting its `Singleton{Lock,Cookie,Socket}` files first; left in place, a second Chrome hands off to the first and exits without opening a debugging port. Relevant to `doctor` and to any future profile-migration helper.
 
 ### Technology stack
@@ -171,7 +172,8 @@ Rationale: the stream carries structured payloads with an explicit terminal sign
 - No CAPTCHA or bot-detection bypass anywhere in the tool — an explicit non-goal, not an unimplemented feature.
 
 ### Resilience
-- **Cross-process rate limiting**: a minimum interval between requests enforced via a persisted timestamp under an advisory lock, so concurrent `pplx ask` invocations serialize instead of stampeding the account. Configurable, with backoff on transient failures.
+- **Cross-process rate limiting**: a minimum interval between requests enforced via a persisted timestamp under an advisory lock, so concurrent `pplx ask` invocations serialize instead of stampeding the account. Configurable (`PPLX_MIN_INTERVAL`, default 20 s), with exponential backoff whose failure count is persisted in the lock file — an agent loop is a *fresh process* each iteration, so in-process backoff state would be discarded exactly when it matters. The interval is a local, conservative default, not a server-stated one: M2 established that Perplexity states no rate anywhere (§9).
+- **Quota pre-flight**: `GET /rest/rate-limit/status` reports `available` per mode; a run refuses to spend a query into an exhausted mode rather than failing mid-stream. It is the only quota signal the account can see — no remaining count is exposed for the modes this tool uses.
 - Adapter isolation: all Perplexity-specific stream parsing and DOM control lives behind one internal adapter module, so a frontend change is a localized patch.
 - `pplx doctor` for live-site breakage detection (US-8).
 
@@ -200,7 +202,7 @@ All of the above is v1.
 | | `multi` | bool | Whether more than one may be selected |
 | | `free_text` | bool | Whether a free-text answer is accepted |
 | `Session` (on-disk) | — | Playwright `storage_state` JSON | Login session; not a Python-facing entity |
-| `LockFile` (on-disk) | — | advisory lock + last-request timestamp | Cross-process pacing and session-write serialization |
+| `LockFile` (on-disk) | — | advisory lock; JSON `{last, fails}` at mode 600 | Cross-process pacing, backoff state, and browser-profile serialization. Written in place under the lock — never by atomic rename, which would swap the inode the lock is held on |
 
 ### Citation index contract
 
@@ -267,7 +269,7 @@ Default output is human-readable text plus a citations list; `--json` prints the
 | Search-mode latency | Comparable to the web UI; no overhead beyond browser automation itself |
 | Deep Research handling | Never blocks indefinitely by default; caller-configurable `.wait()` timeout; a timeout never cancels the underlying task |
 | Answer integrity | An incomplete answer never returns as if complete; citation markers never misattribute (§5 contracts) |
-| Concurrency safety | Concurrent same-account runs serialize via advisory lock; pacing floor holds across processes, not just within one `Client` |
+| Concurrency safety | Concurrent same-account runs serialize via advisory lock; pacing floor holds across processes, not just within one `Client`. POSIX only: Windows has no `flock`, so runs there are unserialized and say so on stderr (M2). The session write is race-free on every platform regardless, via a per-pid temp name |
 | Session durability | Rotated cookies written back atomically on clean exit; a crashed run never corrupts the session file |
 | Security | Session file at mode 600; no credential ever touches tool code or logs; no CAPTCHA/bot-detection bypass under any circumstance |
 | Breakage detection | `pplx doctor` catches live-site drift; fixtures carry a capture date so staleness is visible in review |
@@ -296,7 +298,7 @@ Unit and adapter tests run against **dated** recorded fixtures and cannot detect
 
 **v1:**
 1. Session bootstrap — `pplx login`, atomic write-back, `pplx status` with its four states. **✅ Done.** The tool launches Google Chrome itself on its own profile (a free port per run, no fixed 9222) and reaps it afterwards, since `browser.close()` over CDP only disconnects. A live Chrome holding the profile is detected via its `SingletonLock` pid and named in the error, because otherwise a second launch hands off silently and the only symptom is a port timeout. Write-back refuses to overwrite a good `session.json` with an unauthenticated state.
-2. Cross-process pacing — lock file, interval floor, backoff. Read `GET /rest/rate-limit/status` (which the web app polls before each query) rather than guessing an interval; the server states its own limit.
+2. Cross-process pacing — lock file, interval floor, backoff. **✅ Done — `docs/M2-findings.md`.** The premise that `GET /rest/rate-limit/status` states the server's own limit is **wrong**: probed live, it reports *availability per mode* and no rate, window or reset, and `remaining_detail.kind` is `"not_provided"` for exactly the two modes the tool uses. The interval floor is therefore a documented local default (20 s, `PPLX_MIN_INTERVAL`), and the endpoint is used as a pre-flight quota gate instead. The lock also fixes a real collision: two runs cannot share one Chrome profile, so they must queue rather than race.
 3. Search-mode `ask()` — text, citations, observed model, completion signal, with the §5 contracts enforced and tested. Two parsers are needed, not one: the SSE stream and the plain-JSON resume path (§2 Q5).
 4. Model selection with observed-model verification and `ModelMismatchError`. **Force a real mismatch before trusting it** — M0 confirmed `display_model` and `user_selected_model` exist and agree on every capture, but never saw them disagree, so the error path is unexercised. Requesting a model above the plan's entitlement is the likely way to trigger one. `GET /rest/models/config/v2` enumerates the valid `model_preference` values.
 5. Multi-turn thread continuation via `thread_id`.
@@ -313,7 +315,8 @@ Unit and adapter tests run against **dated** recorded fixtures and cannot detect
 | Truncated answer returned as complete | **Critical** — a wrong-but-plausible answer enters an agent pipeline as fact, undetected | `Response.complete` derived from an explicit terminal signal; raises by default; fixture test for a mid-stream cutoff; asserted live by `doctor` |
 | Perplexity changes its frontend/protocol | High — core functionality stops working | All site logic in one adapter; pinned Playwright; `pplx doctor` for detection; dated fixtures so staleness is visible |
 | Citation misattribution | High — answer cites a real URL that doesn't support the claim; looks correct | Same-payload capture invariant (§5); unmapped marker is an error; fixture + live assertion |
-| Concurrent runs stampede the account | Medium-high — pacing defeated in exactly the agent use case the tool targets | Interval floor persisted in a lock file, enforced with `flock` across processes, not per-`Client` |
+| Concurrent runs stampede the account | Medium-high — pacing defeated in exactly the agent use case the tool targets | Interval floor persisted in a lock file, enforced with `flock` across processes, not per-`Client`. Two runs also cannot share the Chrome profile at all, so the lock is what makes them queue instead of collide |
+| The pacing interval is a guess | Medium — too fast risks the account, too slow annoys; and there is no feedback signal | Accepted, not papered over: M2 confirmed the server states no rate, so nothing better exists. Chosen below the natural spacing of sequential use (~10–30 s per answer) so it only bites on rapid loops, documented as a guess, and overridable |
 | Bot detection / account flagged | Medium-high — irreversible loss of a paid account | Conservative pacing by default; serialized same-account access; hard rule against bypassing any challenge; README states the account-owner risk plainly |
 | Session file is credential-equivalent | Medium | Mode 600 set before atomic rename; documented in README as password-equivalent |
 | Session file corrupted by concurrent writes | Medium — bricks the tool until manual re-login | Atomic `os.replace` under the same advisory lock as pacing |

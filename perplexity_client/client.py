@@ -5,17 +5,29 @@ parser justifies a separate adapter module. They are the only site knowledge in
 the package -- chrome.py is site-agnostic.
 """
 
+import sys
 import time
 
-from .chrome import PplxError, chrome, profile_dir, save_session
+from .chrome import chrome, profile_dir, save_session
+from .errors import PplxError
 
 HOME = "https://www.perplexity.ai/"
+# The account's only quota signal. It reports availability per mode and no rate at all
+# -- no window, no reset, no remaining count for the modes this tool drives (M2:
+# `remaining_detail.kind == "not_provided"`). See docs/M2-findings.md.
+RATE_LIMIT = "/rest/rate-limit/status"
+# The two modes the tool can drive, mapped to that endpoint's names. Others
+# (`agentic_research`, `labs`) are deliberately ignored: warning about a mode we never
+# use is noise, and one of them was already exhausted on the probed account.
+MODES = {"search": "pro_search", "research": "research"}
 # NextAuth's session endpoint: {} when anonymous, {"user": {...}} when signed in.
 # Cookie presence proves nothing -- an expired cookie is still a cookie -- and every
 # /rest/ endpoint answers 200 for anonymous visitors too, so this is the one probe
 # that reflects what the *server* thinks of the session.
 AUTH_PROBE = """() => fetch('/api/auth/session', {credentials: 'include'})
     .then(r => r.json()).then(j => !!(j && j.user)).catch(() => null)"""
+QUOTA_PROBE = """path => fetch(path, {credentials: 'include'})
+    .then(r => r.json()).catch(() => null)"""
 CHALLENGE_TITLES = ("just a moment", "attention required", "checking your browser")
 SETTLE_TIMEOUT = 15.0
 LOGIN_TIMEOUT = 600.0
@@ -34,6 +46,24 @@ def classify(title: str, url: str, authed: bool) -> str:
     if is_challenge(title, url):
         return "challenged"
     return "ok" if authed else "expired"
+
+
+def quota(page) -> dict[str, bool]:
+    """`{mode: still available}` from a page already on perplexity.ai.
+
+    Empty when the endpoint could not be read: a quota reading is advisory, and
+    failing a command over it would be worse than not knowing.
+    """
+    body = page.evaluate(QUOTA_PROBE, RATE_LIMIT)
+    modes = body.get("modes") if isinstance(body, dict) else None
+    return {name: bool(v.get("available"))
+            for name, v in (modes or {}).items() if isinstance(v, dict)}
+
+
+def exhausted(page) -> list[str]:
+    """Modes this tool can drive that the server says are used up."""
+    q = quota(page)
+    return [mode for mode, name in MODES.items() if q.get(name) is False]
 
 
 def _has_session_cookie(ctx) -> bool:
@@ -103,4 +133,13 @@ class Client:
                 raise PplxError(f"could not reach {HOME}: {e}") from e
             if authed is None and not is_challenge(title, url):
                 raise PplxError("could not reach perplexity.ai's session endpoint")
-            return classify(title, url, bool(authed))
+            state = classify(title, url, bool(authed))
+            if state == "ok" and (used_up := exhausted(page)):
+                # Quota is a different axis from session validity, so it warns rather
+                # than changing the state word or the exit code (US-7 wants exactly one
+                # of four words on stdout). ponytail: printed here rather than returned
+                # because the caller that cares is the CLI, and returning it would mean
+                # changing status()'s documented return type for an advisory string.
+                print(f"warning: quota exhausted for: {', '.join(used_up)}",
+                      file=sys.stderr)
+            return state
