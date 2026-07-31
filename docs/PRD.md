@@ -13,22 +13,23 @@
 ```
                      one-time, visible browser
    ┌──────────┐      ┌─────────────────────────┐
-   │  pplx    │ ---> │  Playwright (headed)     │ ---> user logs in manually
-   │  login   │      │  Chromium window          │      (password/SSO/2FA —
-   └──────────┘      └─────────────────────────┘       whatever the account needs)
+   │  pplx    │ ---> │  Google Chrome, launched │ ---> user logs in manually
+   │  login   │      │  as a normal process     │      (password/SSO/2FA —
+   └──────────┘      │  + CDP attach            │       whatever the account needs)
+                     └─────────────────────────┘
                               │
                               ▼
-                  storage_state written atomically to
-                  ~/.config/perplexity-client/session.json   (mode 600)
-                  ~/.config/perplexity-client/pplx.lock      (advisory lock +
-                                                              last-request stamp)
+                  ~/.config/perplexity-client/chrome-profile/  (the live session)
+                  ~/.config/perplexity-client/session.json     (storage_state, 600)
+                  ~/.config/perplexity-client/pplx.lock        (advisory lock +
+                                                                last-request stamp)
 
    ┌──────────────────┐        ┌────────────────────────────────┐
    │ Python caller /   │ -----> │ Client                          │
    │ CLI (`pplx ask`)  │        │  1. acquire flock on pplx.lock  │
    └──────────────────┘        │  2. enforce min-interval floor  │
-                                │  3. load session, launch        │
-                                │     headless context            │
+                                │  3. launch Chrome --headless=new│
+                                │     on the profile, attach CDP  │
                                 └───────────────┬─────────────────┘
                                                 │
                     ┌───────────────────────────┴──────────────────┐
@@ -58,26 +59,30 @@
 
 Rationale: the stream carries structured payloads with an explicit terminal signal. DOM scraping provides neither, which makes the completeness contract (§5) and the citation-index contract (§5) unenforceable rather than merely harder.
 
-**This decision is gated on Milestone 0 (§9), a devtools spike against a real Pro account.** The spike is not a formality — the protocol has not been inspected yet, and this PRD deliberately does not name specific frame types, event names, or payload shapes, because none have been verified. M0 must establish and document:
+**This decision was gated on Milestone 0 (§9), a devtools spike against a real Pro account. M0 is complete and confirmed it — see `docs/M0-findings.md`.** All five questions were answered against a live Pro session, with committed fixtures and a runnable check (`spike/verify_findings.py`). The DOM fallback below is therefore **not** in effect: `Response.complete` is a real observed signal and the citation-index contract is guaranteed, not best-effort.
 
-1. That the answer stream is interceptable from a Playwright context (via WebSocket framing events, response interception, or equivalent).
-2. Which frame/event constitutes the **terminal completion signal**, by name.
-3. Whether answer text and citations arrive in a single terminal payload, or must be assembled across frames — and if assembled, how index integrity is preserved.
-4. Whether the model that actually served the answer is observable in the stream.
-5. Whether a Deep Research task id maps to a durable, re-navigable thread URL (see §6).
+1. **Interceptable** — `POST /rest/sse/perplexity_ask` → `text/event-stream`, teed via CDP `Network.streamResourceContent`. `getResponseBody` returns nothing for a streaming body, so this specific method is load-bearing. Frames are CRLF-delimited.
+2. **Terminal signal: `final_sse_message: true`**, corroborated by `status == "COMPLETED"`. Note `text_completed` fires one frame *early* and must not be used.
+3. **Single self-contained terminal payload** — full answer text and full citation list in one frame, double-JSON-encoded. No cross-frame assembly, so index integrity needs no reconstruction.
+4. **Yes** — `display_model` (served) and `user_selected_model` (requested) are separate fields on the terminal frame.
+5. **Yes** — `backend_uuid` == `thread_url_slug` == URL path, present on the *first* frame while status is still `PENDING`, and the thread is readable from a fresh process via `GET /rest/thread/<uuid>` (plain JSON, not SSE — a second parser).
 
-**Fallback, if M0 disproves the above:** fall back to DOM extraction and record the consequences explicitly in this document rather than silently: `Response.complete` degrades to a best-effort heuristic, and the citation-index contract weakens from *guaranteed* to *best-effort*. A DOM-settle-timer masquerading as a completion signal is **not** an acceptable implementation of `complete` — if it comes to that, `complete` must be documented as heuristic in both the docstring and the README.
+**Fallback, retained for the record and not currently in use:** had M0 disproved the above, the tool would fall back to DOM extraction with the consequences recorded here rather than silently — `Response.complete` degrading to a best-effort heuristic and the citation-index contract weakening from *guaranteed* to *best-effort*. A DOM-settle-timer masquerading as a completion signal is **not** an acceptable implementation of `complete`; if a future protocol change forces the fallback, `complete` must be documented as heuristic in both the docstring and the README.
 
 - **Deployment model:** Runs entirely on the user's own machine. No server component, no hosted infrastructure. Each user authenticates their own Pro account locally; sessions are never shared or transmitted anywhere except to perplexity.ai itself.
-- **Session lifecycle:** `pplx login` opens a real, visible Chromium window for a one-time manual login (handles whatever auth the account needs — password, SSO, 2FA — without the tool ever touching credentials). The resulting Playwright `storage_state` is persisted locally and reused headlessly. On clean exit of any run, the possibly-rotated state is written back atomically under the advisory lock, so cookie rotation extends session life instead of being discarded. On expiry, revocation, or a bot-detection challenge, the tool fails loudly and instructs the user to re-run `login`.
+- **Browser launch (established by M0):** Playwright must **not** launch the browser. Both its bundled Chromium and `channel="chrome"` are challenged by Cloudflare on sight and never clear, while a Google Chrome started as an ordinary process with `--remote-debugging-port` and attached via `connect_over_cdp` is not challenged at all. The tool therefore launches Chrome itself and attaches. Nothing spoofs a fingerprint, patches `navigator.webdriver`, or solves a challenge — see §8; the tool simply does not add automation switches in the first place. Chrome 136+ refuses `--remote-debugging-port` on the default profile, so the tool uses its own profile directory under `~/.config/perplexity-client/`.
+- **Headless (established by M0):** `--headless=new` is *not* challenged — three of three probe runs completed queries normally, against a headed control. Queries run headless; only `login` is visible.
+- **Session lifecycle:** `pplx login` opens a real, visible Chrome window on the tool's own profile directory for a one-time manual login (handles whatever auth the account needs — password, SSO, 2FA — without the tool ever touching credentials). **The profile directory is what actually carries the session**, and it is portable — M0 drove a copied profile from a temp directory successfully. `storage_state` is still exported to `session.json` for inspection and for the atomic write-back below, but it is not the thing that keeps the login alive. On clean exit of any run, the possibly-rotated state is written back atomically under the advisory lock, so cookie rotation extends session life instead of being discarded. On expiry, revocation, or a bot-detection challenge, the tool fails loudly and instructs the user to re-run `login`.
+- **Copying a live profile** requires deleting its `Singleton{Lock,Cookie,Socket}` files first; left in place, a second Chrome hands off to the first and exits without opening a debugging port. Relevant to `doctor` and to any future profile-migration helper.
 
 ### Technology stack
 
 | Layer | Technology | Notes |
 |---|---|---|
 | Language | Python 3.10+ | |
-| Browser automation | Playwright (Python), Chromium | Version-pinned. One-time `playwright install chromium` (~300MB) |
-| Answer extraction | Playwright network/WebSocket interception | Primary data path; see decision above |
+| Browser | **Google Chrome, system install** | A prerequisite, not a download. Launched by the tool as a normal process; `playwright install chromium` is *not* used — its Chromium is challenged (see above) |
+| Browser automation | Playwright (Python), `connect_over_cdp` | Attach only. Playwright never launches the browser |
+| Answer extraction | CDP `Network.streamResourceContent` | Primary data path; `getResponseBody` and Playwright's `response.body()` both return nothing for a streaming body |
 | CLI | Python stdlib `argparse` | No CLI framework dependency at this command count |
 | Cross-process coordination | stdlib `fcntl.flock` on a lock file | Serializes concurrent runs; carries the last-request timestamp |
 | Session storage | Playwright `storage_state` JSON, atomic write (`os.replace`) | Owner-only permissions (600), set before rename |
@@ -113,7 +118,8 @@ Rationale: the stream carries structured payloads with an explicit terminal sign
   - Acceptance criteria:
     - `mode="search"` blocks and returns a `Response`.
     - `mode="research"` returns a `ResearchTask` immediately; `.wait(timeout=...)` blocks until completion and returns a `Response`, or raises on timeout without cancelling the underlying task.
-    - CLI `pplx ask "..." --mode research` polls and prints on completion, showing progress while waiting.
+    - CLI `pplx ask "..." --mode research` polls and prints on completion, showing progress while waiting. Progress is real, not a spinner: the stream's plan block reports each goal as `IN_PROGRESS` or `DONE`.
+    - Research may stop to ask clarifying questions; by default they are skipped so an unattended run never hangs (§5).
 
 - **US-5: Walk away from a long Deep Research run**
   - As a user, I want a research task to survive the process that started it, so that a multi-minute run isn't lost to Ctrl-C, a crash, or a closed laptop.
@@ -121,7 +127,7 @@ Rationale: the stream carries structured payloads with an explicit terminal sign
     - `pplx ask "..." --mode research --detach` submits, prints the task id, and exits zero without waiting.
     - `pplx result <task_id>` retrieves a completed result, or reports still-running status, from a *different* process than the one that submitted it.
     - `Client().task(task_id)` reconstructs a `ResearchTask` from an id alone.
-    - If M0 (§2) proves task ids are not durably re-navigable, this story is cut and `task_id` is renamed to signal process-locality — it must not be shipped implying durability it lacks.
+    - **M0 confirmed durability, so this story is in.** The id is `backend_uuid`, present on the first stream frame while the task is still `PENDING`, so `--detach` can print it and exit immediately without waiting for any result.
 
 - **US-6: Pick a model and know which one answered**
   - As a user, I want to choose the underlying model and be certain which model actually served my answer, so that a silent server-side fallback can't go unnoticed.
@@ -183,15 +189,31 @@ All of the above is v1.
 | `Citation` | `url` | str | Source URL |
 | | `title` | str | Source title |
 | | `snippet` | str \| None | Cited excerpt; `None` when the stream did not carry one |
-| `ResearchTask` | `task_id` | str | Handle for a Deep Research request; durable across processes iff M0 confirms |
-| | `status` | str | `"pending"` \| `"running"` \| `"done"` \| `"failed"` |
+| `ResearchTask` | `task_id` | str | Handle for a Deep Research request. **M0 confirmed durability across processes**; it is `backend_uuid`, available on the first stream frame |
+| | `status` | str | `"pending"` \| `"running"` \| `"awaiting_input"` \| `"done"` \| `"failed"` |
+| | `progress` | list[tuple[str, str]] \| None | Per-goal `(description, "IN_PROGRESS"\|"DONE")` from the stream's plan block; `None` for search mode |
+| | `questions` | list[Question] \| None | Set only in `awaiting_input`; see below |
 | | `thread_id` | str | Thread the task belongs to |
+| `Question` | `text` | str | The clarifying question |
+| | `options` | list[str] | Offered choices |
+| | `multi` | bool | Whether more than one may be selected |
+| | `free_text` | bool | Whether a free-text answer is accepted |
 | `Session` (on-disk) | — | Playwright `storage_state` JSON | Login session; not a Python-facing entity |
 | `LockFile` (on-disk) | — | advisory lock + last-request timestamp | Cross-process pacing and session-write serialization |
 
 ### Citation index contract
 
 `text` retains Perplexity's inline `[n]` markers, and `citations[n-1]` is the source for marker `n`. Text and citations **must be captured from the same terminal payload** — never sampled at different moments — because Perplexity renumbers and appends sources while an answer streams. A marker with no corresponding entry in `citations` is an error, surfaced as such, not a silent drop. This invariant is covered by a fixture test and asserted live by `pplx doctor`.
+
+### Deep Research clarifying questions
+
+**Deep Research may stop and ask the user clarifying questions before it runs**, and it blocks until they are answered or skipped. M0 observed a broad query triggering four multiple-choice questions while a narrow one ran straight through, so this is not predictable from the query alone and cannot be avoided by phrasing.
+
+The trap: **the top-level `status` stays `PENDING` while it waits**, indistinguishable from working. A client keying on `status` alone hangs until its timeout. The real signal is `WORKFLOW_AWAITING_NEXT_STEPS` with `tool_name: "clarifying_questions"` inside the stream's workflow block, which is what `status == "awaiting_input"` above maps to.
+
+The questions arrive structured — each with options, `allow_multichoice` and `allow_free_text` — alongside an `answer_submission_uuid` and a `response_endpoint`, so answers are submitted through the API rather than driven through the DOM.
+
+**Default behaviour is to skip**, because an unattended client is the primary use case (§1) and blocking on a question nobody will answer is the worse failure. Callers who want control pass `on_clarify=` to answer or to raise.
 
 ### Storage scope
 
@@ -208,11 +230,15 @@ Client().ask(query,
              mode="search",               # "search" | "research"
              model="best",
              thread_id=None,
-             allow_incomplete=False) -> Response | ResearchTask
-Client().task(task_id) -> ResearchTask    # reconstruct from id (gated on M0)
+             allow_incomplete=False,
+             on_clarify="skip") -> Response | ResearchTask
+                                          # "skip" | "raise" | callable(list[Question]) -> list[str]
+Client().task(task_id) -> ResearchTask    # reconstruct from id; M0-confirmed
 
 ResearchTask.wait(timeout=None) -> Response
 ResearchTask.status -> str
+ResearchTask.progress -> list[tuple[str, str]] | None
+ResearchTask.answer(responses: list[str]) -> None   # only when status == "awaiting_input"
 ```
 
 Errors: `IncompleteAnswerError`, `ModelMismatchError`, `SessionExpiredError`, `ChallengeEncounteredError`.
@@ -244,7 +270,7 @@ Default output is human-readable text plus a citations list; `--json` prints the
 | Session durability | Rotated cookies written back atomically on clean exit; a crashed run never corrupts the session file |
 | Security | Session file at mode 600; no credential ever touches tool code or logs; no CAPTCHA/bot-detection bypass under any circumstance |
 | Breakage detection | `pplx doctor` catches live-site drift; fixtures carry a capture date so staleness is visible in review |
-| Cost | Zero hosting/API cost; one-time ~300MB Chromium download |
+| Cost | Zero hosting/API cost; no browser download — Google Chrome is a prerequisite the user already has |
 | Maintainability | No dependency beyond browser automation and packaging; all site-specific logic in one adapter module |
 
 ### Testing posture (explicit)
@@ -265,17 +291,17 @@ Unit and adapter tests run against **dated** recorded fixtures and cannot detect
 
 ## 9. Milestones
 
-**M0 — Protocol spike (gates everything else).** Inspect a real Pro session in devtools and answer the five questions in §2. Output is a short written finding committed alongside this PRD, plus a captured fixture. If the stream path is disproven, update §2, §5, and §10 to record the DOM-fallback consequences *before* writing adapter code.
+**M0 — Protocol spike (gates everything else). ✅ Done — `docs/M0-findings.md`.** All five §2 questions answered against a live Pro session; fixtures in `spike/fixtures/`, claims asserted by `spike/verify_findings.py`. The stream path was confirmed, so the DOM fallback is not in effect. §2, §5, §9 and §10 have been amended with what it found — chiefly that Playwright must not launch the browser, and that Deep Research can block on clarifying questions.
 
 **v1:**
 1. Session bootstrap — `pplx login`, atomic write-back, `pplx status` with its four states.
-2. Cross-process pacing — lock file, interval floor, backoff.
-3. Search-mode `ask()` — text, citations, observed model, completion signal, with the §5 contracts enforced and tested.
-4. Model selection with observed-model verification and `ModelMismatchError`.
+2. Cross-process pacing — lock file, interval floor, backoff. Read `GET /rest/rate-limit/status` (which the web app polls before each query) rather than guessing an interval; the server states its own limit.
+3. Search-mode `ask()` — text, citations, observed model, completion signal, with the §5 contracts enforced and tested. Two parsers are needed, not one: the SSE stream and the plain-JSON resume path (§2 Q5).
+4. Model selection with observed-model verification and `ModelMismatchError`. **Force a real mismatch before trusting it** — M0 confirmed `display_model` and `user_selected_model` exist and agree on every capture, but never saw them disagree, so the error path is unexercised. Requesting a model above the plan's entitlement is the likely way to trigger one. `GET /rest/models/config/v2` enumerates the valid `model_preference` values.
 5. Multi-turn thread continuation via `thread_id`.
-6. Deep Research — async submit, `.wait()`, `--detach`, `pplx result`, `Client().task()`.
+6. Deep Research — async submit, `.wait()`, `--detach`, `pplx result`, `Client().task()`, plus the `awaiting_input` state and `on_clarify` handling (§5). Smaller than it looks: M0 showed research reuses the same endpoint and terminal signal as search, differing only in `model_preference`, so the stream parser is shared.
 7. CLI wrapper with human-readable default, `--json`, and correct exit codes.
-8. `pplx doctor` plus dated fixtures and the CONTRIBUTING note on testing posture.
+8. `pplx doctor` plus dated fixtures and the CONTRIBUTING note on testing posture. `doctor` also checks for Chrome and reports its version (§10).
 
 **Future:** Spaces/Collections, caller-facing streaming, PyPI listing, optional local history.
 
@@ -291,5 +317,8 @@ Unit and adapter tests run against **dated** recorded fixtures and cannot detect
 | Session file is credential-equivalent | Medium | Mode 600 set before atomic rename; documented in README as password-equivalent |
 | Session file corrupted by concurrent writes | Medium — bricks the tool until manual re-login | Atomic `os.replace` under the same advisory lock as pacing |
 | Silent server-side model substitution | Medium — task-critical model swap goes unnoticed | `Response.model` strictly observed; mismatch raises when a specific model was requested |
-| Deep Research result lost with its process | Medium | Detach + resume-by-id (US-5), gated on M0; if unavailable, durability is not claimed |
+| Deep Research result lost with its process | Medium | **Resolved by M0** — `backend_uuid` arrives on the first frame and the thread is readable from a fresh process, so detach + resume-by-id (US-5) is buildable as specified |
+| Deep Research blocks on a clarifying question nobody answers | **Medium-high** — an unattended agent hangs to its timeout and the run is wasted; invisible because `status` still reads `PENDING` | Detect `WORKFLOW_AWAITING_NEXT_STEPS`, surface as `status == "awaiting_input"`, skip by default (§5) |
+| Chrome not installed, or a Chrome update breaks CDP attach | **Medium-high** — the tool cannot launch at all, and unlike a pinned Playwright browser this dependency updates itself under us | Chrome is a documented prerequisite; `pplx doctor` checks for the binary and for a working attach, and reports the Chrome version so a breaking update is identifiable |
+| Cloudflare extends challenges to CDP-attached Chrome | **High** — the current approach stops working entirely and §8 forbids bypassing it | No mitigation available by design; the honest outcome is that the tool stops working and says so. `doctor` distinguishes "challenged" from other failures so the cause is unambiguous |
 | ToS and maintainer-side legal exposure | **Medium-high, borne by the maintainer** — this is a public repo automating a service whose vendor sells API access separately. A disclaimer is a social protection, not a legal one, and the table should not price this at zero. | Framed and named throughout as *automating your own account* rather than API substitution; no resale, no multi-account, no bypass, no evasion; conservative pacing; README disclaims affiliation and places account-compliance responsibility on the user. Accepted as a conscious decision, not a checkbox. |
