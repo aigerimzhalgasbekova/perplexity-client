@@ -7,7 +7,7 @@ the package -- chrome.py is site-agnostic.
 
 import time
 
-from .chrome import (PplxError, chrome, profile_dir, save_session, session_path)
+from .chrome import PplxError, chrome, profile_dir, save_session
 
 HOME = "https://www.perplexity.ai/"
 # NextAuth's session endpoint: {} when anonymous, {"user": {...}} when signed in.
@@ -26,22 +26,32 @@ def is_challenge(title: str, url: str) -> bool:
             or "/cdn-cgi/challenge" in (url or ""))
 
 
-def classify(title: str, url: str, authed: bool, had_session: bool) -> str:
-    """One of ok | no-session | expired | challenged.
+def classify(title: str, url: str, authed: bool) -> str:
+    """ok | expired | challenged -- `no-session` is decided before the page load.
 
     Challenge is checked first: the auth probe answers 200 with an empty body from
     behind an interstitial, which would otherwise read as `expired`."""
     if is_challenge(title, url):
         return "challenged"
-    if authed:
-        return "ok"
-    return "expired" if had_session else "no-session"
+    return "ok" if authed else "expired"
 
 
 def _has_session_cookie(ctx) -> bool:
     # Context-level, not page-level: a login redirect can close the tab out from
     # under us, but cookies survive it.
     return any("session-token" in c["name"] for c in ctx.cookies())
+
+
+def _authed(ctx) -> bool:
+    """Run the auth probe on a tab that is already on perplexity.ai.
+
+    Relative fetch, so it only means anything from that origin -- mid-login the
+    user may be parked on an SSO provider, which reads as "not done yet".
+    """
+    for page in ctx.pages:
+        if page.url.startswith(HOME):
+            return bool(page.evaluate(AUTH_PROBE))
+    return False
 
 
 class Client:
@@ -55,22 +65,33 @@ class Client:
             deadline = time.monotonic() + timeout
             while time.monotonic() < deadline:
                 try:
-                    done = _has_session_cookie(ctx)
+                    # The cookie is the cheap gate; the probe is what actually
+                    # proves the login landed, because a session-token cookie can
+                    # appear mid-flow and a redirect chain can outlast any timer.
+                    done = _has_session_cookie(ctx) and _authed(ctx)
                 except Exception as e:  # window closed before the login finished
                     raise PplxError(f"browser closed before login completed: {e}") from e
                 if done:
                     time.sleep(2)  # let the post-login redirects land before snapshotting
-                    save_session(ctx)
+                    if not save_session(ctx):
+                        raise PplxError(
+                            "logged in, but no session cookie was left to save; "
+                            "re-run: pplx login")
                     return
                 time.sleep(2)
         raise PplxError(f"timed out after {timeout:.0f}s waiting for login")
 
     def status(self) -> str:
-        """One real page load, then one of STATES. Costs a page load, not a query."""
-        had_session = session_path().exists()
-        if not had_session and not profile_dir().exists():
+        """One real page load, then one of ok | no-session | expired | challenged."""
+        if not profile_dir().exists():
             return "no-session"
-        with chrome(headless=True) as (_ctx, page):
+        with chrome(headless=True) as (ctx, page):
+            # Judged on the profile's own cookies, not on session.json: that file is
+            # a write-only export in M1, and any abandoned `pplx login` leaves the
+            # profile dir behind -- whose empty profile then draws a Cloudflare
+            # interstitial and would report `challenged` to a user who never logged in.
+            if not _has_session_cookie(ctx):
+                return "no-session"
             try:
                 page.goto(HOME, wait_until="domcontentloaded")
                 deadline = time.monotonic() + SETTLE_TIMEOUT
@@ -82,4 +103,4 @@ class Client:
                 raise PplxError(f"could not reach {HOME}: {e}") from e
             if authed is None and not is_challenge(title, url):
                 raise PplxError("could not reach perplexity.ai's session endpoint")
-            return classify(title, url, bool(authed), had_session)
+            return classify(title, url, bool(authed))

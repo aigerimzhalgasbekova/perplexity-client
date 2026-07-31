@@ -15,7 +15,6 @@ import json
 import os
 import pathlib
 import shutil
-import socket
 import subprocess
 import time
 
@@ -90,22 +89,23 @@ def profile_owner_pid() -> int | None:
     """
     try:
         pid = int(os.readlink(profile_dir() / "SingletonLock").rsplit("-", 1)[1])
-        os.kill(pid, 0)  # stale lock from a crashed Chrome -> OSError -> not in use
     except (OSError, ValueError, IndexError, NotImplementedError):
         return None
+    try:
+        os.kill(pid, 0)
+    except PermissionError:
+        return pid  # alive, just not ours -- the one OSError that proves it exists
+    except OSError:
+        return None  # stale lock from a crashed Chrome
     return pid
 
 
-def _free_port() -> int:
-    with socket.socket() as s:
-        s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1]
-
-
-def _port_open(port: int) -> bool:
-    with socket.socket() as s:
-        s.settimeout(0.5)
-        return s.connect_ex(("127.0.0.1", port)) == 0
+def _read_port(path: pathlib.Path) -> int | None:
+    """Port from Chrome's DevToolsActivePort, or None until it is written."""
+    try:
+        return int(path.read_text().split("\n", 1)[0])
+    except (OSError, ValueError):
+        return None
 
 
 def save_session(ctx) -> bool:
@@ -140,18 +140,21 @@ def chrome(headless: bool = True, url: str = "about:blank"):
     if pid := profile_owner_pid():
         raise ProfileInUseError(
             f"Chrome is already using {profile_dir()} (pid {pid}). "
-            "Quit that window and retry.")
+            f"Quit that Chrome window, or run: kill {pid}")
     profile_dir().mkdir(parents=True, exist_ok=True)
     os.chmod(config_dir(), 0o700)
-    port = _free_port()
+    # Let Chrome pick the port and tell us: binding one ourselves first would be a
+    # race, and attaching to whatever won it means driving someone else's browser.
+    port_file = profile_dir() / "DevToolsActivePort"
+    port_file.unlink(missing_ok=True)
     proc = subprocess.Popen(
-        [find_chrome(), f"--remote-debugging-port={port}",
+        [find_chrome(), "--remote-debugging-port=0",
          f"--user-data-dir={profile_dir()}", *COMMON_ARGS,
          *(HEADLESS_ARGS if headless else ()), url],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
     try:
         deadline = time.monotonic() + PORT_TIMEOUT
-        while not _port_open(port):
+        while (port := _read_port(port_file)) is None:
             if proc.poll() is not None:
                 raise PplxError(f"Chrome exited immediately (code {proc.returncode})")
             if time.monotonic() > deadline:
