@@ -50,7 +50,7 @@ def env_float(name: str, default: float) -> float:
     variable after import silently get the default."""
     try:
         return float(os.environ[name])
-    except (KeyError, ValueError):
+    except KeyError, ValueError:
         return default
 
 
@@ -83,7 +83,7 @@ def _read(fd: int) -> dict[str, float]:
             "last": float(state.get("last", 0)),
             "fails": int(state.get("fails", 0)),
         }
-    except (ValueError, TypeError, AttributeError, OSError):
+    except ValueError, TypeError, AttributeError, OSError:
         return {"last": 0.0, "fails": 0}
 
 

@@ -206,7 +206,7 @@ def _frame(block: bytes) -> Json | None:
         if line.startswith(DATA) and line[len(DATA) :].lstrip().startswith(b"{"):
             try:
                 obj = json.loads(line[len(DATA) :])
-            except (ValueError, UnicodeDecodeError):
+            except ValueError, UnicodeDecodeError:
                 # A block cut mid-JSON is the normal tail of a killed stream, not a bug.
                 return None
             return obj if isinstance(obj, dict) else None

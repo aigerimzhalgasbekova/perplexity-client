@@ -90,7 +90,7 @@ def profile_owner_pid() -> int | None:
     """
     try:
         pid = int(os.readlink(profile_dir() / "SingletonLock").rsplit("-", 1)[1])
-    except (OSError, ValueError, IndexError, NotImplementedError):
+    except OSError, ValueError, IndexError, NotImplementedError:
         return None
     try:
         os.kill(pid, 0)
@@ -105,7 +105,7 @@ def _read_port(path: pathlib.Path) -> int | None:
     """Port from Chrome's DevToolsActivePort, or None until it is written."""
     try:
         return int(path.read_text().split("\n", 1)[0])
-    except (OSError, ValueError):
+    except OSError, ValueError:
         return None
 
 

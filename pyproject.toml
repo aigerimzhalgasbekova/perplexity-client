@@ -3,7 +3,7 @@ name = "perplexity-client"
 version = "0.1.0"
 description = "Automate your own Perplexity Pro account from Python and the shell."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.14"
 license = "MIT"
 dependencies = [
     # Attach-only: Playwright never launches the browser (docs/M0-findings.md).
@@ -30,7 +30,7 @@ dev = [
 
 [tool.ruff]
 line-length = 88
-target-version = "py310"
+target-version = "py314"
 # spike/ is throwaway probe scripts kept for provenance, not shipped code.
 # *.md because ruff 0.16 reformats fenced code blocks, which flattens the deliberate
 # comment alignment in README's examples.
@@ -43,7 +43,7 @@ select = ["E", "F", "I", "UP", "B", "C4", "SIM"]
 quote-style = "double"
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.14"
 strict = true
 warn_unreachable = true
 exclude = "^spike/"

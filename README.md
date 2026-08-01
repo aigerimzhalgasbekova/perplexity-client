@@ -13,7 +13,7 @@ and search-mode `ask()` from Python. `pplx ask` on the command line lands in mil
 
 ## Requirements
 
-- Python 3.10+
+- Python 3.14+
 - **Google Chrome**, installed. The tool launches your own Chrome as an ordinary
   process and attaches over CDP; it never downloads a browser and never adds
   automation switches.
