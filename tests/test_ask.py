@@ -251,6 +251,34 @@ def test_ask_says_the_adapter_is_broken_when_no_stream_ever_arrives(monkeypatch)
         ask(monkeypatch, AskPage(cdp=FakeCDP()))
 
 
+def test_ask_still_explains_itself_when_the_tab_died(monkeypatch):
+    # A dead tab is how a Chrome crash shows up. Diagnosing the silence must not itself
+    # raise, or the user gets a Playwright traceback where the explanation should be.
+    class Gone(AskPage):
+        def press(self, key):
+            self.dead = True
+
+        def title(self):
+            if getattr(self, "dead", False):
+                raise RuntimeError("Target page, context or browser has been closed")
+            return super().title()
+
+    with pytest.raises(PplxError, match="frontend"):
+        ask(monkeypatch, Gone(cdp=FakeCDP()))
+
+
+def test_ask_reports_an_unreachable_site_as_its_own_error(monkeypatch):
+    # Otherwise a network failure escapes as a raw Playwright exception, which the CLI
+    # does not map and the caller cannot catch as a PplxError. `status` already does
+    # this; `ask` has the same page interaction and needs the same treatment.
+    class Offline(AskPage):
+        def goto(self, url, **kw):
+            raise RuntimeError("net::ERR_NAME_NOT_RESOLVED")
+
+    with pytest.raises(PplxError, match="could not reach"):
+        ask(monkeypatch, Offline(cdp=FakeCDP()))
+
+
 def test_ask_stops_waiting_once_the_answer_completes(monkeypatch):
     # A fixed sleep would cost every caller the timeout; polling has to end on the
     # terminal frame.

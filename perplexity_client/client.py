@@ -56,7 +56,12 @@ def _blame(page) -> None:
     A challenge and a changed frontend both look like silence, and they have opposite
     fixes -- one is `pplx login`, the other is a patch to the adapter.
     """
-    if adapter.is_challenge(page.title(), page.url):
+    title = url = ""
+    with contextlib.suppress(Exception):
+        # The tab may be gone -- a crashed Chrome is one of the ways a stream never
+        # arrives. Failing to read it is not the story; failing to explain would be.
+        title, url = page.title(), page.url
+    if adapter.is_challenge(title, url):
         raise ChallengeEncounteredError(
             "perplexity.ai served a bot-detection challenge instead of an answer; this "
             "tool never bypasses one. Open Chrome yourself, then re-run: pplx login")
@@ -73,8 +78,12 @@ def _ready(ctx, page) -> None:
     """
     if not _has_session_cookie(ctx):
         raise SessionExpiredError("no session yet -- run: pplx login")
-    title, url = _settled(page)
-    state = adapter.classify(title, url, bool(page.evaluate(adapter.AUTH_PROBE)))
+    try:
+        title, url = _settled(page)
+        authed = bool(page.evaluate(adapter.AUTH_PROBE))
+    except Exception as e:  # a network failure is not a traceback-worthy bug
+        raise PplxError(f"could not reach {HOME}: {e}") from e
+    state = adapter.classify(title, url, authed)
     if state == "challenged":
         raise ChallengeEncounteredError(
             "perplexity.ai served a bot-detection challenge; this tool never bypasses "
