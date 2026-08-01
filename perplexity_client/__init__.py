@@ -1,8 +1,12 @@
 """Automate your own Perplexity account from Python."""
 
+from .adapter import Citation, Response
 from .client import Client
-from .errors import (ChromeNotFoundError, LocalError, LockTimeoutError, PplxError,
-                     ProfileInUseError)
+from .errors import (ChallengeEncounteredError, ChromeNotFoundError, CitationError,
+                     IncompleteAnswerError, LocalError, LockTimeoutError, PplxError,
+                     ProfileInUseError, QuotaExhaustedError, SessionExpiredError)
 
-__all__ = ["Client", "PplxError", "LocalError", "ChromeNotFoundError",
-           "ProfileInUseError", "LockTimeoutError"]
+__all__ = ["Client", "Response", "Citation",
+           "PplxError", "LocalError", "ChromeNotFoundError", "ProfileInUseError",
+           "LockTimeoutError", "IncompleteAnswerError", "CitationError",
+           "SessionExpiredError", "ChallengeEncounteredError", "QuotaExhaustedError"]

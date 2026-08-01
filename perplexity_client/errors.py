@@ -32,6 +32,31 @@ class LockTimeoutError(PplxError):
     pass
 
 
+class SessionExpiredError(PplxError):
+    """There is no usable login. Re-running `pplx login` is the only fix.
+
+    Raised before a query is spent, never during one -- discovering it mid-stream would
+    burn a query on a session that could never have answered.
+    """
+
+
+class ChallengeEncounteredError(PplxError):
+    """perplexity.ai served a bot-detection challenge.
+
+    A terminal state on purpose (PRD §8): the tool never solves one, never bypasses one
+    and never retries around one. It says so and stops.
+    """
+
+
+class QuotaExhaustedError(PplxError):
+    """The account's quota for this mode is used up.
+
+    Refused up front rather than discovered mid-stream. Availability is the only quota
+    signal the account has -- no remaining count exists for the modes this tool drives
+    (docs/M2-findings.md), so there is nothing to report but "not now".
+    """
+
+
 class IncompleteAnswerError(PplxError):
     """The answer stream ended without its completion signal.
 

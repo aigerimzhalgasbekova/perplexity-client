@@ -9,6 +9,7 @@ two `page.evaluate` probes and the CDP tee. That is what lets the parser be test
 against recorded fixtures instead of the live site (PRD §7).
 """
 
+import base64
 import dataclasses
 import json
 import re
@@ -41,6 +42,7 @@ ASK_PATH = "/rest/sse/perplexity_ask"
 # split then silently matches nothing (M0 Q1) -- hence bytes end to end.
 FRAME_SEP = b"\r\n\r\n"
 DATA = b"data: "
+BOX_TIMEOUT = 30_000  # ms; the homepage has ~40 REST calls to get through first
 
 
 def is_challenge(title: str, url: str) -> bool:
@@ -182,6 +184,11 @@ class Stream:
 
     def __init__(self) -> None:
         self.frames: list[dict] = []
+        self.cdp = None  # set by `tee`, so the caller has something to detach
+        # A closed connection is a definite end, terminal frame or not. Without it a
+        # dropped stream costs the caller the whole answer timeout to learn nothing the
+        # close had not already said.
+        self.ended = False
         self._buf = b""
 
     def feed(self, chunk: bytes) -> None:
@@ -283,6 +290,70 @@ def parse_stream(frames: list[dict], allow_incomplete: bool) -> Response:
             f"signal, so this answer is cut off. Pass allow_incomplete=True to take "
             f"what arrived")
     return _partial(frames)
+
+
+# --- driving the page ---------------------------------------------------------------
+# DOM is control only, never content (PRD §2): navigate, type, submit. Answer content
+# comes off the stream, which is the only place the completeness and citation-index
+# contracts are enforceable.
+
+
+def tee(ctx, page) -> Stream:
+    """Start copying the answer stream into a `Stream`. Call before submitting.
+
+    `Network.getResponseBody` returns nothing for a streaming body and neither does
+    Playwright's `response.body()`; `streamResourceContent` is the only method that
+    works here (M0 Q1), and it has to be asked for on the response event, while the
+    body is still going past.
+    """
+    stream = Stream()
+    cdp = ctx.new_cdp_session(page)
+    cdp.send("Network.enable")
+    rid = None
+
+    def on_response(params):
+        nonlocal rid
+        r = params.get("response") or {}
+        # Keyed on the one request that carries an answer: the homepage fires dozens of
+        # others, and their bytes in this buffer would corrupt every frame after them.
+        if rid is None and ASK_PATH in (r.get("url") or "") \
+                and r.get("mimeType") == "text/event-stream":
+            rid = params.get("requestId")
+            got = cdp.send("Network.streamResourceContent", {"requestId": rid})
+            # Whatever arrived before we asked. Dropping it loses the head of the
+            # stream, and with it every frame boundary after it.
+            stream.feed(base64.b64decode(got.get("bufferedData") or ""))
+
+    def on_data(params):
+        if params.get("requestId") == rid and params.get("data"):
+            stream.feed(base64.b64decode(params["data"]))
+
+    def on_end(params):
+        # CDP delivers every `dataReceived` before the request finishes, so nothing is
+        # lost by stopping here -- and both endings, clean and failed, mean the same
+        # thing to us: no more bytes are coming.
+        if params.get("requestId") == rid:
+            stream.ended = True
+
+    cdp.on("Network.responseReceived", on_response)
+    cdp.on("Network.dataReceived", on_data)
+    cdp.on("Network.loadingFinished", on_end)
+    cdp.on("Network.loadingFailed", on_end)
+    stream.cdp = cdp
+    return stream
+
+
+def submit(page, query: str) -> None:
+    """Type the query and send it.
+
+    Deep-linking `/search/new?q=…` draws the Cloudflare interstitial hardest (M0), so
+    this does what a person does: the homepage, the box, Enter.
+    """
+    box = page.get_by_role("textbox").first
+    box.wait_for(timeout=BOX_TIMEOUT)
+    box.click()
+    box.fill(query)
+    box.press("Enter")
 
 
 def parse_thread(body: dict, allow_incomplete: bool) -> Response:
