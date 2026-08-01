@@ -131,6 +131,10 @@ def _result(args: argparse.Namespace) -> int:
     try:
         # `timeout=0` polls once and gives up, which is exactly "is it ready yet".
         r = task.wait(timeout=0, allow_incomplete=args.allow_incomplete)
+    except SessionExpiredError, ChallengeEncounteredError:
+        # Exit 1, not 3: "log in again" downgraded to "not finished yet" is what a
+        # polling loop retries forever (adversarial review, 2026-08-01).
+        raise
     except PplxError:
         if task.status == "done":
             raise  # a real parse failure, not an unfinished task

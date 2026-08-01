@@ -23,9 +23,29 @@ GOOD = Response(
 )
 
 
+class ThreadPage:
+    """The one page `doctor` opens itself: the resumed-thread invariant."""
+
+    blocks: list = [{"intended_usage": "ask_text"}]
+
+    def goto(self, url, **kw):
+        pass
+
+    def evaluate(self, script, arg=None):
+        return {"entries": [{"backend_uuid": "thread-1", "blocks": ThreadPage.blocks}]}
+
+
 def doctor(monkeypatch, answer=GOOD, state="ok", version="Google Chrome 150.0"):
+    import contextlib
+
     monkeypatch.setattr(client, "chrome_version", lambda: version)
     monkeypatch.setattr(client.Client, "status", lambda self: state)
+
+    @contextlib.contextmanager
+    def fake_chrome(**kw):
+        yield None, ThreadPage()
+
+    monkeypatch.setattr(client, "chrome", fake_chrome)
 
     def ask(self, query, **kw):
         if isinstance(answer, Exception):
@@ -53,8 +73,19 @@ def test_every_invariant_is_named_and_holds(monkeypatch):
         "thread id",
         "observed model",
         "observed mode",
+        "thread blocks",
     }
     assert got["chrome"][1] == "Google Chrome 150.0"
+
+
+def test_a_block_free_thread_document_is_a_failed_invariant(monkeypatch):
+    # M5's silent-failure shape: drop THREAD_QUERY's parameters and the endpoint
+    # answers with entries but no blocks -- research polls would then report nothing,
+    # with no error anywhere (docs/M4-M8-findings.md). This is the live check for it.
+    monkeypatch.setattr(ThreadPage, "blocks", [])
+    got = rows(doctor(monkeypatch))
+    assert got["thread blocks"][0] is False
+    assert got["observed mode"][0] is True  # the rows above it still report
 
 
 def test_a_marker_with_no_source_fails_the_index_invariant(monkeypatch):

@@ -352,6 +352,26 @@ class Client:
         check("thread id", bool(r.thread_id), r.thread_id)
         check("observed model", bool(r.model), r.model)
         check("observed mode", r.mode == "search", r.mode)
+        # M5's silent-failure shape, checked live: a thread fetched without
+        # THREAD_QUERY's parameters answers with entries but no blocks at all
+        # (docs/M4-M8-findings.md), and every research poll rides this endpoint.
+        # Free -- it re-reads the answer just paid for; a fresh thread's slug is its
+        # first entry's backend_uuid, so `thread_id` is the right handle here.
+        try:
+            with chrome(headless=True) as (_ctx, page):
+                page.goto(HOME, wait_until="domcontentloaded")
+                body = page.evaluate(
+                    adapter.FETCH_JSON, adapter.thread_path(r.thread_id)
+                )
+                entry = adapter.entry_of(body if isinstance(body, dict) else {})
+                blocks = entry.get("blocks") or ()
+                check(
+                    "thread blocks",
+                    bool(blocks),
+                    f"{len(blocks)} blocks on the resumed thread",
+                )
+        except Exception as e:
+            check("thread blocks", False, f"{type(e).__name__}: {e}")
         return rows
 
     def login(self, timeout: float = LOGIN_TIMEOUT) -> None:

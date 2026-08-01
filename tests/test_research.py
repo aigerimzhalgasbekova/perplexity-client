@@ -14,7 +14,12 @@ import time
 import pytest
 
 from perplexity_client import adapter, research
-from perplexity_client.errors import ClarificationRequiredError, PplxError
+from perplexity_client.errors import (
+    ChallengeEncounteredError,
+    ClarificationRequiredError,
+    PplxError,
+    SessionExpiredError,
+)
 from perplexity_client.research import ResearchTask
 
 FIXTURES = pathlib.Path(__file__).parent.parent / "spike" / "fixtures"
@@ -224,11 +229,19 @@ class FakePage:
         self.waits = 0
         self.radios = {}
         self.keyboard = self
+        self.authed = True
+        self.title_text = "Perplexity"
+        self.url = ""
 
     def goto(self, url, **kw):
         self.url = url
 
+    def title(self):
+        return self.title_text
+
     def evaluate(self, script, arg=None):
+        if arg is None:
+            return self.authed  # the auth probe; thread polls carry a path argument
         self.polls += 1
         return self.bodies[min(self.polls - 1, len(self.bodies) - 1)]
 
@@ -258,23 +271,56 @@ class SilentCDP:
 
 
 class FakeCtx:
+    def __init__(self, cookies=({"name": "__Secure-session-token"},)):
+        self.jar = list(cookies)
+
+    def cookies(self):
+        return self.jar
+
     def new_cdp_session(self, page):
         return SilentCDP()
 
 
-def fake_chrome(page):
+def fake_chrome(page, ctx=None):
     import contextlib
 
     @contextlib.contextmanager
     def _chrome(headless=True, url="about:blank", interval=0.0):
-        yield FakeCtx(), page
+        yield ctx or FakeCtx(), page
 
     return _chrome
 
 
-def task(monkeypatch, page, **kw) -> ResearchTask:
-    monkeypatch.setattr(research, "chrome", fake_chrome(page))
+def task(monkeypatch, page, ctx=None, **kw) -> ResearchTask:
+    monkeypatch.setattr(research, "chrome", fake_chrome(page, ctx))
     return ResearchTask(task_id="task-1", **kw)
+
+
+def test_wait_refuses_a_machine_with_no_session(monkeypatch):
+    # The gate `ask` runs before spending a query, carried over (adversarial review,
+    # 2026-08-01): FETCH_JSON swallows its own errors, so without this a machine that
+    # never logged in polls a thread it cannot see and reports "pending" forever.
+    page = FakePage(body(DONE))
+    with pytest.raises(SessionExpiredError, match="pplx login"):
+        task(monkeypatch, page, ctx=FakeCtx(cookies=())).wait(timeout=60)
+    assert page.polls == 0  # refused before the first poll
+
+
+def test_wait_refuses_an_expired_session(monkeypatch):
+    page = FakePage(body(DONE))
+    page.authed = None  # the auth probe answers empty when the session is dead
+    with pytest.raises(SessionExpiredError, match="expired"):
+        task(monkeypatch, page).wait(timeout=60)
+    assert page.polls == 0
+
+
+def test_a_challenge_on_the_thread_page_is_named_not_polled(monkeypatch):
+    monkeypatch.setattr(adapter, "SETTLE_TIMEOUT", 0.0)
+    page = FakePage(body(DONE))
+    page.title_text = "Just a moment..."
+    with pytest.raises(ChallengeEncounteredError, match="never bypasses"):
+        task(monkeypatch, page).wait(timeout=60)
+    assert page.polls == 0
 
 
 def test_wait_polls_until_the_task_completes(monkeypatch):
@@ -418,7 +464,7 @@ def test_waiting_costs_one_page_load_however_long_it_takes():
     ResearchTask(task_id="task-1")._loop(
         page, None, time.monotonic() + 60, 60, False, lambda g: None
     )
-    assert not hasattr(page, "url")  # `_loop` never navigates; `wait` did that once
+    assert page.url == ""  # `_loop` never navigates; `wait` did that once
 
 
 def test_a_replayed_question_is_not_asked_twice():

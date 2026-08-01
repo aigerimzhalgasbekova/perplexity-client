@@ -186,6 +186,18 @@ def test_result_reports_a_task_that_is_still_running(capsys):
     assert "running" in err and "[1/2] writing" in err
 
 
+def test_result_on_a_dead_session_exits_1_not_3(capsys):
+    # Downgraded to exit 3, "log in again" reads as "not finished yet" and a polling
+    # shell loop retries a dead session forever (adversarial review, 2026-08-01).
+    class Dead(FakeTask):
+        def wait(self, timeout=None, allow_incomplete=False, on_progress=None):
+            raise SessionExpiredError("session expired or revoked -- run: pplx login")
+
+    FakeClient.result = Dead(task_id="task-7")
+    assert cli.main(["result", "task-7"]) == 1
+    assert "pplx login" in capsys.readouterr().err
+
+
 # --- exit codes ---------------------------------------------------------------
 
 

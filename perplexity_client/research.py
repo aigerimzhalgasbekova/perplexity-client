@@ -27,12 +27,18 @@ import sys
 import time
 from collections.abc import Callable
 
-from playwright.sync_api import Page
+from playwright.sync_api import BrowserContext, Page
 
 from . import adapter
 from .adapter import Json, Question, Response
 from .chrome import chrome
-from .errors import ClarificationRequiredError, PplxError
+from .errors import (
+    ChallengeEncounteredError,
+    ClarificationRequiredError,
+    PplxError,
+    SessionExpiredError,
+)
+from .pacing import env_float
 
 # What a caller may pass for `on_clarify`: skip them (the default, because an
 # unattended client is the primary use case), refuse to guess, or answer them.
@@ -80,26 +86,10 @@ class ResearchTask:
 
     def refresh(self) -> ResearchTask:
         """One page load -- not one query -- against the thread endpoint."""
-        with chrome(headless=True) as (_ctx, page):
-            page.goto(adapter.HOME, wait_until="domcontentloaded")
+        with chrome(headless=True) as (ctx, page):
+            self._open(ctx, page)
             self._poll(page)
         return self
-
-    def answer(self, responses: list[str]) -> None:
-        """Answer the outstanding clarifying questions from a standalone process.
-
-        Rarely the right call: the server gives 60 seconds before answering for you,
-        and a fresh browser spends a chunk of that getting to the page. Inside
-        `wait()`, `on_clarify=<callable>` is the version that has the window to spare.
-        """
-        with chrome(headless=True) as (_ctx, page):
-            self._open(page)
-            self._poll(page)
-            if self.status != "awaiting_input":
-                raise PplxError(
-                    f"task {self.task_id} is {self.status}, not waiting for an answer"
-                )
-            adapter.answer_clarifiers(page, responses)
 
     def wait(
         self,
@@ -113,7 +103,11 @@ class ResearchTask:
         nothing here could cancel it even if that were wanted (PRD §7). The id in the
         message is enough to pick it up again later.
         """
-        limit = timeout if timeout is not None else WAIT_TIMEOUT
+        limit = (
+            timeout
+            if timeout is not None
+            else env_float("PPLX_WAIT_TIMEOUT", WAIT_TIMEOUT)
+        )
         deadline = time.monotonic() + limit
         with chrome(headless=True) as (ctx, page):
             # Teed before navigating: opening a running thread subscribes to
@@ -122,7 +116,7 @@ class ResearchTask:
             # carries no plan and no workflow block until the entry completes.
             stream = adapter.tee(ctx, page, reconnect=True)
             try:
-                self._open(page)
+                self._open(ctx, page)
                 return self._loop(
                     page, stream, deadline, limit, allow_incomplete, on_progress
                 )
@@ -174,10 +168,33 @@ class ResearchTask:
 
     # --- internals ----------------------------------------------------------
 
-    def _open(self, page: Page) -> None:
+    def _open(self, ctx: BrowserContext, page: Page) -> None:
         # The thread's own page, not the homepage: polling would work from either, but
         # the clarifying-question wizard is DOM, and it only exists here.
+        #
+        # Gated the same way `ask` is before it spends a query (adversarial review,
+        # 2026-08-01): FETCH_JSON swallows its own errors by design, so on a dead
+        # session every poll below would read as "pending" -- a machine that never
+        # logged in reporting a task as unfinished forever, when the real answer is
+        # "run: pplx login".
+        if not any("session-token" in c["name"] for c in ctx.cookies()):
+            raise SessionExpiredError("no session yet -- run: pplx login")
         page.goto(adapter.thread_url(self.thread_id), wait_until="domcontentloaded")
+        deadline = time.monotonic() + adapter.SETTLE_TIMEOUT
+        while (
+            adapter.is_challenge(page.title(), page.url) and time.monotonic() < deadline
+        ):
+            page.wait_for_timeout(1000)
+        state = adapter.classify(
+            page.title(), page.url, bool(page.evaluate(adapter.AUTH_PROBE))
+        )
+        if state == "challenged":
+            raise ChallengeEncounteredError(
+                "perplexity.ai served a bot-detection challenge on that thread; this "
+                "tool never bypasses one. Open Chrome yourself, then re-run: pplx login"
+            )
+        if state != "ok":
+            raise SessionExpiredError("session expired or revoked -- run: pplx login")
         page.wait_for_timeout(1500)
 
     def _poll(self, page: Page, stream: adapter.Stream | None = None) -> Json:

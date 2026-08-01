@@ -855,18 +855,31 @@ MENU_ITEM: Literal["menuitemradio"] = "menuitemradio"
 LOCKED_ITEM: Literal["menuitem"] = "menuitem"
 
 
-def _named(name: str, wanted: str | None) -> bool:
+def _name_rx(label: str) -> re.Pattern[str]:
+    """The pattern menu lookups hand to `get_by_role` instead of the bare label.
+
+    Playwright's default `name=` match is a case-insensitive *substring*, and
+    "Search" is a substring of "Deep research" -- a bare-label lookup matches both
+    mode entries and acts on whichever the DOM renders first, and the after-pick
+    verification then reads the same wrong entry back (adversarial review,
+    2026-08-01). Anchored prefix-plus-word-boundary instead: badges may follow the
+    label ("Kimi K3 New Thinking"), but "Grok 4" must not match "Grok 4.5".
+    """
+    return re.compile(rf"^{re.escape(' '.join(label.split()))}(\s|$)", re.I)
+
+
+def _named(name: str, wanted: str | re.Pattern[str] | None) -> bool:
     """Does this accessible name start with `wanted` as a whole word?
 
     Menu entries carry their badges in the name -- "Kimi K3 New Thinking", "Best
     Selects the best available model" -- so an equality test matches nothing and a
-    substring test matches "Grok 4" against "Grok 4.5".
+    substring test matches "Grok 4" against "Grok 4.5". One rule, shared: production
+    passes `_name_rx` patterns to Playwright, and the test fakes route through here.
     """
     if wanted is None:
         return True
-    got = " ".join((name or "").split()).lower()
-    want = " ".join(wanted.split()).lower()
-    return got == want or got.startswith(want + " ")
+    rx = wanted if isinstance(wanted, re.Pattern) else _name_rx(wanted)
+    return bool(rx.match(" ".join((name or "").split())))
 
 
 def _open_menu(page: Page, names: tuple[str, ...]) -> None:
@@ -888,7 +901,7 @@ def _open_menu(page: Page, names: tuple[str, ...]) -> None:
 
 def _selected(page: Page, label: str) -> bool:
     """Is the entry called `label` the one the open menu shows as chosen?"""
-    item = page.get_by_role(MENU_ITEM, name=label)
+    item = page.get_by_role(MENU_ITEM, name=_name_rx(label))
     if not item.count():
         return False
     return item.first.get_attribute("aria-checked") == "true"
@@ -899,9 +912,9 @@ def _pick(page: Page, label: str, names: tuple[str, ...], what: str) -> None:
     if _selected(page, label):
         page.keyboard.press("Escape")  # already there; nothing to spend a click on
         return
-    item = page.get_by_role(MENU_ITEM, name=label)
+    item = page.get_by_role(MENU_ITEM, name=_name_rx(label))
     if not item.count():
-        if page.get_by_role(LOCKED_ITEM, name=label).count():
+        if page.get_by_role(LOCKED_ITEM, name=_name_rx(label)).count():
             raise ModelUnavailableError(
                 f"{label!r} is not included in this account's plan -- the picker "
                 f"offers it as an upgrade, not as a choice. Pick another model, or "

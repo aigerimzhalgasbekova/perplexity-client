@@ -247,7 +247,11 @@ Client().task(task_id) -> ResearchTask    # reconstruct from id; M0-confirmed
 ResearchTask.wait(timeout=None) -> Response
 ResearchTask.status -> str
 ResearchTask.progress -> list[tuple[str, str]] | None
-ResearchTask.answer(responses: list[str]) -> None   # only when status == "awaiting_input"
+# Clarifying questions are answered inside `wait()` via `on_clarify=<callable>`. A
+# standalone `answer()` method was built and removed: while a task is pending the
+# thread document carries no workflow block, so a fresh process can never see
+# `awaiting_input` in time to use it -- and the server's own 60s window retires the
+# question anyway (docs/M4-M8-findings.md; adversarial review, 2026-08-01).
 ```
 
 Errors: `IncompleteAnswerError`, `ModelMismatchError`, `SessionExpiredError`, `ChallengeEncounteredError`.

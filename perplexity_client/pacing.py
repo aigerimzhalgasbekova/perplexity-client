@@ -36,8 +36,11 @@ HAVE_FLOCK = fcntl is not None
 # answer takes ~10-30s to generate, so this barely touches sequential use and only
 # bites the rapid-loop case that PRD §10 names.
 INTERVAL = 20.0
-# Longer than `login`'s 10-minute manual window, which holds the lock the whole time.
-LOCK_TIMEOUT = 900.0
+# Above the longest legitimate hold: a non-detached research wait keeps the lock for
+# up to WAIT_TIMEOUT (research.py, 1800s), and `login`'s manual window holds it for
+# 600. Below either, a healthy neighbour times out with advice to delete a lock that
+# is doing its job (adversarial review, 2026-08-01).
+LOCK_TIMEOUT = 2100.0
 BACKOFF_BASE = 5.0
 # Deliberately close to the interval floor. Failures are not classified (see `paced`),
 # so a local misconfiguration accrues backoff exactly like a sulking server does; a cap
@@ -116,8 +119,9 @@ def _acquire(fd: int, path: pathlib.Path) -> None:
                 raise
             if time.monotonic() > deadline:
                 raise LockTimeoutError(
-                    f"another pplx run has held {path} for too long. If none is "
-                    f"running, delete that file."
+                    f"another pplx run has held {path} for too long -- most likely "
+                    f"a research wait (`pplx ask --mode research` without "
+                    f"--detach). Only if no pplx run is alive, delete that file."
                 ) from e
             if not notified:  # a silent multi-minute wait reads as a hang
                 print("waiting for another pplx run to finish...", file=sys.stderr)

@@ -125,7 +125,8 @@ so they never wait out an interval or a backoff, however badly the last run went
 | Variable | Default | What |
 |---|---|---|
 | `PPLX_MIN_INTERVAL` | `20` | Seconds between queries. A local floor, not a server rule: Perplexity states no rate to its own account (`docs/M2-findings.md`) |
-| `PPLX_LOCK_TIMEOUT` | `900` | Seconds to wait for another run before giving up. Longer than `login`'s manual window |
+| `PPLX_LOCK_TIMEOUT` | `2100` | Seconds to wait for another run before giving up. Above the longest legitimate hold — a non-detached research wait (`PPLX_WAIT_TIMEOUT`) keeps the lock while it blocks |
+| `PPLX_WAIT_TIMEOUT` | `1800` | Seconds a non-detached research `wait()` blocks before raising. The task keeps running server-side; `pplx result <id>` picks it up |
 | `PPLX_ASK_TIMEOUT` | `180` | Seconds to wait for one answer. A ceiling, not an expectation — a search answer takes ~10–30 s; this is what stops a stalled stream from hanging an agent loop |
 | `PPLX_SUBMIT_TIMEOUT` | `60` | Seconds to wait for a research task's *id*, which arrives on the first frame — not for its answer |
 
