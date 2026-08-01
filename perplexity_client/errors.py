@@ -10,11 +10,21 @@ class PplxError(Exception):
     """Base for every error this tool raises on purpose."""
 
 
-class ChromeNotFoundError(PplxError):
+class LocalError(PplxError):
+    """This machine is misconfigured -- the account never pushed back.
+
+    `pacing` counts failures to back off with, and it must not count these: they do
+    not heal on their own, so every retry of the user's fix would be slower than the
+    last. The marker lives here rather than as a tuple in `pacing` so that module
+    still needs to know nothing about browsers.
+    """
+
+
+class ChromeNotFoundError(LocalError):
     pass
 
 
-class ProfileInUseError(PplxError):
+class ProfileInUseError(LocalError):
     pass
 
 

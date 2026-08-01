@@ -54,7 +54,15 @@ def quota(page) -> dict[str, bool]:
     Empty when the endpoint could not be read: a quota reading is advisory, and
     failing a command over it would be worse than not knowing.
     """
-    body = page.evaluate(QUOTA_PROBE, RATE_LIMIT)
+    try:
+        body = page.evaluate(QUOTA_PROBE, RATE_LIMIT)
+    except Exception:
+        # The `evaluate` itself, not the fetch the probe already catches: a client-side
+        # navigation can destroy the execution context between one probe and the next.
+        # Only the `ok` path reaches here, so without this the sessions that crash are
+        # exactly the healthy ones -- and on a non-PplxError, at the CLI's exit code
+        # for "session not usable".
+        return {}
     modes = body.get("modes") if isinstance(body, dict) else None
     return {name: bool(v.get("available"))
             for name, v in (modes or {}).items() if isinstance(v, dict)}

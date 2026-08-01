@@ -19,7 +19,7 @@ import pathlib
 import sys
 import time
 
-from .errors import LockTimeoutError
+from .errors import LocalError, LockTimeoutError
 
 try:
     import fcntl
@@ -56,7 +56,11 @@ def default_interval() -> float:
 def wait_for(state: dict, interval: float, now: float) -> float:
     """Seconds to sleep before the next run may start."""
     floor = interval
-    if fails := state.get("fails", 0):
+    # `interval and ...`: the backoff may raise a floor, never create one. A lock-only
+    # caller (`interval=0` -- `status`, `login`) is a page load, not a query, and must
+    # stay fast to diagnose with even when the last runs failed. Its failures still
+    # *count*, so they slow the next caller that does spend quota.
+    if interval and (fails := state.get("fails", 0)):
         # Capped exponent as well as value: `fails` persists across runs and an
         # unbounded shift would be a silly way to hang.
         floor = max(floor, min(BACKOFF_CAP, BACKOFF_BASE * 2 ** min(fails - 1, 20)))
@@ -130,8 +134,16 @@ def paced(path, interval: float = 0.0):
                       f"run(s)...", file=sys.stderr)
             time.sleep(wait)
         fails = state["fails"]
+        # Stamped again on release below; this one is for the run that never gets
+        # there. SIGTERM -- what `timeout` and any supervisor send, and the agent loop
+        # is exactly where those live -- skips `finally` entirely, which used to leave
+        # a freshly created lock file *empty*: no floor and no backoff for the next
+        # iteration, in the one case most likely to be looping.
+        _write(fd, time.time(), fails)
         try:
             yield
+        except LocalError:
+            raise  # this machine, not the account: see errors.LocalError
         except Exception:
             fails += 1  # a fresh process each iteration is the agent case, so the
             raise       # count has to outlive us to mean anything

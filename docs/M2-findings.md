@@ -61,8 +61,9 @@ what makes concurrent runs *queue* instead of *collide*. Every `chrome()` call t
 ### 2. Interval floor: local, conservative, and only for callers that spend quota
 
 `paced(interval)` sleeps out the remainder of `interval` since the last run's release.
-- `chrome()` defaults to `interval=0.0` — lock only. `status` and `login` are page
-  loads, not queries; making a user wait 20 s to check a broken session is hostile.
+- `chrome()` defaults to `interval=0.0` — lock only, and lock only in every state:
+  the backoff is exempted from it too (§3), not just the floor. `status` and `login`
+  are page loads, not queries; making a user wait to check a broken session is hostile.
 - M3's `ask()` passes `pacing.DEFAULT_INTERVAL` (20 s, `PPLX_MIN_INTERVAL` overrides).
 
 **Why 20 s:** an answer takes ~10–30 s to generate (M0 captures), so sequential
@@ -80,17 +81,40 @@ case is a shell loop, where in-process backoff state is discarded every iteratio
 
 ```
 wait  = clamp(0, floor, last + floor - now)
-floor = max(interval, 5 s · 2^(fails-1) capped at 60 s)   # when fails > 0
+floor = max(interval, 5 s · 2^(fails-1) capped at 60 s)   # when fails > 0 and interval > 0
 ```
 
 Clean exit resets `fails` to 0; any `Exception` increments it. `KeyboardInterrupt` does
 neither — cancelling a run is a decision, not a failure.
 
-Not every exception is transient (`ChromeNotFoundError` will not heal on its own), but
-backing off costs one delayed run, and the alternative is classifying every error — a
-branch that would rot. That trade is why the cap is **60 s rather than minutes**, and
-why a backing-off run says so on stderr: the worst case is a user who fixed their
-Chrome path staring at an unexplained pause.
+**The backoff raises a floor; it never creates one.** `interval > 0` guards it, so a
+lock-only caller is exempt. Without that guard §2's rule and this one contradict each
+other, and the one that loses is diagnosis: after five failed runs, `pplx status` — the
+command you run *to investigate them* — slept the full 60 s cap before loading a page.
+The failures still count, so they are owed by the next caller that actually spends a
+query. Measured both ways in `test_a_lock_only_run_never_backs_off` and
+`test_backoff_doubles_and_caps`.
+
+**A local misconfiguration is not the account pushing back.** `errors.LocalError`
+(`ChromeNotFoundError`, `ProfileInUseError`) is re-raised uncounted. The earlier trade —
+"backing off costs one delayed run, and classifying every error is a branch that would
+rot" — was wrong on its first clause: `fails` only clears on a *clean* run, and an error
+that cannot heal on its own never produces one, so the cost is every run until the user
+fixes it, each one slower than the last. One marker class is not a branch that rots.
+Everything else stays unclassified, which is why the cap is **60 s rather than minutes**
+and why a backing-off run says so on stderr.
+
+### 3b. The stamp has to survive the thing that actually kills a run
+
+`last` used to be written only on release. `SIGTERM` — what `timeout` and every
+supervisor send, and a shell loop around `pplx` is exactly where those live — runs no
+`finally` in CPython, so a killed run left the lock file it had just created **empty**:
+zero state, meaning no floor *and* a laundered `fails`, in the one case most likely to be
+looping. The stamp is now written on acquire as well (after the wait, before the body)
+and again on release, so an interrupted run still spaces the next one — from its start
+rather than its release, which is strictly more conservative than the nothing it left
+before. Cost: one extra `pwrite` per run. `test_a_run_killed_mid_flight_still_stamps_the_clock`
+kills a real child process.
 
 **Clock:** wall clock, because two processes must compare timestamps; `time.monotonic`
 is per-process. NTP can therefore move `last` into the future, so the wait is clamped
@@ -99,7 +123,12 @@ to at most one `floor` — a clock jump must never park the tool for a day.
 ### 4. Quota surfacing
 
 `status` already holds an open page, so it reads `/rest/rate-limit/status` for free and
-warns on **stderr** when `pro_search` or `research` is unavailable. Stdout keeps the
+warns on **stderr** when `pro_search` or `research` is unavailable. Advisory means
+advisory: the `page.evaluate` is wrapped, not just the `fetch` inside it, because a
+client-side navigation can destroy the execution context between the auth probe and
+this one. Only the `ok` branch reads quota, so an escape there would crash exactly the
+*healthy* sessions — and as a non-`PplxError`, which the CLI does not map, so it would
+surface as a traceback at exit code 1, the code that means "session not usable". Stdout keeps the
 US-7 contract exactly: one word, one of `ok | no-session | expired | challenged`. Quota
 is a different axis from session validity, so an exhausted mode does not change the
 exit code.

@@ -50,6 +50,22 @@ def test_quota_is_advisory_and_never_raises(body):
     assert quota(FakePage(quota=body)) == {}
 
 
+def test_quota_survives_the_evaluate_itself_failing():
+    # The probe's own `.catch` covers the *fetch*; it cannot cover Playwright tearing
+    # the execution context down under it, which a client-side navigation does between
+    # one probe and the next. Only the `ok` branch reads quota, so an escape here
+    # crashes exactly the healthy sessions -- as a non-PplxError, which the CLI does
+    # not map, so it surfaces as a traceback at the exit code meaning "not usable".
+    class Destroyed(FakePage):
+        def evaluate(self, script, arg=None):
+            if arg == client.RATE_LIMIT:
+                raise RuntimeError("Execution context was destroyed by a navigation")
+            return True
+
+    assert quota(Destroyed()) == {}
+    assert exhausted(Destroyed()) == []
+
+
 def test_status_warns_on_stderr_without_changing_the_state_word(monkeypatch, capsys):
     spent = {"modes": {"pro_search": {"available": False}}}
     from perplexity_client import chrome as chrome_mod

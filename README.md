@@ -44,7 +44,9 @@ usable, `2` tool error.
 
 Runs serialize across processes on an advisory lock — a second `pplx` waits for the
 first rather than fighting it for the browser profile. Runs that spend a query also
-wait out a minimum interval, and a failed run makes the next one wait longer.
+wait out a minimum interval, and a failed run makes the next such run wait longer.
+`status` and `login` only take the lock — they load a page rather than spend a query,
+so they never wait out an interval or a backoff, however badly the last run went.
 
 | Variable | Default | What |
 |---|---|---|

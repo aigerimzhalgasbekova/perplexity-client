@@ -15,7 +15,7 @@ import time
 
 import pytest
 
-from perplexity_client.errors import LockTimeoutError
+from perplexity_client.errors import ChromeNotFoundError, LockTimeoutError
 from perplexity_client.pacing import BACKOFF_CAP, paced, wait_for
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -30,6 +30,17 @@ with paced({path!r}, {interval!r}):
     start = time.time()
     time.sleep({hold!r})
     print(json.dumps([start, time.time()]))
+"""
+
+
+# Announces that it is inside the lock, then waits to be killed there.
+HELD = """
+import sys, time
+sys.path.insert(0, {root!r})
+from perplexity_client.pacing import paced
+with paced({path!r}):
+    print("holding", flush=True)
+    time.sleep(30)
 """
 
 
@@ -59,7 +70,16 @@ def test_wait_for_clamps_a_clock_that_jumped_backwards():
 @pytest.mark.parametrize("fails,expected", [(1, 5), (2, 10), (4, 40), (99, BACKOFF_CAP)])
 def test_backoff_doubles_and_caps(fails, expected):
     # `fails` is unbounded on disk, so the shift must be capped too, not just the value.
-    assert wait_for({"last": 1000.0, "fails": fails}, 0, now=1000.0) == expected
+    # Interval is 1, not 0: a lock-only caller is exempt from the backoff entirely
+    # (below), so 0 here would measure nothing.
+    assert wait_for({"last": 1000.0, "fails": fails}, 1, now=1000.0) == expected
+
+
+def test_a_lock_only_run_never_backs_off():
+    # `status` and `login` are page loads, not queries. The backoff may raise the
+    # floor a query-spending caller waits out; it must not invent one for the command
+    # a user runs *to diagnose the failures that accrued it*.
+    assert wait_for({"last": 1000.0, "fails": 5}, 0, now=1000.0) == 0
 
 
 def test_a_backing_off_run_says_so(lock, capsys, monkeypatch):
@@ -67,7 +87,7 @@ def test_a_backing_off_run_says_so(lock, capsys, monkeypatch):
     with pytest.raises(RuntimeError):
         with paced(lock):
             raise RuntimeError("transient")
-    with paced(lock, interval=0.0):
+    with paced(lock, interval=0.001):
         pass
     assert "backing off" in capsys.readouterr().err
 
@@ -95,6 +115,16 @@ def test_failure_count_survives_the_process_that_failed(lock, monkeypatch):
         assert json.loads(lock.read_text())["fails"] == expected
     with paced(lock):  # a clean run clears the debt
         pass
+    assert json.loads(lock.read_text())["fails"] == 0
+
+
+def test_a_local_misconfiguration_is_not_a_failure(lock):
+    # Chrome missing, or the user's own Chrome parked on the profile, is this machine
+    # -- not the account pushing back. Counting it means every retry of the fix is
+    # slower than the last, and the error never heals on its own to clear the debt.
+    with pytest.raises(ChromeNotFoundError):
+        with paced(lock):
+            raise ChromeNotFoundError("install Chrome")
     assert json.loads(lock.read_text())["fails"] == 0
 
 
@@ -130,6 +160,26 @@ def test_the_floor_is_waited_out_across_processes(lock, tmp_path):
     (_, first_end), (second_start, _) = runs
     # Mutual exclusion, then the floor measured from the previous run's *release*.
     assert second_start >= first_end + interval
+
+
+def test_a_run_killed_mid_flight_still_stamps_the_clock(lock):
+    # SIGTERM is what `timeout` and any supervisor send, and a shell loop around
+    # `pplx` is precisely where those live. Python runs no `finally` for it, so the
+    # release stamp never lands -- and a lock file created by the killed run then
+    # reads back as *empty*, leaving the next iteration with no floor and no backoff
+    # in the one case most likely to be hammering the account.
+    before = time.time()
+    proc = subprocess.Popen(
+        [sys.executable, "-c", HELD.format(root=ROOT, path=str(lock))],
+        stdout=subprocess.PIPE, text=True)
+    try:
+        assert proc.stdout.readline().strip() == "holding"
+        proc.terminate()
+        assert proc.wait(timeout=30) != 0
+    finally:
+        proc.stdout.close()
+    state = json.loads(lock.read_text())
+    assert before <= state["last"] <= time.time()
 
 
 def test_lock_acquisition_times_out_instead_of_hanging(lock, monkeypatch):
