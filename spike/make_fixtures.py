@@ -15,8 +15,12 @@ import json
 import pathlib
 import re
 import sys
+import time
 
 FIXTURES = pathlib.Path(__file__).parent / "fixtures"
+# Stamped into the filename: a fixture is evidence about the site on a date, and
+# nothing downstream can tell a stale one apart without it (PRD §7).
+DATE = time.strftime("%Y-%m-%d")
 # read_write_token grants write access to the thread -- never commit a real one.
 REDACT = ("author_id", "author_username", "author_image", "read_write_token")
 
@@ -35,7 +39,7 @@ def thread_fixture(events, name: str) -> bool:
         url = p.get("url") or ""
         if e["event"] == "body" and "/rest/thread/" in url and "list_recent" not in url:
             FIXTURES.mkdir(exist_ok=True)
-            out = FIXTURES / f"{name}.json"
+            out = FIXTURES / f"{name}-{DATE}.json"
             body = redact(p["body"])
             out.write_text(body)
             print(f"{out.name}: {len(body)}B")
@@ -66,8 +70,8 @@ def main(path: str) -> None:
         sys.exit("no terminal frame in capture; not a complete answer")
 
     FIXTURES.mkdir(exist_ok=True)
-    (FIXTURES / "search-complete.sse").write_bytes(text.encode())
-    (FIXTURES / "search-truncated.sse").write_bytes(
+    (FIXTURES / f"search-complete-{DATE}.sse").write_bytes(text.encode())
+    (FIXTURES / f"search-truncated-{DATE}.sse").write_bytes(
         "\r\n\r\n".join(blocks[:terminal // 2]).encode())
     print(f"terminal frame at block {terminal}/{len(blocks)}")
     print(f"complete: {len(text)}B, truncated: {terminal // 2} blocks")

@@ -40,7 +40,7 @@ BACKOFF_BASE = 5.0
 BACKOFF_CAP = 60.0
 
 
-def _env(name: str, default: float) -> float:
+def env_float(name: str, default: float) -> float:
     """Read at call time, not import time -- otherwise tests and shells that set the
     variable after import silently get the default."""
     try:
@@ -50,7 +50,7 @@ def _env(name: str, default: float) -> float:
 
 
 def default_interval() -> float:
-    return _env("PPLX_MIN_INTERVAL", INTERVAL)
+    return env_float("PPLX_MIN_INTERVAL", INTERVAL)
 
 
 def wait_for(state: dict, interval: float, now: float) -> float:
@@ -94,7 +94,7 @@ def _acquire(fd: int, path: pathlib.Path) -> None:
         print("warning: no cross-process lock on this platform -- concurrent pplx "
               "runs are not serialized", file=sys.stderr)
         return
-    deadline = time.monotonic() + _env("PPLX_LOCK_TIMEOUT", LOCK_TIMEOUT)
+    deadline = time.monotonic() + env_float("PPLX_LOCK_TIMEOUT", LOCK_TIMEOUT)
     notified = False
     while True:
         try:
@@ -148,7 +148,18 @@ def paced(path, interval: float = 0.0):
             fails += 1  # a fresh process each iteration is the agent case, so the
             raise       # count has to outlive us to mean anything
         else:
-            fails = 0
+            # Only a run that actually spent a query may clear the debt. A lock-only
+            # page load is already exempt from *waiting out* a backoff (see `wait_for`),
+            # so letting it *clear* one means diagnosing a problem erases the caution it
+            # earned -- and `status` returns "challenged" without raising, so the single
+            # most alarming thing this tool can report would reset the pacing that being
+            # challenged accrued. Diagnose-then-retry is the natural agent loop.
+            # A successful `login` was weighed on the same rule and rejected: it is the
+            # one event that really does prove the earlier failures are fixed, but
+            # exempting it makes the exemption a property of the command rather than of
+            # spending a query -- and the 60s cap keeps what that costs small.
+            if interval:
+                fails = 0
         finally:
             # Stamped on release, not on acquire: the lock is held for the whole run,
             # so "time since the last run finished" is the only spacing that exists.

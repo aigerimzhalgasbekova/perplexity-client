@@ -12,8 +12,8 @@ import stat
 
 import pytest
 
-from perplexity_client import chrome, client
-from perplexity_client.client import classify, is_challenge
+from perplexity_client import adapter, chrome, client
+from perplexity_client.adapter import classify, is_challenge
 
 GOOD_STATE = {"cookies": [{"name": "__Secure-next-auth.session-token", "value": "x"}]}
 ANON_STATE = {"cookies": [{"name": "pplx.session-id", "value": "x"}]}
@@ -32,7 +32,7 @@ class FakeCtx:
 
 
 class FakePage:
-    def __init__(self, title="Perplexity", url=client.HOME, authed=True, quota=None):
+    def __init__(self, title="Perplexity", url=adapter.HOME, authed=True, quota=None):
         self._title, self.url, self._authed = title, url, authed
         self._quota = quota or {}
 
@@ -43,7 +43,7 @@ class FakePage:
         return self._title
 
     def evaluate(self, script, arg=None):
-        return self._quota if arg == client.RATE_LIMIT else self._authed
+        return self._quota if arg == adapter.RATE_LIMIT else self._authed
 
 
 @pytest.fixture(autouse=True)

@@ -1,8 +1,9 @@
 # M0 — Protocol spike findings
 
 **Capture date:** 2026-07-31 · **Account:** Perplexity Pro · **Web app version:** `2.18`
-**Fixtures:** `spike/fixtures/search-complete.sse`, `search-truncated.sse`,
-`research-thread-resume.json`
+**Fixtures:** `spike/fixtures/search-complete-2026-07-31.sse`,
+`search-truncated-2026-07-31.sse`, `research-thread-resume-2026-07-31.json`
+(the date is in the filename so a stale capture is visible without reading this line)
 **Tooling:** `spike/capture.py` (capture), `spike/make_fixtures.py` (redact + cut fixtures)
 
 Every shape claim below is asserted in `spike/verify_findings.py`; run it to falsify them.

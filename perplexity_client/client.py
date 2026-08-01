@@ -1,77 +1,25 @@
-"""Session bootstrap: `login` and `status` (PRD milestone 1, US-7).
+"""The public surface: `login`, `status` (PRD milestone 1, US-7).
 
-ponytail: the Perplexity-specific constants live here until milestone 3's stream
-parser justifies a separate adapter module. They are the only site knowledge in
-the package -- chrome.py is site-agnostic.
+Orchestration only. Everything Perplexity-specific -- endpoints, probes, the answer
+parser -- lives in `adapter`, so a frontend change is a patch there and not here.
 """
 
+import contextlib
 import sys
 import time
 
+from . import adapter
+from .adapter import HOME, Response
 from .chrome import chrome, profile_dir, save_session
-from .errors import PplxError
+from .errors import (ChallengeEncounteredError, PplxError, QuotaExhaustedError,
+                     SessionExpiredError)
+from .pacing import default_interval, env_float
 
-HOME = "https://www.perplexity.ai/"
-# The account's only quota signal. It reports availability per mode and no rate at all
-# -- no window, no reset, no remaining count for the modes this tool drives (M2:
-# `remaining_detail.kind == "not_provided"`). See docs/M2-findings.md.
-RATE_LIMIT = "/rest/rate-limit/status"
-# The two modes the tool can drive, mapped to that endpoint's names. Others
-# (`agentic_research`, `labs`) are deliberately ignored: warning about a mode we never
-# use is noise, and one of them was already exhausted on the probed account.
-MODES = {"search": "pro_search", "research": "research"}
-# NextAuth's session endpoint: {} when anonymous, {"user": {...}} when signed in.
-# Cookie presence proves nothing -- an expired cookie is still a cookie -- and every
-# /rest/ endpoint answers 200 for anonymous visitors too, so this is the one probe
-# that reflects what the *server* thinks of the session.
-AUTH_PROBE = """() => fetch('/api/auth/session', {credentials: 'include'})
-    .then(r => r.json()).then(j => !!(j && j.user)).catch(() => null)"""
-QUOTA_PROBE = """path => fetch(path, {credentials: 'include'})
-    .then(r => r.json()).catch(() => null)"""
-CHALLENGE_TITLES = ("just a moment", "attention required", "checking your browser")
-SETTLE_TIMEOUT = 15.0
 LOGIN_TIMEOUT = 600.0
-
-
-def is_challenge(title: str, url: str) -> bool:
-    return (any(t in (title or "").lower() for t in CHALLENGE_TITLES)
-            or "/cdn-cgi/challenge" in (url or ""))
-
-
-def classify(title: str, url: str, authed: bool) -> str:
-    """ok | expired | challenged -- `no-session` is decided before the page load.
-
-    Challenge is checked first: the auth probe answers 200 with an empty body from
-    behind an interstitial, which would otherwise read as `expired`."""
-    if is_challenge(title, url):
-        return "challenged"
-    return "ok" if authed else "expired"
-
-
-def quota(page) -> dict[str, bool]:
-    """`{mode: still available}` from a page already on perplexity.ai.
-
-    Empty when the endpoint could not be read: a quota reading is advisory, and
-    failing a command over it would be worse than not knowing.
-    """
-    try:
-        body = page.evaluate(QUOTA_PROBE, RATE_LIMIT)
-    except Exception:
-        # The `evaluate` itself, not the fetch the probe already catches: a client-side
-        # navigation can destroy the execution context between one probe and the next.
-        # Only the `ok` path reaches here, so without this the sessions that crash are
-        # exactly the healthy ones -- and on a non-PplxError, at the CLI's exit code
-        # for "session not usable".
-        return {}
-    modes = body.get("modes") if isinstance(body, dict) else None
-    return {name: bool(v.get("available"))
-            for name, v in (modes or {}).items() if isinstance(v, dict)}
-
-
-def exhausted(page) -> list[str]:
-    """Modes this tool can drive that the server says are used up."""
-    q = quota(page)
-    return [mode for mode, name in MODES.items() if q.get(name) is False]
+# A ceiling, not an expectation: a search answer takes ~10-30s. It exists so a stream
+# that stalls forever fails as an incomplete answer instead of hanging an agent loop.
+ANSWER_TIMEOUT = 180.0
+POLL_MS = 250
 
 
 def _has_session_cookie(ctx) -> bool:
@@ -88,11 +36,121 @@ def _authed(ctx) -> bool:
     """
     for page in ctx.pages:
         if page.url.startswith(HOME):
-            return bool(page.evaluate(AUTH_PROBE))
+            return bool(page.evaluate(adapter.AUTH_PROBE))
     return False
 
 
+def _settled(page) -> tuple[str, str]:
+    """Land on the homepage and give a real Chrome its usual chance to clear an
+    interstitial by itself before anyone calls it a challenge."""
+    page.goto(HOME, wait_until="domcontentloaded")
+    deadline = time.monotonic() + adapter.SETTLE_TIMEOUT
+    while adapter.is_challenge(page.title(), page.url) and time.monotonic() < deadline:
+        page.wait_for_timeout(1000)
+    return page.title(), page.url
+
+
+def _blame(page, what: str) -> None:
+    """The page did not do what the adapter expects. Say which of the two causes it was.
+
+    A challenge and a changed frontend both look like silence, and they have opposite
+    fixes -- one is `pplx login`, the other is a patch to the adapter.
+    """
+    title = url = ""
+    with contextlib.suppress(Exception):
+        # The tab may be gone -- a crashed Chrome is one of the ways a stream never
+        # arrives. Failing to read it is not the story; failing to explain would be.
+        title, url = page.title(), page.url
+    if adapter.is_challenge(title, url):
+        raise ChallengeEncounteredError(
+            "perplexity.ai served a bot-detection challenge instead of an answer; this "
+            "tool never bypasses one. Open Chrome yourself, then re-run: pplx login")
+    raise PplxError(
+        f"{what} -- perplexity.ai's frontend has most likely changed. Run: pplx doctor")
+
+
+def _ready(ctx, page) -> None:
+    """Fail before a query is spent, never during one.
+
+    Each of these costs a page load or a fetch; the thing being protected is a query,
+    which the account has a finite and invisible supply of (docs/M2-findings.md).
+    """
+    if not _has_session_cookie(ctx):
+        raise SessionExpiredError("no session yet -- run: pplx login")
+    try:
+        title, url = _settled(page)
+        authed = bool(page.evaluate(adapter.AUTH_PROBE))
+    except Exception as e:  # a network failure is not a traceback-worthy bug
+        raise PplxError(f"could not reach {HOME}: {e}") from e
+    state = adapter.classify(title, url, authed)
+    if state == "challenged":
+        raise ChallengeEncounteredError(
+            "perplexity.ai served a bot-detection challenge; this tool never bypasses "
+            "one. Open Chrome yourself, then re-run: pplx login")
+    if state != "ok":
+        raise SessionExpiredError("session expired or revoked -- run: pplx login")
+    if "search" in adapter.exhausted(page):
+        raise QuotaExhaustedError(
+            "the account's search quota is used up. It resets on Perplexity's own "
+            "schedule, which the account cannot see (docs/M2-findings.md)")
+
+
 class Client:
+    def ask(self, query: str, allow_incomplete: bool = False) -> Response:
+        """One search-mode query. Blocks until the answer completes.
+
+        Raises `IncompleteAnswerError` rather than returning a truncated answer (US-3):
+        a wrong-but-plausible answer entering an agent pipeline as fact is the failure
+        PRD §10 rates critical, and it is invisible unless the tool refuses.
+        """
+        if not (query := query.strip()):
+            raise PplxError("empty query")
+        with chrome(headless=True, interval=default_interval()) as (ctx, page):
+            _ready(ctx, page)
+            stream = adapter.tee(ctx, page)
+            try:
+                try:
+                    adapter.submit(page, query)
+                except Exception:
+                    # The box not being there has the same two causes as a stream that
+                    # never arrives, and _blame already tells them apart. Raw, this is a
+                    # Playwright timeout that says nothing about either.
+                    _blame(page, "the query box never appeared")
+                deadline = time.monotonic() + env_float("PPLX_ASK_TIMEOUT", ANSWER_TIMEOUT)
+                # Suppressed, not propagated: this is the longest-lived call in the
+                # flow -- up to the whole answer timeout of a Chrome this tool launched
+                # -- and a browser that dies here would reach the caller as a raw
+                # Playwright error, past a contract (and the CLI's exit code) that is
+                # `except PplxError`. Falling through keeps any frames that did arrive:
+                # _blame diagnoses an empty stream, and parse_stream tells a partial one
+                # apart from a complete one, which a raise here could not.
+                with contextlib.suppress(Exception):
+                    # Yielding through Playwright, not time.sleep: CDP events only
+                    # dispatch while the greenlet yields, so a sleeping loop would
+                    # receive nothing at all and every answer would "time out".
+                    while not stream.done and not stream.ended \
+                            and time.monotonic() < deadline:
+                        page.wait_for_timeout(POLL_MS)
+                if not stream.frames:
+                    _blame(page, "the query was submitted but no answer stream was "
+                                 "intercepted")
+            finally:
+                # It outlives the page otherwise, and `ask` is the call an agent loop
+                # repeats. Best-effort: a teardown failure must not mask the answer.
+                with contextlib.suppress(Exception):
+                    stream.cdp.detach()
+            r = adapter.parse_stream(stream.frames, allow_incomplete)
+            if r.mode != "search":
+                # `submit` types into the box and inherits whatever mode the profile's
+                # UI is set to; selecting it is milestones 4-6. Warned rather than
+                # raised, on the same reasoning as status()'s quota warning: mode is a
+                # different axis from correctness, and discarding an answer the account
+                # has already paid for is a worse outcome than reporting it honestly.
+                print(f"warning: this answer came back in {r.mode!r} mode, not search "
+                      f"-- check the mode selector on the tool's Chrome profile",
+                      file=sys.stderr)
+            return r
+
     def login(self, timeout: float = LOGIN_TIMEOUT) -> None:
         """Open a visible Chrome and wait for a manual login.
 
@@ -132,17 +190,18 @@ class Client:
                 return "no-session"
             try:
                 page.goto(HOME, wait_until="domcontentloaded")
-                deadline = time.monotonic() + SETTLE_TIMEOUT
-                while is_challenge(page.title(), page.url) and time.monotonic() < deadline:
+                deadline = time.monotonic() + adapter.SETTLE_TIMEOUT
+                while (adapter.is_challenge(page.title(), page.url)
+                       and time.monotonic() < deadline):
                     page.wait_for_timeout(1000)  # a real Chrome usually clears it itself
                 title, url = page.title(), page.url
-                authed = page.evaluate(AUTH_PROBE)
+                authed = page.evaluate(adapter.AUTH_PROBE)
             except Exception as e:  # a network failure is not a traceback-worthy bug
                 raise PplxError(f"could not reach {HOME}: {e}") from e
-            if authed is None and not is_challenge(title, url):
+            if authed is None and not adapter.is_challenge(title, url):
                 raise PplxError("could not reach perplexity.ai's session endpoint")
-            state = classify(title, url, bool(authed))
-            if state == "ok" and (used_up := exhausted(page)):
+            state = adapter.classify(title, url, bool(authed))
+            if state == "ok" and (used_up := adapter.exhausted(page)):
                 # Quota is a different axis from session validity, so it warns rather
                 # than changing the state word or the exit code (US-7 wants exactly one
                 # of four words on stdout). ponytail: printed here rather than returned

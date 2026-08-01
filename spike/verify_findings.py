@@ -12,6 +12,9 @@ import pathlib
 import re
 
 FIXTURES = pathlib.Path(__file__).parent / "fixtures"
+# In the filenames, not only in the prose: a fixture is evidence about the site *on a
+# date*, and a green run against a year-old capture means nothing (PRD §7).
+DATE = "2026-07-31"
 
 
 def frames(path):
@@ -27,7 +30,7 @@ def terminal_frame(msgs):
 
 
 def main() -> None:
-    msgs = frames(FIXTURES / "search-complete.sse")
+    msgs = frames(FIXTURES / f"search-complete-{DATE}.sse")
     assert len(msgs) > 100, len(msgs)
 
     # Q2: exactly one terminal frame, agreeing with status
@@ -58,7 +61,7 @@ def main() -> None:
     assert fin["backend_uuid"] == fin["thread_url_slug"]
 
     # US-3: a stream cut mid-answer has no terminal frame
-    cut = frames(FIXTURES / "search-truncated.sse")
+    cut = frames(FIXTURES / f"search-truncated-{DATE}.sse")
     assert cut, "truncated fixture is empty"
     assert terminal_frame(cut) is None, "truncated fixture still has a terminal frame"
     assert all(m.get("status") == "PENDING" for m in cut)
@@ -72,7 +75,7 @@ def main() -> None:
 
 def verify_resume() -> None:
     """Q5: the resume path is plain JSON with its own shape and its own done signal."""
-    d = json.loads((FIXTURES / "research-thread-resume.json").read_text())
+    d = json.loads((FIXTURES / f"research-thread-resume-{DATE}.json").read_text())
     entry = d["entries"][0]
     assert entry["status"] == "COMPLETED", entry["status"]
     assert entry["backend_uuid"] == entry["thread_url_slug"]

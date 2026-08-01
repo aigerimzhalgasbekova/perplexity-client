@@ -7,8 +7,9 @@ script your own queries, this drives a real, manually-authenticated browser sess
 on your machine — the same thing you would do by hand, done from a script. It is not
 an API substitute, and it is not affiliated with Perplexity.
 
-Status: **milestone 2** — session bootstrap (`login`, `status`) and cross-process
-pacing. Querying lands in milestone 3; see `docs/PRD.md`.
+Status: **milestone 3** — session bootstrap (`login`, `status`), cross-process pacing,
+and search-mode `ask()` from Python. `pplx ask` on the command line lands in milestone
+7; model selection, threads and Deep Research in 4–6. See `docs/PRD.md`.
 
 ## Requirements
 
@@ -35,10 +36,42 @@ pplx status    # ok | no-session | expired | challenged
 from perplexity_client import Client
 
 Client().status()   # "ok"
+
+r = Client().ask("what is a quokka")
+r.text        # the answer, with its inline [n] markers left in
+r.citations   # [Citation(url=..., title=..., snippet=...)]; r.citations[n-1] is marker n
+r.model       # the model that *served* it, never an echo of what was asked for
+r.thread_id   # the thread, for the multi-turn continuation coming in milestone 5
+r.complete    # True only if Perplexity said the answer was finished
 ```
 
 `status` costs one page load, not one query. Exit codes: `0` ok, `1` session not
 usable, `2` tool error.
+
+## Two things `ask` will not do quietly
+
+**Return a truncated answer.** `ask()` raises `IncompleteAnswerError` unless
+Perplexity signalled that the answer finished. A cut-off answer that reads as
+complete is the one failure this tool takes seriously: it is wrong, it is plausible,
+and nothing downstream can tell. Pass `allow_incomplete=True` to get what did arrive,
+with `complete == False` on it.
+
+**Return a citation that points at nothing.** `r.citations[n-1]` is the source for
+marker `[n]`, and both come out of the same payload — Perplexity renumbers sources
+while an answer streams, so sampling them a moment apart is how a claim ends up
+attached to the wrong URL. A marker with no source raises `CitationError` rather than
+being dropped. On a partial answer (`allow_incomplete=True`) the citations are
+whatever had arrived when the stream was cut, and this check is not applied — a
+source the answer cites may simply not have been delivered yet. Markers are read out
+of the prose, not the raw markdown: `nums[0]` in a code block is not a citation.
+
+`ask()` does not yet *choose* the mode — it types into the box and inherits whatever
+the profile's Chrome UI is set to (selecting it lands in milestones 4–6). `r.mode` is
+the mode that actually served the answer, and `ask` warns on stderr when that is not
+`search`.
+
+`ask` also refuses before it spends a query rather than after: no session, an expired
+one, a bot-detection challenge, or a mode the account has used up each fail up front.
 
 ## One account, one run at a time
 
@@ -52,6 +85,7 @@ so they never wait out an interval or a backoff, however badly the last run went
 |---|---|---|
 | `PPLX_MIN_INTERVAL` | `20` | Seconds between queries. A local floor, not a server rule: Perplexity states no rate to its own account (`docs/M2-findings.md`) |
 | `PPLX_LOCK_TIMEOUT` | `900` | Seconds to wait for another run before giving up. Longer than `login`'s manual window |
+| `PPLX_ASK_TIMEOUT` | `180` | Seconds to wait for one answer. A ceiling, not an expectation — a search answer takes ~10–30 s; this is what stops a stalled stream from hanging an agent loop |
 
 Turning the interval down is your risk to take: parallel hammering of one account is
 the fastest way to get it flagged, and the account cannot see its own quota counter.
