@@ -247,7 +247,9 @@ def test_ask_names_a_challenge_that_appeared_after_submitting(monkeypatch):
 
 
 def test_ask_says_the_adapter_is_broken_when_no_stream_ever_arrives(monkeypatch):
-    with pytest.raises(PplxError, match="frontend"):
+    # Distinct from the missing-box case above: the query *was* sent, so this one
+    # actually cost the account a query and the message should not pretend otherwise.
+    with pytest.raises(PplxError, match="no answer stream was intercepted"):
         ask(monkeypatch, AskPage(cdp=FakeCDP()))
 
 
@@ -265,6 +267,29 @@ def test_ask_still_explains_itself_when_the_tab_died(monkeypatch):
 
     with pytest.raises(PplxError, match="frontend"):
         ask(monkeypatch, Gone(cdp=FakeCDP()))
+
+
+def test_ask_diagnoses_a_query_box_that_never_appeared(monkeypatch):
+    # The box not being there is how a frontend change first shows up, and it arrives
+    # as a Playwright timeout -- which the CLI cannot map and says nothing useful.
+    class NoBox(AskPage):
+        def wait_for(self, timeout=None):
+            raise RuntimeError("Timeout 30000ms exceeded waiting for get_by_role")
+
+    with pytest.raises(PplxError, match="query box never appeared"):
+        ask(monkeypatch, NoBox(cdp=FakeCDP()))
+
+
+def test_ask_calls_a_challenge_a_challenge_even_when_the_box_is_missing(monkeypatch):
+    # The box is missing *because* an interstitial replaced the page. Sending that user
+    # to `doctor` would be the wrong instruction entirely.
+    class Blocked(AskPage):
+        def wait_for(self, timeout=None):
+            self._title = "Just a moment..."
+            raise RuntimeError("Timeout 30000ms exceeded waiting for get_by_role")
+
+    with pytest.raises(ChallengeEncounteredError):
+        ask(monkeypatch, Blocked(cdp=FakeCDP()))
 
 
 def test_ask_reports_an_unreachable_site_as_its_own_error(monkeypatch):

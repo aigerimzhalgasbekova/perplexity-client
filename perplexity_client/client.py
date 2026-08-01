@@ -50,8 +50,8 @@ def _settled(page) -> tuple[str, str]:
     return page.title(), page.url
 
 
-def _blame(page) -> None:
-    """Nothing was intercepted. Say which of the two causes it was.
+def _blame(page, what: str) -> None:
+    """The page did not do what the adapter expects. Say which of the two causes it was.
 
     A challenge and a changed frontend both look like silence, and they have opposite
     fixes -- one is `pplx login`, the other is a patch to the adapter.
@@ -66,8 +66,7 @@ def _blame(page) -> None:
             "perplexity.ai served a bot-detection challenge instead of an answer; this "
             "tool never bypasses one. Open Chrome yourself, then re-run: pplx login")
     raise PplxError(
-        "the query was submitted but no answer stream was intercepted -- "
-        "perplexity.ai's frontend has most likely changed. Run: pplx doctor")
+        f"{what} -- perplexity.ai's frontend has most likely changed. Run: pplx doctor")
 
 
 def _ready(ctx, page) -> None:
@@ -110,7 +109,13 @@ class Client:
             _ready(ctx, page)
             stream = adapter.tee(ctx, page)
             try:
-                adapter.submit(page, query)
+                try:
+                    adapter.submit(page, query)
+                except Exception:
+                    # The box not being there has the same two causes as a stream that
+                    # never arrives, and _blame already tells them apart. Raw, this is a
+                    # Playwright timeout that says nothing about either.
+                    _blame(page, "the query box never appeared")
                 deadline = time.monotonic() + env_float("PPLX_ASK_TIMEOUT", ANSWER_TIMEOUT)
                 # Yielding through Playwright, not time.sleep: CDP events only dispatch
                 # while the greenlet yields, so a sleeping loop would receive nothing at
@@ -118,7 +123,8 @@ class Client:
                 while not stream.done and not stream.ended and time.monotonic() < deadline:
                     page.wait_for_timeout(POLL_MS)
                 if not stream.frames:
-                    _blame(page)
+                    _blame(page, "the query was submitted but no answer stream was "
+                                 "intercepted")
             finally:
                 # It outlives the page otherwise, and `ask` is the call an agent loop
                 # repeats. Best-effort: a teardown failure must not mask the answer.
