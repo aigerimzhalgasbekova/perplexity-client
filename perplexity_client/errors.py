@@ -30,3 +30,21 @@ class ProfileInUseError(LocalError):
 
 class LockTimeoutError(PplxError):
     pass
+
+
+class IncompleteAnswerError(PplxError):
+    """The answer stream ended without its completion signal.
+
+    Raised rather than returned, because PRD §10 rates a truncated answer entering an
+    agent pipeline as fact the critical failure of this tool -- it is wrong and it looks
+    right. Callers who want the partial text pass `allow_incomplete=True`.
+    """
+
+
+class CitationError(PplxError):
+    """A `[n]` marker in the answer has no citation `n`.
+
+    PRD §5 makes this an error rather than a silent drop, because the failure it guards
+    is an answer that cites a real URL which does not support the claim -- which reads
+    as correct to everything downstream.
+    """

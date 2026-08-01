@@ -9,6 +9,12 @@ two `page.evaluate` probes and the CDP tee. That is what lets the parser be test
 against recorded fixtures instead of the live site (PRD §7).
 """
 
+import dataclasses
+import json
+import re
+
+from .errors import CitationError, IncompleteAnswerError
+
 HOME = "https://www.perplexity.ai/"
 # The account's only quota signal. It reports availability per mode and no rate at all
 # -- no window, no reset, no remaining count for the modes this tool drives (M2:
@@ -28,6 +34,13 @@ QUOTA_PROBE = """path => fetch(path, {credentials: 'include'})
     .then(r => r.json()).catch(() => null)"""
 CHALLENGE_TITLES = ("just a moment", "attention required", "checking your browser")
 SETTLE_TIMEOUT = 15.0
+# The one request that carries an answer. The homepage fires ~40 other REST calls
+# before it (M0), so the adapter keys on this path and ignores every other stream.
+ASK_PATH = "/rest/sse/perplexity_ask"
+# CRLF per the SSE spec. Reading a capture in text mode rewrites this to "\n\n" and the
+# split then silently matches nothing (M0 Q1) -- hence bytes end to end.
+FRAME_SEP = b"\r\n\r\n"
+DATA = b"data: "
 
 
 def is_challenge(title: str, url: str) -> bool:
@@ -69,3 +82,223 @@ def exhausted(page) -> list[str]:
     """Modes this tool can drive that the server says are used up."""
     q = quota(page)
     return [mode for mode, name in MODES.items() if q.get(name) is False]
+
+
+# --- the answer ------------------------------------------------------------------
+# One parser, two finders. The live stream's terminal frame and the resume endpoint's
+# entry carry the same `blocks` list -- verified byte-identical against the M0
+# fixtures, see docs/M3-findings.md -- so only *finding* the payload differs.
+
+
+@dataclasses.dataclass(frozen=True)
+class Citation:
+    url: str
+    title: str
+    snippet: str | None
+
+
+@dataclasses.dataclass(frozen=True)
+class Response:
+    text: str
+    citations: list[Citation]
+    model: str
+    mode: str
+    thread_id: str
+    complete: bool
+
+
+def _citations(results) -> list[Citation]:
+    # `snippet` arrives as "" rather than absent for some sources (M0 Q3). PRD §5 types
+    # it `str | None`, so empty becomes None: a caller checking `is None` should not
+    # have to also remember to check for the empty string.
+    return [Citation(url=w.get("url") or "", title=w.get("name") or "",
+                     snippet=w.get("snippet") or None)
+            for w in results or () if isinstance(w, dict)]
+
+
+def answer_from(entry: dict, complete: bool) -> Response:
+    """A `Response` from one terminal SSE frame, or one resume entry -- same shape.
+
+    Text and citations come out of the *same* dict, which is what PRD §5's same-payload
+    invariant asks for: Perplexity renumbers and appends sources while an answer
+    streams, so sampling the two a moment apart is how markers come to misattribute.
+    """
+    blocks = {b.get("intended_usage"): b
+              for b in entry.get("blocks") or () if isinstance(b, dict)}
+    text = ((blocks.get("ask_text") or {}).get("markdown_block") or {}).get("answer") or ""
+    cites = _citations(((blocks.get("web_results") or {}).get("web_result_block")
+                        or {}).get("web_results"))
+    if complete:
+        # Enforced on complete answers only: a stream cut mid-answer may carry a marker
+        # whose source had not been delivered yet, and raising on output the caller
+        # explicitly opted into would be a false alarm (docs/M3-findings.md).
+        markers = {int(n) for n in re.findall(r"\[(\d+)\]", text)}
+        if unmapped := sorted(markers - set(range(1, len(cites) + 1))):
+            raise CitationError(
+                f"the answer cites {unmapped} but only {len(cites)} sources came back, "
+                f"so those markers point at nothing. Refusing to return an answer whose "
+                f"citations cannot be trusted; run: pplx doctor")
+    return Response(text=text, citations=cites,
+                    model=entry.get("display_model") or "",
+                    mode="research" if entry.get("search_mode") == "RESEARCH" else "search",
+                    thread_id=entry.get("backend_uuid") or "", complete=complete)
+
+
+def _frame(block: bytes) -> dict | None:
+    """The JSON object out of one SSE block, or None if there is not one there yet."""
+    for line in block.split(b"\r\n"):
+        if line.startswith(DATA) and line[len(DATA):].lstrip().startswith(b"{"):
+            try:
+                return json.loads(line[len(DATA):])
+            except (ValueError, UnicodeDecodeError):
+                # A block cut mid-JSON is the normal tail of a killed stream, not a bug.
+                return None
+    return None
+
+
+def frames(raw: bytes) -> list[dict]:
+    return [f for block in raw.split(FRAME_SEP) if (f := _frame(block)) is not None]
+
+
+def terminal(frames: list[dict]) -> dict | None:
+    """The completion signal: `final_sse_message` **and** `status == "COMPLETED"`.
+
+    Both, per M0 Q2 -- and never `text_completed`, which goes true one frame early and
+    would admit a payload that is not yet final.
+    """
+    return next((f for f in frames
+                 if f.get("final_sse_message") and f.get("status") == "COMPLETED"), None)
+
+
+class Stream:
+    """Incremental SSE reader over CDP's chunk boundaries.
+
+    `Network.dataReceived` hands over whatever bytes arrived, split wherever the network
+    split them, so the last frame in the buffer is usually half-written -- and the
+    terminal frame is ~400KB, several chunks on its own. Complete frames are taken off
+    the front and the remainder is kept for the next chunk. Re-parsing the whole buffer
+    on a timer is the alternative, and it gets slower the longer the answer runs.
+    """
+
+    def __init__(self) -> None:
+        self.frames: list[dict] = []
+        self._buf = b""
+
+    def feed(self, chunk: bytes) -> None:
+        self._buf += chunk
+        *complete, self._buf = self._buf.split(FRAME_SEP)
+        self.frames += [f for block in complete if (f := _frame(block)) is not None]
+
+    @property
+    def done(self) -> bool:
+        return terminal(self.frames) is not None
+
+
+# Top-level fields that are present from the first frame (M0 Q5) and are all a partial
+# answer can report about itself.
+_CARRIED = ("backend_uuid", "display_model", "search_mode")
+
+
+def _snapshot(block: dict, field: str) -> dict | None:
+    """The whole value of one block field, however it arrived.
+
+    Mid-stream a block may hold the field outright or a diff whose first operation
+    replaces the root, and both mean the same thing: here is the current value.
+    """
+    if full := block.get(field):
+        return full
+    diff = block.get("diff_block") or {}
+    if diff.get("field") == field:
+        for patch in diff.get("patches") or ():
+            if isinstance(patch, dict) and patch.get("op") == "replace" \
+                    and patch.get("path") == "":
+                return patch.get("value") or {}
+    return None
+
+
+def _apply(chunks: list[str], patch: dict) -> list[str]:
+    """One `markdown_block` patch.
+
+    Two operations exist in the wild and only two are handled -- `replace` at the root
+    (a whole snapshot) and `add` at /chunks/<n> (one token). Anything else is ignored
+    rather than guessed at: a guess invents text that was never sent, which is worse
+    than a short answer the caller already knows is incomplete.
+    """
+    path, op = patch.get("path", ""), patch.get("op")
+    if op == "replace" and path == "":
+        return [str(c) for c in (patch.get("value") or {}).get("chunks") or ()]
+    if op == "add" and path.startswith("/chunks/"):
+        try:
+            i = int(path.rsplit("/", 1)[1])
+        except ValueError:
+            return chunks
+        # The index is honoured rather than appended to: a repeated or reordered frame
+        # would otherwise shift every token after it.
+        chunks += [""] * (i + 1 - len(chunks))
+        chunks[i] = str(patch.get("value", ""))
+    return chunks
+
+
+def _partial(frames: list[dict]) -> Response:
+    """What arrived, replayed.
+
+    The assembled answer only ever appears on the terminal frame; before it, `ask_text`
+    streams as JSON-patch fragments. Without replaying them an `allow_incomplete=True`
+    caller gets an empty string instead of the partial answer US-3 promises.
+    """
+    chunks: list[str] = []
+    web, latest = None, {}
+    for f in frames:
+        latest.update({k: v for k, v in f.items() if k in _CARRIED})
+        for block in f.get("blocks") or ():
+            if not isinstance(block, dict):
+                continue
+            usage = block.get("intended_usage")
+            if usage == "web_results":
+                # Citations stream as a diff as well, but only ever as one whole-value
+                # replace -- they are settled in one go rather than token by token.
+                web = _snapshot(block, "web_result_block") or web
+            elif usage == "ask_text":
+                if snap := _snapshot(block, "markdown_block"):
+                    chunks = [str(c) for c in snap.get("chunks") or ()]
+                diff = block.get("diff_block") or {}
+                if diff.get("field") == "markdown_block":
+                    for patch in diff.get("patches") or ():
+                        if isinstance(patch, dict):
+                            chunks = _apply(chunks, patch)
+    # An entry assembled by hand, because a cut stream never sent one. Citations are
+    # whatever had been delivered, and the index contract is deliberately not enforced
+    # over them -- see answer_from.
+    entry = {**latest, "blocks": [{"intended_usage": "web_results",
+                                   "web_result_block": web or {}}]}
+    return dataclasses.replace(answer_from(entry, complete=False), text="".join(chunks))
+
+
+def parse_stream(frames: list[dict], allow_incomplete: bool) -> Response:
+    if fin := terminal(frames):
+        return answer_from(fin, complete=True)
+    if not allow_incomplete:
+        raise IncompleteAnswerError(
+            f"the answer stream ended after {len(frames)} frames without a completion "
+            f"signal, so this answer is cut off. Pass allow_incomplete=True to take "
+            f"what arrived")
+    return _partial(frames)
+
+
+def parse_thread(body: dict, allow_incomplete: bool) -> Response:
+    """`GET /rest/thread/<uuid>` -- the resume path (M0 Q5).
+
+    Plain JSON rather than SSE, and already decoded, but the entry carries the same
+    `blocks` the terminal frame does, so it is the same parser. There is no
+    `final_sse_message` out here; `status` is the completion signal.
+
+    Nothing calls this until `pplx result` and `Client().task()` (milestones 6-7). It
+    ships now because PRD §9 puts it in this milestone, and because it turned out to
+    cost four lines rather than the second parser that was budgeted for it.
+    """
+    entry = next(iter(body.get("entries") or ()), None) or {}
+    complete = entry.get("status") == "COMPLETED"
+    if not complete and not allow_incomplete:
+        raise IncompleteAnswerError(
+            f"the thread is {entry.get('status') or 'unreadable'}, not COMPLETED")
+    return answer_from(entry, complete=complete)
