@@ -150,7 +150,7 @@ def test_tee_ignores_bytes_from_every_other_request():
     cdp.data("other", b"garbage that is not a frame\r\n\r\n")
     cdp.data("ask", COMPLETE)
     assert s.done
-    assert len(s.frames) == len(adapter.frames(COMPLETE))
+    assert s.frames == adapter.frames(COMPLETE)
 
 
 def test_tee_keeps_the_bytes_that_arrived_before_the_tee_started():
