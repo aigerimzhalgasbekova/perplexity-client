@@ -9,8 +9,8 @@ import pathlib
 
 import pytest
 
-from perplexity_client import client
-from perplexity_client.client import exhausted, quota
+from perplexity_client import adapter, client
+from perplexity_client.adapter import exhausted, quota
 
 from test_session import FakeCtx, FakePage, fake_chrome  # noqa: E402
 
@@ -58,7 +58,7 @@ def test_quota_survives_the_evaluate_itself_failing():
     # not map, so it surfaces as a traceback at the exit code meaning "not usable".
     class Destroyed(FakePage):
         def evaluate(self, script, arg=None):
-            if arg == client.RATE_LIMIT:
+            if arg == adapter.RATE_LIMIT:
                 raise RuntimeError("Execution context was destroyed by a navigation")
             return True
 
