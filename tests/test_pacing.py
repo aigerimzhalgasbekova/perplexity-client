@@ -67,7 +67,9 @@ def test_wait_for_clamps_a_clock_that_jumped_backwards():
     assert wait_for({"last": 1_021_600.0}, 20, now=1000.0) == 20
 
 
-@pytest.mark.parametrize("fails,expected", [(1, 5), (2, 10), (4, 40), (99, BACKOFF_CAP)])
+@pytest.mark.parametrize(
+    "fails,expected", [(1, 5), (2, 10), (4, 40), (99, BACKOFF_CAP)]
+)
 def test_backoff_doubles_and_caps(fails, expected):
     # `fails` is unbounded on disk, so the shift must be capped too, not just the value.
     # Interval is 1, not 0: a lock-only caller is exempt from the backoff entirely
@@ -84,9 +86,8 @@ def test_a_lock_only_run_never_backs_off():
 
 def test_a_backing_off_run_says_so(lock, capsys, monkeypatch):
     monkeypatch.setattr("perplexity_client.pacing.BACKOFF_BASE", 0.01)
-    with pytest.raises(RuntimeError):
-        with paced(lock):
-            raise RuntimeError("transient")
+    with pytest.raises(RuntimeError), paced(lock):
+        raise RuntimeError("transient")
     with paced(lock, interval=0.001):
         pass
     assert "backing off" in capsys.readouterr().err
@@ -107,11 +108,12 @@ def test_paced_stamps_the_run_and_creates_an_owner_only_file(lock):
 
 
 def test_failure_count_survives_the_process_that_failed(lock, monkeypatch):
-    monkeypatch.setattr("perplexity_client.pacing.BACKOFF_BASE", 0.01)  # else 15s of sleep
+    monkeypatch.setattr(
+        "perplexity_client.pacing.BACKOFF_BASE", 0.01
+    )  # else 15s of sleep
     for expected in (1, 2):
-        with pytest.raises(RuntimeError):
-            with paced(lock):
-                raise RuntimeError("transient")
+        with pytest.raises(RuntimeError), paced(lock):
+            raise RuntimeError("transient")
         assert json.loads(lock.read_text())["fails"] == expected
     with paced(lock, interval=0.01):  # a clean run that spent a query clears the debt
         pass
@@ -125,9 +127,8 @@ def test_a_page_load_cannot_clear_a_debt_it_never_pays(lock, monkeypatch):
     # single most alarming thing the tool can report resets the pacing that being
     # challenged accrued, and a diagnose-then-retry loop never backs off at all.
     monkeypatch.setattr("perplexity_client.pacing.BACKOFF_BASE", 0.01)
-    with pytest.raises(RuntimeError):
-        with paced(lock, interval=0.01):
-            raise RuntimeError("challenged")
+    with pytest.raises(RuntimeError), paced(lock, interval=0.01):
+        raise RuntimeError("challenged")
     assert json.loads(lock.read_text())["fails"] == 1
     with paced(lock):  # a lock-only page load: no query spent, no debt cleared
         pass
@@ -138,18 +139,16 @@ def test_a_local_misconfiguration_is_not_a_failure(lock):
     # Chrome missing, or the user's own Chrome parked on the profile, is this machine
     # -- not the account pushing back. Counting it means every retry of the fix is
     # slower than the last, and the error never heals on its own to clear the debt.
-    with pytest.raises(ChromeNotFoundError):
-        with paced(lock):
-            raise ChromeNotFoundError("install Chrome")
+    with pytest.raises(ChromeNotFoundError), paced(lock):
+        raise ChromeNotFoundError("install Chrome")
     assert json.loads(lock.read_text())["fails"] == 0
 
 
 def test_a_cancelled_run_is_not_a_failure(lock):
     # Ctrl-C is a user decision, not a transient error; charging it a backoff would
     # punish the person for stopping a run they did not want.
-    with pytest.raises(KeyboardInterrupt):
-        with paced(lock):
-            raise KeyboardInterrupt
+    with pytest.raises(KeyboardInterrupt), paced(lock):
+        raise KeyboardInterrupt
     assert json.loads(lock.read_text())["fails"] == 0
 
 
@@ -163,10 +162,19 @@ def test_a_corrupt_lock_file_is_not_fatal(lock):
 
 def test_the_floor_is_waited_out_across_processes(lock, tmp_path):
     interval, hold = 0.6, 0.4
-    procs = [subprocess.Popen(
-        [sys.executable, "-c",
-         CHILD.format(root=ROOT, path=str(lock), interval=interval, hold=hold)],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) for _ in range(2)]
+    procs = [
+        subprocess.Popen(
+            [
+                sys.executable,
+                "-c",
+                CHILD.format(root=ROOT, path=str(lock), interval=interval, hold=hold),
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        for _ in range(2)
+    ]
     runs = []
     for p in procs:
         out, err = p.communicate(timeout=60)
@@ -187,7 +195,9 @@ def test_a_run_killed_mid_flight_still_stamps_the_clock(lock):
     before = time.time()
     proc = subprocess.Popen(
         [sys.executable, "-c", HELD.format(root=ROOT, path=str(lock))],
-        stdout=subprocess.PIPE, text=True)
+        stdout=subprocess.PIPE,
+        text=True,
+    )
     try:
         assert proc.stdout.readline().strip() == "holding"
         proc.terminate()
@@ -200,14 +210,14 @@ def test_a_run_killed_mid_flight_still_stamps_the_clock(lock):
 
 def test_lock_acquisition_times_out_instead_of_hanging(lock, monkeypatch):
     monkeypatch.setenv("PPLX_LOCK_TIMEOUT", "0.3")
-    with paced(lock):  # flock is per open file description, so this blocks even us
-        with pytest.raises(LockTimeoutError):
-            with paced(lock):
-                pass
+    # flock is per open file description, so this blocks even us
+    with paced(lock), pytest.raises(LockTimeoutError), paced(lock):
+        pass
 
 
 def test_interval_default_reads_the_environment_at_call_time(monkeypatch):
     from perplexity_client import pacing
+
     monkeypatch.setenv("PPLX_MIN_INTERVAL", "3.5")
     assert pacing.default_interval() == 3.5
     monkeypatch.setenv("PPLX_MIN_INTERVAL", "nonsense")

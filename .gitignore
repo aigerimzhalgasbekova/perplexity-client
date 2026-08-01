@@ -1,6 +1,16 @@
 .venv/
 spike/captures/
 __pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.DS_Store
 
 # Implementation plans are scaffolding: superseded by the code and docs/M*-findings.md
 docs/superpowers/plans/

@@ -11,23 +11,29 @@ HINT = {
     "no-session": "no session yet -- run: pplx login",
     "expired": "session expired or revoked -- run: pplx login",
     "challenged": "perplexity.ai served a bot-detection challenge; this tool never "
-                  "bypasses one. Open Chrome yourself, then re-run: pplx login",
+    "bypasses one. Open Chrome yourself, then re-run: pplx login",
 }
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="pplx", description="Automate your own Perplexity account.")
+        prog="pplx", description="Automate your own Perplexity account."
+    )
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("login", help="one-time manual login in a visible browser window")
-    sub.add_parser("status", help="report session state: ok | no-session | expired | "
-                                  "challenged. Costs one page load, not one query.")
+    sub.add_parser(
+        "status",
+        help="report session state: ok | no-session | expired | "
+        "challenged. Costs one page load, not one query.",
+    )
     args = parser.parse_args(argv)
 
     try:
         if args.cmd == "login":
-            print("Opening Chrome. Log in to Perplexity in the window that appears; "
-                  "this waits up to 10 minutes.")
+            print(
+                "Opening Chrome. Log in to Perplexity in the window that appears; "
+                "this waits up to 10 minutes."
+            )
             Client().login()
             print(f"logged in; session saved to {session_path()}")
             return 0

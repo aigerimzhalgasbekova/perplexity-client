@@ -13,8 +13,15 @@ import base64
 import dataclasses
 import json
 import re
+from typing import Any
+
+from playwright.sync_api import BrowserContext, CDPSession, Page
 
 from .errors import CitationError, IncompleteAnswerError
+
+# Every payload here is JSON off the network: the keys are strings and the values are
+# whatever perplexity.ai sent, which is exactly what `dict[str, Any]` says.
+Json = dict[str, Any]
 
 HOME = "https://www.perplexity.ai/"
 # The account's only quota signal. It reports availability per mode and no rate at all
@@ -48,8 +55,9 @@ CODE = re.compile(r"```.*?```|`[^`\n]*`", re.S)
 
 
 def is_challenge(title: str, url: str) -> bool:
-    return (any(t in (title or "").lower() for t in CHALLENGE_TITLES)
-            or "/cdn-cgi/challenge" in (url or ""))
+    return any(
+        t in (title or "").lower() for t in CHALLENGE_TITLES
+    ) or "/cdn-cgi/challenge" in (url or "")
 
 
 def classify(title: str, url: str, authed: bool) -> str:
@@ -62,7 +70,7 @@ def classify(title: str, url: str, authed: bool) -> str:
     return "ok" if authed else "expired"
 
 
-def quota(page) -> dict[str, bool]:
+def quota(page: Page) -> dict[str, bool]:
     """`{mode: still available}` from a page already on perplexity.ai.
 
     Empty when the endpoint could not be read: a quota reading is advisory, and
@@ -78,11 +86,14 @@ def quota(page) -> dict[str, bool]:
         # for "session not usable".
         return {}
     modes = body.get("modes") if isinstance(body, dict) else None
-    return {name: bool(v.get("available"))
-            for name, v in (modes or {}).items() if isinstance(v, dict)}
+    return {
+        name: bool(v.get("available"))
+        for name, v in (modes or {}).items()
+        if isinstance(v, dict)
+    }
 
 
-def exhausted(page) -> list[str]:
+def exhausted(page: Page) -> list[str]:
     """Modes this tool can drive that the server says are used up."""
     q = quota(page)
     return [mode for mode, name in MODES.items() if q.get(name) is False]
@@ -111,27 +122,41 @@ class Response:
     complete: bool
 
 
-def _citations(results) -> list[Citation]:
+def _citations(results: Any) -> list[Citation]:
     # `snippet` arrives as "" rather than absent for some sources (M0 Q3). PRD §5 types
     # it `str | None`, so empty becomes None: a caller checking `is None` should not
     # have to also remember to check for the empty string.
-    return [Citation(url=w.get("url") or "", title=w.get("name") or "",
-                     snippet=w.get("snippet") or None)
-            for w in results or () if isinstance(w, dict)]
+    return [
+        Citation(
+            url=w.get("url") or "",
+            title=w.get("name") or "",
+            snippet=w.get("snippet") or None,
+        )
+        for w in results or ()
+        if isinstance(w, dict)
+    ]
 
 
-def answer_from(entry: dict, complete: bool) -> Response:
+def answer_from(entry: Json, complete: bool) -> Response:
     """A `Response` from one terminal SSE frame, or one resume entry -- same shape.
 
     Text and citations come out of the *same* dict, which is what PRD §5's same-payload
     invariant asks for: Perplexity renumbers and appends sources while an answer
     streams, so sampling the two a moment apart is how markers come to misattribute.
     """
-    blocks = {b.get("intended_usage"): b
-              for b in entry.get("blocks") or () if isinstance(b, dict)}
-    text = ((blocks.get("ask_text") or {}).get("markdown_block") or {}).get("answer") or ""
-    cites = _citations(((blocks.get("web_results") or {}).get("web_result_block")
-                        or {}).get("web_results"))
+    blocks = {
+        b.get("intended_usage"): b
+        for b in entry.get("blocks") or ()
+        if isinstance(b, dict)
+    }
+    text = ((blocks.get("ask_text") or {}).get("markdown_block") or {}).get(
+        "answer"
+    ) or ""
+    cites = _citations(
+        ((blocks.get("web_results") or {}).get("web_result_block") or {}).get(
+            "web_results"
+        )
+    )
     if complete:
         if not text:
             # Every lookup above is `or {}`-guarded, so a renamed block collapses to ""
@@ -141,7 +166,8 @@ def answer_from(entry: dict, complete: bool) -> Response:
             # finished answer with no text is not an outcome this protocol produces.
             raise IncompleteAnswerError(
                 "the completion signal arrived but the answer block was empty -- "
-                "perplexity.ai's frontend has most likely changed. Run: pplx doctor")
+                "perplexity.ai's frontend has most likely changed. Run: pplx doctor"
+            )
         # Enforced on complete answers only: a stream cut mid-answer may carry a marker
         # whose source had not been delivered yet, and raising on output the caller
         # explicitly opted into would be a false alarm (docs/M3-findings.md).
@@ -156,43 +182,55 @@ def answer_from(entry: dict, complete: bool) -> Response:
         if unmapped := sorted(markers - set(range(1, len(cites) + 1))):
             raise CitationError(
                 f"the answer cites {unmapped} but only {len(cites)} sources came back, "
-                f"so those markers point at nothing. Refusing to return an answer whose "
-                f"citations cannot be trusted; run: pplx doctor")
-    return Response(text=text, citations=cites,
-                    model=entry.get("display_model") or "",
-                    # The server's own word, lowercased -- not
-                    # `"research" if ... else "search"`, which reports every
-                    # unrecognised or renamed mode as the one mode this milestone
-                    # claims to drive: a guess in the flattering direction, in a module
-                    # that elsewhere refuses to guess. PRD §5 amended to match.
-                    mode=str(entry.get("search_mode") or "unknown").lower(),
-                    thread_id=entry.get("backend_uuid") or "", complete=complete)
+                f"so those markers point at nothing. Refusing to return an answer "
+                f"whose citations cannot be trusted; run: pplx doctor"
+            )
+    return Response(
+        text=text,
+        citations=cites,
+        model=entry.get("display_model") or "",
+        # The server's own word, lowercased -- not
+        # `"research" if ... else "search"`, which reports every
+        # unrecognised or renamed mode as the one mode this milestone
+        # claims to drive: a guess in the flattering direction, in a module
+        # that elsewhere refuses to guess. PRD §5 amended to match.
+        mode=str(entry.get("search_mode") or "unknown").lower(),
+        thread_id=entry.get("backend_uuid") or "",
+        complete=complete,
+    )
 
 
-def _frame(block: bytes) -> dict | None:
+def _frame(block: bytes) -> Json | None:
     """The JSON object out of one SSE block, or None if there is not one there yet."""
     for line in block.split(b"\r\n"):
-        if line.startswith(DATA) and line[len(DATA):].lstrip().startswith(b"{"):
+        if line.startswith(DATA) and line[len(DATA) :].lstrip().startswith(b"{"):
             try:
-                return json.loads(line[len(DATA):])
-            except (ValueError, UnicodeDecodeError):
+                obj = json.loads(line[len(DATA) :])
+            except ValueError, UnicodeDecodeError:
                 # A block cut mid-JSON is the normal tail of a killed stream, not a bug.
                 return None
+            return obj if isinstance(obj, dict) else None
     return None
 
 
-def frames(raw: bytes) -> list[dict]:
+def frames(raw: bytes) -> list[Json]:
     return [f for block in raw.split(FRAME_SEP) if (f := _frame(block)) is not None]
 
 
-def terminal(frames: list[dict]) -> dict | None:
+def terminal(frames: list[Json]) -> Json | None:
     """The completion signal: `final_sse_message` **and** `status == "COMPLETED"`.
 
     Both, per M0 Q2 -- and never `text_completed`, which goes true one frame early and
     would admit a payload that is not yet final.
     """
-    return next((f for f in frames
-                 if f.get("final_sse_message") and f.get("status") == "COMPLETED"), None)
+    return next(
+        (
+            f
+            for f in frames
+            if f.get("final_sse_message") and f.get("status") == "COMPLETED"
+        ),
+        None,
+    )
 
 
 class Stream:
@@ -206,8 +244,9 @@ class Stream:
     """
 
     def __init__(self) -> None:
-        self.frames: list[dict] = []
-        self.cdp = None  # set by `tee`, so the caller has something to detach
+        self.frames: list[Json] = []
+        # set by `tee`, so the caller has something to detach
+        self.cdp: CDPSession | None = None
         # A closed connection is a definite end, terminal frame or not. Without it a
         # dropped stream costs the caller the whole answer timeout to learn nothing the
         # close had not already said.
@@ -241,24 +280,28 @@ class Stream:
 _CARRIED = ("backend_uuid", "display_model", "search_mode")
 
 
-def _snapshot(block: dict, field: str) -> dict | None:
+def _snapshot(block: Json, field: str) -> Json | None:
     """The whole value of one block field, however it arrived.
 
     Mid-stream a block may hold the field outright or a diff whose first operation
     replaces the root, and both mean the same thing: here is the current value.
     """
-    if full := block.get(field):
+    if isinstance(full := block.get(field), dict) and full:
         return full
     diff = block.get("diff_block") or {}
     if diff.get("field") == field:
         for patch in diff.get("patches") or ():
-            if isinstance(patch, dict) and patch.get("op") == "replace" \
-                    and patch.get("path") == "":
-                return patch.get("value") or {}
+            if (
+                isinstance(patch, dict)
+                and patch.get("op") == "replace"
+                and patch.get("path") == ""
+            ):
+                value = patch.get("value")
+                return value if isinstance(value, dict) else {}
     return None
 
 
-def _apply(chunks: list[str], patch: dict) -> list[str]:
+def _apply(chunks: list[str], patch: Json) -> list[str]:
     """One `markdown_block` patch.
 
     Two operations exist in the wild and only two are handled -- `replace` at the root
@@ -287,7 +330,7 @@ def _apply(chunks: list[str], patch: dict) -> list[str]:
     return chunks
 
 
-def _partial(frames: list[dict]) -> Response:
+def _partial(frames: list[Json]) -> Response:
     """What arrived, replayed.
 
     The assembled answer only ever appears on the terminal frame; before it, `ask_text`
@@ -295,7 +338,8 @@ def _partial(frames: list[dict]) -> Response:
     caller gets an empty string instead of the partial answer US-3 promises.
     """
     chunks: list[str] = []
-    web, latest = None, {}
+    web: Json | None = None
+    latest: Json = {}
     for f in frames:
         latest.update({k: v for k, v in f.items() if k in _CARRIED})
         for block in f.get("blocks") or ():
@@ -317,19 +361,22 @@ def _partial(frames: list[dict]) -> Response:
     # An entry assembled by hand, because a cut stream never sent one. Citations are
     # whatever had been delivered, and the index contract is deliberately not enforced
     # over them -- see answer_from.
-    entry = {**latest, "blocks": [{"intended_usage": "web_results",
-                                   "web_result_block": web or {}}]}
+    entry = {
+        **latest,
+        "blocks": [{"intended_usage": "web_results", "web_result_block": web or {}}],
+    }
     return dataclasses.replace(answer_from(entry, complete=False), text="".join(chunks))
 
 
-def parse_stream(frames: list[dict], allow_incomplete: bool) -> Response:
+def parse_stream(frames: list[Json], allow_incomplete: bool) -> Response:
     if fin := terminal(frames):
         return answer_from(fin, complete=True)
     if not allow_incomplete:
         raise IncompleteAnswerError(
             f"the answer stream ended after {len(frames)} frames without a completion "
             f"signal, so this answer is cut off. Pass allow_incomplete=True to take "
-            f"what arrived")
+            f"what arrived"
+        )
     return _partial(frames)
 
 
@@ -339,7 +386,7 @@ def parse_stream(frames: list[dict], allow_incomplete: bool) -> Response:
 # contracts are enforceable.
 
 
-def tee(ctx, page) -> Stream:
+def tee(ctx: BrowserContext, page: Page) -> Stream:
     """Start copying the answer stream into a `Stream`. Call before submitting.
 
     `Network.getResponseBody` returns nothing for a streaming body and neither does
@@ -350,23 +397,28 @@ def tee(ctx, page) -> Stream:
     stream = Stream()
     cdp = ctx.new_cdp_session(page)
     cdp.send("Network.enable")
-    rid = None
+    rid: str | None = None
 
-    def on_response(params):
+    def on_response(params: Json) -> None:
         nonlocal rid
         r = params.get("response") or {}
         # Keyed on the one request that carries an answer: the homepage fires dozens of
         # others, and their bytes in this buffer would corrupt every frame after them.
-        if rid is None and ASK_PATH in (r.get("url") or "") \
-                and r.get("mimeType") == "text/event-stream" \
-                and 200 <= (r.get("status") or 0) < 300:
+        if (
+            rid is None
+            and ASK_PATH in (r.get("url") or "")
+            and r.get("mimeType") == "text/event-stream"
+            and 200 <= (r.get("status") or 0) < 300
+        ):
             # Status checked too: an error response on this path would bind `rid`, and
             # the frontend's retry -- the one carrying the actual answer -- would then
             # be dropped as someone else's. The user gets told the frontend changed
             # when in fact the server pushed back.
             try:
-                got = cdp.send("Network.streamResourceContent",
-                               {"requestId": params.get("requestId")})
+                got = cdp.send(
+                    "Network.streamResourceContent",
+                    {"requestId": params.get("requestId")},
+                )
             except Exception:
                 # "Request not found" if it finished during the round-trip. Binding
                 # anyway would leave the stream silently dead, since every later
@@ -379,11 +431,11 @@ def tee(ctx, page) -> Stream:
             # stream, and with it every frame boundary after it.
             stream.feed(base64.b64decode(got.get("bufferedData") or ""))
 
-    def on_data(params):
+    def on_data(params: Json) -> None:
         if params.get("requestId") == rid and params.get("data"):
             stream.feed(base64.b64decode(params["data"]))
 
-    def on_end(params):
+    def on_end(params: Json) -> None:
         # CDP delivers every `dataReceived` before the request finishes, so nothing is
         # lost by stopping here -- and both endings, clean and failed, mean the same
         # thing to us: no more bytes are coming, so the held-back tail can be flushed.
@@ -398,7 +450,7 @@ def tee(ctx, page) -> Stream:
     return stream
 
 
-def submit(page, query: str) -> None:
+def submit(page: Page, query: str) -> None:
     """Type the query and send it.
 
     Deep-linking `/search/new?q=…` draws the Cloudflare interstitial hardest (M0), so
@@ -411,7 +463,7 @@ def submit(page, query: str) -> None:
     box.press("Enter")
 
 
-def parse_thread(body: dict, allow_incomplete: bool) -> Response:
+def parse_thread(body: Json, allow_incomplete: bool) -> Response:
     """`GET /rest/thread/<uuid>` -- the resume path (M0 Q5).
 
     Plain JSON rather than SSE, and already decoded, but the entry carries the same
@@ -426,5 +478,6 @@ def parse_thread(body: dict, allow_incomplete: bool) -> Response:
     complete = entry.get("status") == "COMPLETED"
     if not complete and not allow_incomplete:
         raise IncompleteAnswerError(
-            f"the thread is {entry.get('status') or 'unreadable'}, not COMPLETED")
+            f"the thread is {entry.get('status') or 'unreadable'}, not COMPLETED"
+        )
     return answer_from(entry, complete=complete)

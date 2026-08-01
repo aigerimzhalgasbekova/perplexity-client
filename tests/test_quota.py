@@ -8,15 +8,16 @@ import json
 import pathlib
 
 import pytest
+from test_session import FakeCtx, FakePage, fake_chrome  # noqa: E402
 
 from perplexity_client import adapter, client
 from perplexity_client.adapter import exhausted, quota
 
-from test_session import FakeCtx, FakePage, fake_chrome  # noqa: E402
-
 FIXTURE = json.loads(
-    (pathlib.Path(__file__).parent / "fixtures" / "rate-limit-status-2026-07-31.json")
-    .read_text())
+    (
+        pathlib.Path(__file__).parent / "fixtures" / "rate-limit-status-2026-07-31.json"
+    ).read_text()
+)
 GOOD_STATE = {"cookies": [{"name": "__Secure-next-auth.session-token", "value": "x"}]}
 
 
@@ -29,7 +30,11 @@ def test_quota_reads_availability_per_mode():
     # The capture: agentic_research was already used up on the probed Pro account,
     # which is why the exhausted path is not hypothetical.
     assert quota(FakePage(quota=FIXTURE)) == {
-        "pro_search": True, "research": True, "agentic_research": False, "labs": True}
+        "pro_search": True,
+        "research": True,
+        "agentic_research": False,
+        "labs": True,
+    }
 
 
 def test_exhausted_ignores_modes_this_tool_cannot_drive():
@@ -38,12 +43,15 @@ def test_exhausted_ignores_modes_this_tool_cannot_drive():
 
 
 def test_exhausted_names_a_used_up_mode():
-    spent = {"modes": {"pro_search": {"available": True},
-                       "research": {"available": False}}}
+    spent = {
+        "modes": {"pro_search": {"available": True}, "research": {"available": False}}
+    }
     assert exhausted(FakePage(quota=spent)) == ["research"]
 
 
-@pytest.mark.parametrize("body", [None, {}, {"modes": None}, "<html>", {"modes": {"x": 1}}])
+@pytest.mark.parametrize(
+    "body", [None, {}, {"modes": None}, "<html>", {"modes": {"x": 1}}]
+)
 def test_quota_is_advisory_and_never_raises(body):
     # A quota reading must not be able to fail a command: the endpoint is not part of
     # any contract, and an unparseable body is a warning we skip, not an error.
@@ -69,9 +77,11 @@ def test_quota_survives_the_evaluate_itself_failing():
 def test_status_warns_on_stderr_without_changing_the_state_word(monkeypatch, capsys):
     spent = {"modes": {"pro_search": {"available": False}}}
     from perplexity_client import chrome as chrome_mod
+
     chrome_mod.profile_dir().mkdir(parents=True)
-    monkeypatch.setattr(client, "chrome",
-                        fake_chrome(FakeCtx(GOOD_STATE, [FakePage(quota=spent)])))
+    monkeypatch.setattr(
+        client, "chrome", fake_chrome(FakeCtx(GOOD_STATE, [FakePage(quota=spent)]))
+    )
     assert client.Client().status() == "ok"
     out = capsys.readouterr()
     assert out.out == ""  # stdout stays parseable: US-7's one word, printed by the CLI

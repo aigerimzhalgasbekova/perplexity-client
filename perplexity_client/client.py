@@ -8,11 +8,17 @@ import contextlib
 import sys
 import time
 
+from playwright.sync_api import BrowserContext, Page
+
 from . import adapter
 from .adapter import HOME, Response
 from .chrome import chrome, profile_dir, save_session
-from .errors import (ChallengeEncounteredError, PplxError, QuotaExhaustedError,
-                     SessionExpiredError)
+from .errors import (
+    ChallengeEncounteredError,
+    PplxError,
+    QuotaExhaustedError,
+    SessionExpiredError,
+)
 from .pacing import default_interval, env_float
 
 LOGIN_TIMEOUT = 600.0
@@ -22,13 +28,13 @@ ANSWER_TIMEOUT = 180.0
 POLL_MS = 250
 
 
-def _has_session_cookie(ctx) -> bool:
+def _has_session_cookie(ctx: BrowserContext) -> bool:
     # Context-level, not page-level: a login redirect can close the tab out from
     # under us, but cookies survive it.
     return any("session-token" in c["name"] for c in ctx.cookies())
 
 
-def _authed(ctx) -> bool:
+def _authed(ctx: BrowserContext) -> bool:
     """Run the auth probe on a tab that is already on perplexity.ai.
 
     Relative fetch, so it only means anything from that origin -- mid-login the
@@ -40,7 +46,7 @@ def _authed(ctx) -> bool:
     return False
 
 
-def _settled(page) -> tuple[str, str]:
+def _settled(page: Page) -> tuple[str, str]:
     """Land on the homepage and give a real Chrome its usual chance to clear an
     interstitial by itself before anyone calls it a challenge."""
     page.goto(HOME, wait_until="domcontentloaded")
@@ -50,7 +56,7 @@ def _settled(page) -> tuple[str, str]:
     return page.title(), page.url
 
 
-def _blame(page, what: str) -> None:
+def _blame(page: Page, what: str) -> None:
     """The page did not do what the adapter expects. Say which of the two causes it was.
 
     A challenge and a changed frontend both look like silence, and they have opposite
@@ -64,12 +70,14 @@ def _blame(page, what: str) -> None:
     if adapter.is_challenge(title, url):
         raise ChallengeEncounteredError(
             "perplexity.ai served a bot-detection challenge instead of an answer; this "
-            "tool never bypasses one. Open Chrome yourself, then re-run: pplx login")
+            "tool never bypasses one. Open Chrome yourself, then re-run: pplx login"
+        )
     raise PplxError(
-        f"{what} -- perplexity.ai's frontend has most likely changed. Run: pplx doctor")
+        f"{what} -- perplexity.ai's frontend has most likely changed. Run: pplx doctor"
+    )
 
 
-def _ready(ctx, page) -> None:
+def _ready(ctx: BrowserContext, page: Page) -> None:
     """Fail before a query is spent, never during one.
 
     Each of these costs a page load or a fetch; the thing being protected is a query,
@@ -86,13 +94,15 @@ def _ready(ctx, page) -> None:
     if state == "challenged":
         raise ChallengeEncounteredError(
             "perplexity.ai served a bot-detection challenge; this tool never bypasses "
-            "one. Open Chrome yourself, then re-run: pplx login")
+            "one. Open Chrome yourself, then re-run: pplx login"
+        )
     if state != "ok":
         raise SessionExpiredError("session expired or revoked -- run: pplx login")
     if "search" in adapter.exhausted(page):
         raise QuotaExhaustedError(
             "the account's search quota is used up. It resets on Perplexity's own "
-            "schedule, which the account cannot see (docs/M2-findings.md)")
+            "schedule, which the account cannot see (docs/M2-findings.md)"
+        )
 
 
 class Client:
@@ -116,7 +126,9 @@ class Client:
                     # never arrives, and _blame already tells them apart. Raw, this is a
                     # Playwright timeout that says nothing about either.
                     _blame(page, "the query box never appeared")
-                deadline = time.monotonic() + env_float("PPLX_ASK_TIMEOUT", ANSWER_TIMEOUT)
+                deadline = time.monotonic() + env_float(
+                    "PPLX_ASK_TIMEOUT", ANSWER_TIMEOUT
+                )
                 # Suppressed, not propagated: this is the longest-lived call in the
                 # flow -- up to the whole answer timeout of a Chrome this tool launched
                 # -- and a browser that dies here would reach the caller as a raw
@@ -128,17 +140,23 @@ class Client:
                     # Yielding through Playwright, not time.sleep: CDP events only
                     # dispatch while the greenlet yields, so a sleeping loop would
                     # receive nothing at all and every answer would "time out".
-                    while not stream.done and not stream.ended \
-                            and time.monotonic() < deadline:
+                    while (
+                        not stream.done
+                        and not stream.ended
+                        and time.monotonic() < deadline
+                    ):
                         page.wait_for_timeout(POLL_MS)
                 if not stream.frames:
-                    _blame(page, "the query was submitted but no answer stream was "
-                                 "intercepted")
+                    _blame(
+                        page,
+                        "the query was submitted but no answer stream was intercepted",
+                    )
             finally:
                 # It outlives the page otherwise, and `ask` is the call an agent loop
                 # repeats. Best-effort: a teardown failure must not mask the answer.
                 with contextlib.suppress(Exception):
-                    stream.cdp.detach()
+                    if stream.cdp is not None:
+                        stream.cdp.detach()
             r = adapter.parse_stream(stream.frames, allow_incomplete)
             if r.mode != "search":
                 # `submit` types into the box and inherits whatever mode the profile's
@@ -146,9 +164,11 @@ class Client:
                 # raised, on the same reasoning as status()'s quota warning: mode is a
                 # different axis from correctness, and discarding an answer the account
                 # has already paid for is a worse outcome than reporting it honestly.
-                print(f"warning: this answer came back in {r.mode!r} mode, not search "
-                      f"-- check the mode selector on the tool's Chrome profile",
-                      file=sys.stderr)
+                print(
+                    f"warning: this answer came back in {r.mode!r} mode, not search "
+                    f"-- check the mode selector on the tool's Chrome profile",
+                    file=sys.stderr,
+                )
             return r
 
     def login(self, timeout: float = LOGIN_TIMEOUT) -> None:
@@ -166,13 +186,18 @@ class Client:
                     # appear mid-flow and a redirect chain can outlast any timer.
                     done = _has_session_cookie(ctx) and _authed(ctx)
                 except Exception as e:  # window closed before the login finished
-                    raise PplxError(f"browser closed before login completed: {e}") from e
+                    raise PplxError(
+                        f"browser closed before login completed: {e}"
+                    ) from e
                 if done:
-                    time.sleep(2)  # let the post-login redirects land before snapshotting
+                    time.sleep(
+                        2
+                    )  # let the post-login redirects land before snapshotting
                     if not save_session(ctx):
                         raise PplxError(
                             "logged in, but no session cookie was left to save; "
-                            "re-run: pplx login")
+                            "re-run: pplx login"
+                        )
                     return
                 time.sleep(2)
         raise PplxError(f"timed out after {timeout:.0f}s waiting for login")
@@ -191,9 +216,13 @@ class Client:
             try:
                 page.goto(HOME, wait_until="domcontentloaded")
                 deadline = time.monotonic() + adapter.SETTLE_TIMEOUT
-                while (adapter.is_challenge(page.title(), page.url)
-                       and time.monotonic() < deadline):
-                    page.wait_for_timeout(1000)  # a real Chrome usually clears it itself
+                while (
+                    adapter.is_challenge(page.title(), page.url)
+                    and time.monotonic() < deadline
+                ):
+                    page.wait_for_timeout(
+                        1000
+                    )  # a real Chrome usually clears it itself
                 title, url = page.title(), page.url
                 authed = page.evaluate(adapter.AUTH_PROBE)
             except Exception as e:  # a network failure is not a traceback-worthy bug
@@ -207,6 +236,8 @@ class Client:
                 # of four words on stdout). ponytail: printed here rather than returned
                 # because the caller that cares is the CLI, and returning it would mean
                 # changing status()'s documented return type for an advisory string.
-                print(f"warning: quota exhausted for: {', '.join(used_up)}",
-                      file=sys.stderr)
+                print(
+                    f"warning: quota exhausted for: {', '.join(used_up)}",
+                    file=sys.stderr,
+                )
             return state

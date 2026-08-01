@@ -10,13 +10,17 @@ import base64
 import contextlib
 
 import pytest
-
-from perplexity_client import adapter, chrome, client, pacing
-from perplexity_client.errors import (ChallengeEncounteredError, IncompleteAnswerError,
-                                      PplxError, QuotaExhaustedError, SessionExpiredError)
-
 from test_adapter import COMPLETE, TRUNCATED  # noqa: E402
 from test_session import ANON_STATE, GOOD_STATE, FakeCtx, FakePage  # noqa: E402
+
+from perplexity_client import adapter, chrome, client, pacing
+from perplexity_client.errors import (
+    ChallengeEncounteredError,
+    IncompleteAnswerError,
+    PplxError,
+    QuotaExhaustedError,
+    SessionExpiredError,
+)
 
 ASK_URL = "https://www.perplexity.ai" + adapter.ASK_PATH
 
@@ -43,8 +47,11 @@ class FakeCDP:
 
     def respond(self, rid, url, mime="text/event-stream", status=200):
         self.handlers["Network.responseReceived"](
-            {"requestId": rid,
-             "response": {"url": url, "mimeType": mime, "status": status}})
+            {
+                "requestId": rid,
+                "response": {"url": url, "mimeType": mime, "status": status},
+            }
+        )
 
     def data(self, rid, raw: bytes):
         self.handlers["Network.dataReceived"]({"requestId": rid, "data": b64(raw)})
@@ -105,6 +112,7 @@ def fake_chrome(ctx, seen=None):
         if seen is not None:
             seen["interval"] = interval
         yield ctx, ctx.pages[0] if ctx.pages else None
+
     return _chrome
 
 
@@ -194,8 +202,9 @@ def test_tee_keeps_the_bytes_that_arrived_before_the_tee_started():
     # streamResourceContent answers with whatever was already buffered; dropping it
     # loses the head of the stream, and with it every frame boundary after it.
     cdp = FakeCDP()
-    cdp.send = lambda m, p=None: ({"bufferedData": b64(COMPLETE)}
-                                  if m == "Network.streamResourceContent" else {})
+    cdp.send = lambda m, p=None: (
+        {"bufferedData": b64(COMPLETE)} if m == "Network.streamResourceContent" else {}
+    )
     s = adapter.tee(CDPCtx(cdp=cdp), object())
     cdp.respond("ask", ASK_URL)
     assert s.done
@@ -238,9 +247,16 @@ def test_ask_refuses_an_exhausted_mode_rather_than_failing_mid_stream(monkeypatc
 
 def test_ask_proceeds_when_only_a_mode_it_is_not_using_is_exhausted(monkeypatch):
     cdp = FakeCDP()
-    page = AskPage(cdp=cdp, feed=COMPLETE,
-                   quota={"modes": {"pro_search": {"available": True},
-                                    "research": {"available": False}}})
+    page = AskPage(
+        cdp=cdp,
+        feed=COMPLETE,
+        quota={
+            "modes": {
+                "pro_search": {"available": True},
+                "research": {"available": False},
+            }
+        },
+    )
     assert ask(monkeypatch, page).complete is True
 
 

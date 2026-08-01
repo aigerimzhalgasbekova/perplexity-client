@@ -84,16 +84,24 @@ def test_save_session_overwrites_rotated_cookies(config):
     assert json.loads(chrome.session_path().read_text()) == rotated
 
 
-@pytest.mark.parametrize("title,url,authed,expected", [
-    ("Perplexity", "https://www.perplexity.ai/", True, "ok"),
-    ("Perplexity", "https://www.perplexity.ai/", False, "expired"),
-    # The auth probe answers 200 with an empty body from behind an interstitial,
-    # so a challenge must outrank it -- otherwise a block reads as "expired" and
-    # sends the user off to re-login for no reason.
-    ("Just a moment...", "https://www.perplexity.ai/", False, "challenged"),
-    ("Just a moment...", "https://www.perplexity.ai/", True, "challenged"),
-    ("", "https://www.perplexity.ai/cdn-cgi/challenge-platform/x", True, "challenged"),
-])
+@pytest.mark.parametrize(
+    "title,url,authed,expected",
+    [
+        ("Perplexity", "https://www.perplexity.ai/", True, "ok"),
+        ("Perplexity", "https://www.perplexity.ai/", False, "expired"),
+        # The auth probe answers 200 with an empty body from behind an interstitial,
+        # so a challenge must outrank it -- otherwise a block reads as "expired" and
+        # sends the user off to re-login for no reason.
+        ("Just a moment...", "https://www.perplexity.ai/", False, "challenged"),
+        ("Just a moment...", "https://www.perplexity.ai/", True, "challenged"),
+        (
+            "",
+            "https://www.perplexity.ai/cdn-cgi/challenge-platform/x",
+            True,
+            "challenged",
+        ),
+    ],
+)
 def test_classify(title, url, authed, expected):
     assert classify(title, url, authed) == expected
 
@@ -107,6 +115,7 @@ def fake_chrome(ctx):
     @contextlib.contextmanager
     def _chrome(headless=True, url="about:blank"):
         yield ctx, ctx.pages[0] if ctx.pages else None
+
     return _chrome
 
 
@@ -125,7 +134,9 @@ def test_status_reports_no_session_for_a_profile_that_never_logged_in(monkeypatc
 
 def test_status_reports_ok_when_the_profile_carries_a_session(monkeypatch):
     chrome.profile_dir().mkdir(parents=True)
-    monkeypatch.setattr(client, "chrome", fake_chrome(FakeCtx(GOOD_STATE, [FakePage()])))
+    monkeypatch.setattr(
+        client, "chrome", fake_chrome(FakeCtx(GOOD_STATE, [FakePage()]))
+    )
     assert client.Client().status() == "ok"
 
 

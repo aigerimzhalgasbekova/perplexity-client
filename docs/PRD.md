@@ -81,7 +81,7 @@ Rationale: the stream carries structured payloads with an explicit terminal sign
 
 | Layer | Technology | Notes |
 |---|---|---|
-| Language | Python 3.10+ | |
+| Language | Python 3.14+ | |
 | Browser | **Google Chrome, system install** | A prerequisite, not a download. Launched by the tool as a normal process; `playwright install chromium` is *not* used — its Chromium is challenged (see above) |
 | Browser automation | Playwright (Python), `connect_over_cdp` | Attach only. Playwright never launches the browser |
 | Answer extraction | CDP `Network.streamResourceContent` | Primary data path; `getResponseBody` and Playwright's `response.body()` both return nothing for a streaming body |
