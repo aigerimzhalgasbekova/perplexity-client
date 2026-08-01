@@ -329,13 +329,21 @@ def test_ask_stops_waiting_when_the_connection_closes_short(monkeypatch):
 
 
 def test_ask_ignores_another_request_finishing(monkeypatch):
+    # One of the ~40 homepage requests finishing must not end the answer's wait. The
+    # spurious finish has to land *before* any answer bytes, or `done` short-circuits
+    # the loop and the test passes whether or not the guard exists.
     class Noisy(AskPage):
         def press(self, key):
             self.cdp.respond("ask", ASK_URL)
             self.cdp.finish("something-else")
-            self.cdp.data("ask", COMPLETE)
 
-    assert ask(monkeypatch, Noisy(cdp=FakeCDP())).complete is True
+        def wait_for_timeout(self, ms):
+            super().wait_for_timeout(ms)
+            self.cdp.data("ask", COMPLETE)  # the answer arrives while we are polling
+
+    page = Noisy(cdp=FakeCDP())
+    assert ask(monkeypatch, page).complete is True
+    assert page.waits > 0  # it kept waiting past the unrelated request's finish
 
 
 def test_ask_gives_up_at_the_timeout(monkeypatch):
