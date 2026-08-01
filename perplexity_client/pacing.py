@@ -154,6 +154,10 @@ def paced(path, interval: float = 0.0):
             # earned -- and `status` returns "challenged" without raising, so the single
             # most alarming thing this tool can report would reset the pacing that being
             # challenged accrued. Diagnose-then-retry is the natural agent loop.
+            # A successful `login` was weighed on the same rule and rejected: it is the
+            # one event that really does prove the earlier failures are fixed, but
+            # exempting it makes the exemption a property of the command rather than of
+            # spending a query -- and the 60s cap keeps what that costs small.
             if interval:
                 fails = 0
         finally:

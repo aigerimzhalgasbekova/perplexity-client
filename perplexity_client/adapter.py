@@ -43,6 +43,8 @@ ASK_PATH = "/rest/sse/perplexity_ask"
 FRAME_SEP = b"\r\n\r\n"
 DATA = b"data: "
 BOX_TIMEOUT = 30_000  # ms; the homepage has ~40 REST calls to get through first
+# Fenced and inline code, removed before the citation-marker scan. See answer_from.
+CODE = re.compile(r"```.*?```|`[^`\n]*`", re.S)
 
 
 def is_challenge(title: str, url: str) -> bool:
@@ -143,7 +145,14 @@ def answer_from(entry: dict, complete: bool) -> Response:
         # Enforced on complete answers only: a stream cut mid-answer may carry a marker
         # whose source had not been delivered yet, and raising on output the caller
         # explicitly opted into would be a false alarm (docs/M3-findings.md).
-        markers = {int(n) for n in re.findall(r"\[(\d+)\]", text)}
+        #
+        # Read out of the prose, not the raw markdown: `nums[0]`, `arr[10]` and a
+        # bracketed quantifier in a regex are not citations, and Perplexity is heavily
+        # used for programming questions. Scanning the code too throws away a complete,
+        # correct answer -- after the query is spent, with a message blaming the
+        # frontend and prescribing a `doctor` run that spends another. A marker never
+        # legitimately appears inside code, so nothing real is lost.
+        markers = {int(n) for n in re.findall(r"\[(\d+)\]", CODE.sub("", text))}
         if unmapped := sorted(markers - set(range(1, len(cites) + 1))):
             raise CitationError(
                 f"the answer cites {unmapped} but only {len(cites)} sources came back, "
@@ -151,7 +160,12 @@ def answer_from(entry: dict, complete: bool) -> Response:
                 f"citations cannot be trusted; run: pplx doctor")
     return Response(text=text, citations=cites,
                     model=entry.get("display_model") or "",
-                    mode="research" if entry.get("search_mode") == "RESEARCH" else "search",
+                    # The server's own word, lowercased -- not
+                    # `"research" if ... else "search"`, which reports every
+                    # unrecognised or renamed mode as the one mode this milestone
+                    # claims to drive: a guess in the flattering direction, in a module
+                    # that elsewhere refuses to guess. PRD §5 amended to match.
+                    mode=str(entry.get("search_mode") or "unknown").lower(),
                     thread_id=entry.get("backend_uuid") or "", complete=complete)
 
 

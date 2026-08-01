@@ -62,7 +62,13 @@ while an answer streams, so sampling them a moment apart is how a claim ends up
 attached to the wrong URL. A marker with no source raises `CitationError` rather than
 being dropped. On a partial answer (`allow_incomplete=True`) the citations are
 whatever had arrived when the stream was cut, and this check is not applied — a
-source the answer cites may simply not have been delivered yet.
+source the answer cites may simply not have been delivered yet. Markers are read out
+of the prose, not the raw markdown: `nums[0]` in a code block is not a citation.
+
+`ask()` does not yet *choose* the mode — it types into the box and inherits whatever
+the profile's Chrome UI is set to (selecting it lands in milestones 4–6). `r.mode` is
+the mode that actually served the answer, and `ask` warns on stderr when that is not
+`search`.
 
 `ask` also refuses before it spends a query rather than after: no session, an expired
 one, a bot-detection challenge, or a mode the account has used up each fail up front.

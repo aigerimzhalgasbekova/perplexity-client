@@ -49,19 +49,27 @@ terminal frame. So `allow_incomplete=True` (US-3) cannot just read the last fram
 without replaying the diffs it would hand back an empty string, which is not "what was
 received".
 
-The full operation vocabulary observed across both fixtures, for
-`diff_block.field == "markdown_block"`:
+The operation vocabulary observed across both fixtures, **scoped to the block the
+parser reads** — `intended_usage == "ask_text"`, `diff_block.field ==
+"markdown_block"`:
 
-| `op` | `path` | Meaning |
-|---|---|---|
-| `replace` | `""` | snapshot: the whole `markdown_block`, including `chunks` |
-| `add` | `/chunks/<n>` | append one token to `chunks` at index `n` |
+| `op` | `path` | Complete | Truncated | Meaning |
+|---|---|---|---|---|
+| `replace` | `""` | 1 | 1 | snapshot: the whole `markdown_block`, including `chunks` |
+| `add` | `/chunks/<n>` | 117 | 54 | append one token to `chunks` at index `n` |
 
-That is the entire surface — 9 root replaces and 104 chunk appends in the truncated
-capture, 13 and 224 in the complete one. Replaying it is a list and a join, not an
-RFC 6902 implementation, and the parser handles only these two operations: an
-unrecognised patch is ignored rather than guessed at, because a wrong guess would
-produce plausible-looking text that never existed.
+That is the entire surface *for that block* — one snapshot, then tokens. Replaying it
+is a list and a join, not an RFC 6902 implementation, and the parser handles only these
+two operations: an unrecognised patch is ignored rather than guessed at, because a wrong
+guess would produce plausible-looking text that never existed.
+
+The scoping matters, because the aggregate is wider. Each answer also streams sibling
+`ask_text_<n>_markdown` blocks — one per section, whose text is a duplicate of the
+aggregate `ask_text` carries — and *those* use two further operations: `replace` at
+`/progress` (5 in the complete capture, 2 in the truncated) and `add` at `/media_items`
+(1, complete only). Neither ever appears on `ask_text`. The parser reads the aggregate
+and ignores the siblings, so it never meets either — but the next person extending the
+replay will, and would otherwise trust a table that had scoped itself silently.
 
 The index in `/chunks/<n>` is honoured rather than appended blindly, and bounded to
 `0 <= n <= len(chunks)` — append or overwrite, never outside the array. Both bounds
@@ -71,6 +79,24 @@ inventing text the server never sent, while a large index pads without limit (an
 of 2×10⁷ measured at 320 MB). Past the end is an error in RFC 6902 anyway, and every
 index in both captures is simply the next one — the observed stream is append-only,
 strictly increasing, no gaps and no duplicates.
+
+`chunks[0]` arrives only in the root snapshot (both captures open with a one-element
+`chunks`, and the first `add` is `/chunks/1`), so losing that one frame would fail
+every later index against the bound and empty the whole partial answer rather than
+shorten it. Padding across the gap instead — `i <= len(chunks) + k` — was considered
+and rejected: a hole in the middle of `"".join(chunks)` reads as continuous prose with
+a word silently missing, which is the plausible-but-wrong shape this milestone exists
+to refuse, while the current bound degrades to truncation at the gap, which is what
+`complete=False` already says. The loss is bounded either way; only one of the two is
+honest about it.
+
+**Markers are read out of the prose, not the raw markdown.** Fenced and inline code are
+stripped first. `nums[0]`, `arr[10]` and a bracketed quantifier in a regex are not
+citations, and Perplexity is heavily used for programming questions — scanning the raw
+text throws away a complete, correct answer *after the query is spent*, with a message
+blaming the frontend and prescribing a `doctor` run that spends another. `[0]` is the
+common case, since `citations[n-1]` gives it no meaning and it is unmapped by
+construction. A marker never legitimately appears inside code, so nothing real is lost.
 
 **The citation-index contract is enforced on complete answers only.** A stream cut
 mid-answer may legitimately carry a marker whose source had not been delivered yet;
@@ -122,8 +148,28 @@ this by ending with `event: end_of_stream`, whose separator flushes the terminal
 ahead of it. `Stream.close()` does the flush; a genuinely half-written tail still fails
 to parse and is still dropped.
 
+## Mode is observed here, not chosen
+
+`submit` does what a person does — the homepage, the box, Enter — and so inherits
+whatever mode the profile's UI is set to. Nothing in `ask()` selects search mode;
+selecting it is US-4's content, milestones 4–6. Two consequences are worth writing
+down rather than discovering:
+
+- `_ready` gates on the **search** quota. If the profile's selector is parked on Deep
+  Research, that gate checks the wrong axis, and the run spends research quota.
+- `Response.mode` is the observed mode, so the mismatch is visible — and `ask()` now
+  says so on stderr when it is not `"search"`. Warned rather than raised, on the same
+  reasoning as `status()`'s quota warning: discarding an answer the account has
+  already paid for is a worse outcome than reporting it honestly.
+
+The mode discriminator is explicit for the same reason `Response.model` is strictly
+observed: `"research" if search_mode == "RESEARCH" else "search"` reports every
+unrecognised or renamed mode as the one mode this milestone claims to drive, which is a
+guess in the flattering direction.
+
 ## What this milestone does not do
 
+- **Selecting the mode** — milestones 4–6, as above. It is reported, not requested.
 - **Model selection and `ModelMismatchError`** — milestone 4. `Response.model` is
   already strictly the observed `display_model`, so nothing here needs revisiting;
   what is missing is the request side and the comparison.
@@ -143,3 +189,6 @@ to parse and is still dropped.
 3. §5 should say the citation-index contract binds complete answers. It is silent on
    incomplete ones today, and the honest reading — enforce it on a partial answer —
    would make `allow_incomplete=True` raise on output the caller asked for.
+4. §5 types `mode` as `"search" | "research"`. It is the **observed** mode, and those
+   are the two this tool drives; anything else comes back as the server's own value,
+   lowercased, rather than being folded into `"search"`.

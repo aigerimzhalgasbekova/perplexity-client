@@ -117,11 +117,20 @@ class Client:
                     # Playwright timeout that says nothing about either.
                     _blame(page, "the query box never appeared")
                 deadline = time.monotonic() + env_float("PPLX_ASK_TIMEOUT", ANSWER_TIMEOUT)
-                # Yielding through Playwright, not time.sleep: CDP events only dispatch
-                # while the greenlet yields, so a sleeping loop would receive nothing at
-                # all and every answer would "time out".
-                while not stream.done and not stream.ended and time.monotonic() < deadline:
-                    page.wait_for_timeout(POLL_MS)
+                # Suppressed, not propagated: this is the longest-lived call in the
+                # flow -- up to the whole answer timeout of a Chrome this tool launched
+                # -- and a browser that dies here would reach the caller as a raw
+                # Playwright error, past a contract (and the CLI's exit code) that is
+                # `except PplxError`. Falling through keeps any frames that did arrive:
+                # _blame diagnoses an empty stream, and parse_stream tells a partial one
+                # apart from a complete one, which a raise here could not.
+                with contextlib.suppress(Exception):
+                    # Yielding through Playwright, not time.sleep: CDP events only
+                    # dispatch while the greenlet yields, so a sleeping loop would
+                    # receive nothing at all and every answer would "time out".
+                    while not stream.done and not stream.ended \
+                            and time.monotonic() < deadline:
+                        page.wait_for_timeout(POLL_MS)
                 if not stream.frames:
                     _blame(page, "the query was submitted but no answer stream was "
                                  "intercepted")
@@ -130,7 +139,17 @@ class Client:
                 # repeats. Best-effort: a teardown failure must not mask the answer.
                 with contextlib.suppress(Exception):
                     stream.cdp.detach()
-            return adapter.parse_stream(stream.frames, allow_incomplete)
+            r = adapter.parse_stream(stream.frames, allow_incomplete)
+            if r.mode != "search":
+                # `submit` types into the box and inherits whatever mode the profile's
+                # UI is set to; selecting it is milestones 4-6. Warned rather than
+                # raised, on the same reasoning as status()'s quota warning: mode is a
+                # different axis from correctness, and discarding an answer the account
+                # has already paid for is a worse outcome than reporting it honestly.
+                print(f"warning: this answer came back in {r.mode!r} mode, not search "
+                      f"-- check the mode selector on the tool's Chrome profile",
+                      file=sys.stderr)
+            return r
 
     def login(self, timeout: float = LOGIN_TIMEOUT) -> None:
         """Open a visible Chrome and wait for a manual login.

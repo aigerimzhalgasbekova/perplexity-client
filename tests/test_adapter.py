@@ -287,3 +287,37 @@ def test_resume_path_of_an_unfinished_thread_raises():
 def test_resume_path_with_no_entries_raises():
     with pytest.raises(IncompleteAnswerError):
         adapter.parse_thread({"entries": []}, allow_incomplete=False)
+
+
+def test_a_bracketed_number_inside_code_is_not_a_citation_marker():
+    # Perplexity is used for programming questions, and `nums[0]` is not a citation.
+    # Reading markers out of the raw markdown throws away a complete, correct answer
+    # -- after the query is already spent, with a message blaming the frontend.
+    entry = {"blocks": [
+        {"intended_usage": "ask_text", "markdown_block": {"answer":
+            "Index from zero.[1]\n\n```python\nprint(nums[0], nums[10])\n```\n\n"
+            "Or use `arr[3]` directly.[2]"}},
+        {"intended_usage": "web_results", "web_result_block": {"web_results": [
+            {"url": "u1", "name": "t1"}, {"url": "u2", "name": "t2"}]}}]}
+    r = adapter.answer_from(entry, complete=True)
+    assert r.text.count("nums[0]") == 1  # left in the answer, just not read as a marker
+
+
+def test_stripping_code_does_not_disable_the_citation_contract():
+    # The other half of the fix: an unmapped marker in prose still raises, code or no
+    # code. Without this the fix above could pass by never checking anything.
+    entry = {"blocks": [
+        {"intended_usage": "ask_text", "markdown_block": {"answer":
+            "```python\nnums[0]\n```\n\nSee the spec.[7]"}},
+        {"intended_usage": "web_results",
+         "web_result_block": {"web_results": [{"url": "u", "name": "t"}]}}]}
+    with pytest.raises(CitationError, match=r"\[7\]"):
+        adapter.answer_from(entry, complete=True)
+
+
+def test_an_unrecognised_mode_is_not_reported_as_search():
+    # `else "search"` is a guess in the flattering direction: a renamed or new mode
+    # would be reported as the one mode this milestone claims to drive.
+    odd = adapter.answer_from({"search_mode": "COPILOT"}, complete=False)
+    assert odd.mode == "copilot"
+    assert adapter.answer_from({}, complete=False).mode == "unknown"

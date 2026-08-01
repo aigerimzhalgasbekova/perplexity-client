@@ -404,3 +404,40 @@ def test_ask_spends_the_pacing_interval_unlike_status(monkeypatch):
     seen = {}
     ask(monkeypatch, AskPage(cdp=FakeCDP(), feed=COMPLETE), seen=seen)
     assert seen["interval"] == pacing.default_interval()
+
+
+def test_ask_explains_a_browser_that_died_while_it_was_waiting(monkeypatch):
+    # The poll loop is the longest-lived call in the flow -- up to the whole answer
+    # timeout of a headless Chrome this tool launched itself -- and it was the one
+    # page interaction with no mapping. Raw, it reaches a caller whose contract
+    # (and the CLI's exit code 2) is `except PplxError`.
+    class Dies(AskPage):
+        def wait_for_timeout(self, ms):
+            raise RuntimeError("Target page, context or browser has been closed")
+
+    with pytest.raises(PplxError):
+        ask(monkeypatch, Dies(cdp=FakeCDP()))
+
+
+def test_ask_keeps_an_answer_that_arrived_before_the_browser_died(monkeypatch):
+    # A dead browser after the terminal frame must not cost the query that bought it.
+    class Dies(AskPage):
+        def wait_for_timeout(self, ms):
+            # The answer lands and Chrome goes away in the same poll: CDP has already
+            # dispatched the frames the loop is about to be killed before re-reading.
+            self.cdp.data("ask", COMPLETE)
+            raise RuntimeError("Target page, context or browser has been closed")
+
+    assert ask(monkeypatch, Dies(cdp=FakeCDP())).complete is True
+
+
+def test_ask_says_so_when_the_answer_was_not_in_search_mode(monkeypatch, capsys):
+    # `submit` types into the box and inherits whatever mode the profile's UI is set
+    # to; nothing here selects it (milestones 4-6). Returning the answer beats
+    # discarding a query already spent -- but silently spending research quota under a
+    # call documented as search is the thing that has to be visible.
+    feed = COMPLETE.replace(b'"search_mode": "SEARCH"', b'"search_mode": "RESEARCH"')
+    assert feed != COMPLETE
+    r = ask(monkeypatch, AskPage(cdp=FakeCDP(), feed=feed))
+    assert r.mode == "research"
+    assert "not search" in capsys.readouterr().err

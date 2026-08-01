@@ -186,7 +186,7 @@ All of the above is v1.
 | `Response` | `text` | str | Answer text, retaining inline `[n]` citation markers |
 | | `citations` | list[Citation] | Sources, ordered so `citations[n-1]` is marker `n` |
 | | `model` | str | **Observed** model that served the answer |
-| | `mode` | str | `"search"` \| `"research"` |
+| | `mode` | str | **Observed** mode: `"search"` \| `"research"`, the two this tool drives. **M3:** anything else is reported as the server's own value, lowercased, rather than folded into `"search"` — until mode *selection* lands (US-4, M4–6), `ask()` inherits the profile's UI setting, so this field is the only thing that makes a mismatch visible |
 | | `thread_id` | str | Conversation thread this response belongs to |
 | | `complete` | bool | `True` only if the terminal completion signal was observed |
 | `Citation` | `url` | str | Source URL |
@@ -207,6 +207,8 @@ All of the above is v1.
 ### Citation index contract
 
 `text` retains Perplexity's inline `[n]` markers, and `citations[n-1]` is the source for marker `n`. Text and citations **must be captured from the same terminal payload** — never sampled at different moments — because Perplexity renumbers and appends sources while an answer streams. A marker with no corresponding entry in `citations` is an error, surfaced as such, not a silent drop. This invariant is covered by a fixture test and asserted live by `pplx doctor`.
+
+**Markers are read out of the prose** (M3): fenced and inline code is stripped before the scan, because `nums[0]` and `arr[10]` are not citations and Perplexity is heavily used for programming questions. Enforcing the contract against raw markdown would discard a complete, correct answer after the query was already spent.
 
 **The contract binds complete answers** (M3). A stream cut mid-answer may legitimately carry a marker whose source had not been delivered yet, so enforcing it on a partial answer would raise on output the caller explicitly asked for with `allow_incomplete=True`. Completeness is the guarantee that holds unconditionally; the citation contract holds wherever there is a complete answer to hold it over.
 
