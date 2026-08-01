@@ -8,6 +8,8 @@ whether perplexity.ai answers is `pplx doctor`'s job, not pytest's (PRD §7).
 
 import base64
 import contextlib
+import json
+import pathlib
 
 import pytest
 from test_adapter import COMPLETE, TRUNCATED  # noqa: E402
@@ -23,6 +25,14 @@ from perplexity_client.errors import (
 )
 
 ASK_URL = "https://www.perplexity.ai" + adapter.ASK_PATH
+MODELS = json.loads(
+    (
+        pathlib.Path(__file__).parent.parent
+        / "spike"
+        / "fixtures"
+        / "models-config-2026-08-01.json"
+    ).read_text()
+)
 
 
 def b64(data: bytes) -> str:
@@ -69,6 +79,42 @@ class CDPCtx(FakeCtx):
         return self.cdp
 
 
+class Settled:
+    """A composer menu that is already showing what the caller wants.
+
+    Mode and model selection is covered properly in test_models.py against a menu
+    that can be wrong; here it is only in the way, so every entry reports itself as
+    the checked one and `_pick` returns without touching anything.
+    """
+
+    def count(self):
+        return 1
+
+    @property
+    def first(self):
+        return self
+
+    def get_attribute(self, attr):
+        return "true"
+
+    def click(self, timeout=None):
+        pass
+
+    def press(self, key, timeout=None):
+        pass
+
+
+class Keys:
+    """`page.keyboard`, which must not be `page` itself -- Escape would otherwise
+    land in the textbox's `press` and submit the query."""
+
+    def __init__(self):
+        self.pressed = []
+
+    def press(self, key):
+        self.pressed.append(key)
+
+
 class AskPage(FakePage):
     """A page whose textbox records what was typed and sent."""
 
@@ -76,13 +122,22 @@ class AskPage(FakePage):
         super().__init__(**kw)
         self.typed, self.pressed, self.cdp, self.feed = None, None, cdp, feed
         self.waits = 0
+        self.keyboard = Keys()
 
-    def get_by_role(self, role):
-        assert role == "textbox"
-        return self
+    def get_by_role(self, role, name=None, exact=False):
+        return self if role == "textbox" else Settled()
+
+    def evaluate(self, script, arg=None):
+        if arg == adapter.MODEL_CONFIG:
+            return MODELS
+        return super().evaluate(script, arg)
 
     @property
     def first(self):
+        return self
+
+    @property
+    def last(self):
         return self
 
     def wait_for(self, timeout=None):
@@ -93,6 +148,10 @@ class AskPage(FakePage):
 
     def fill(self, text):
         self.typed = text
+        # Setting mode and model waits on menus of its own, and the tests below count
+        # waits to prove the *answer* loop did not spin. The query being typed is the
+        # line between the two.
+        self.waits = 0
 
     def press(self, key):
         self.pressed = key
@@ -141,6 +200,45 @@ def test_tee_only_follows_the_request_that_carries_an_answer():
     assert not [m for m, _ in cdp.sent if m == "Network.streamResourceContent"]
     cdp.respond("2", ASK_URL)
     assert ("Network.streamResourceContent", {"requestId": "2"}) in cdp.sent
+
+
+def test_tee_ignores_a_second_answer_stream_by_default():
+    # One query, one answer. Splicing a later stream onto this one would assemble a
+    # frame out of two different answers' bytes.
+    cdp = FakeCDP()
+    adapter.tee(CDPCtx(cdp=cdp), object())
+    cdp.respond("first", ASK_URL)
+    cdp.finish("first")
+    cdp.respond("second", ASK_URL)
+    assert [p for m, p in cdp.sent if m == "Network.streamResourceContent"] == [
+        {"requestId": "first"}
+    ]
+
+
+def test_tee_does_not_mistake_a_previous_turn_for_this_answer():
+    # Continuing a thread whose last turn is still generating: opening that page
+    # subscribes to `/rest/sse/perplexity_ask/reconnect/<old uuid>`, which contains
+    # ASK_PATH as a substring. Binding to it would hand the *previous* answer back as
+    # this query's -- complete, plausible, and about the wrong question.
+    cdp = FakeCDP()
+    s = adapter.tee(CDPCtx(cdp=cdp), object())
+    cdp.respond("old", ASK_URL + "/reconnect/previous-turn")
+    assert not [m for m, _ in cdp.sent if m == "Network.streamResourceContent"]
+    cdp.respond("mine", ASK_URL)
+    cdp.data("mine", COMPLETE)
+    assert s.done
+
+
+def test_a_reconnect_tee_takes_only_the_reconnect():
+    # And the mirror image: following a task must not bind whatever new query the
+    # page happens to fire while it watches.
+    cdp = FakeCDP()
+    s = adapter.tee(CDPCtx(cdp=cdp), object(), reconnect=True)
+    cdp.respond("fresh", ASK_URL)
+    assert not [m for m, _ in cdp.sent if m == "Network.streamResourceContent"]
+    cdp.respond("mine", ASK_URL + "/reconnect/task-1")
+    cdp.data("mine", b'data:{"status": "COMPLETED", "final_sse_message": true}\n\n')
+    assert s.done
 
 
 def test_tee_ignores_a_non_streaming_response_on_the_ask_path():
@@ -392,7 +490,8 @@ def test_ask_ignores_another_request_finishing(monkeypatch):
 
         def wait_for_timeout(self, ms):
             super().wait_for_timeout(ms)
-            self.cdp.data("ask", COMPLETE)  # the answer arrives while we are polling
+            if self.typed:  # not during mode/model selection: the tee is not up yet
+                self.cdp.data("ask", COMPLETE)  # the answer arrives while polling
 
     page = Noisy(cdp=FakeCDP())
     assert ask(monkeypatch, page).complete is True
@@ -429,7 +528,10 @@ def test_ask_explains_a_browser_that_died_while_it_was_waiting(monkeypatch):
     # (and the CLI's exit code 2) is `except PplxError`.
     class Dies(AskPage):
         def wait_for_timeout(self, ms):
-            raise RuntimeError("Target page, context or browser has been closed")
+            # Not before the query is typed: setting mode and model waits on menus of
+            # its own, and dying in *those* is a different path with its own message.
+            if self.typed:
+                raise RuntimeError("Target page, context or browser has been closed")
 
     with pytest.raises(PplxError):
         ask(monkeypatch, Dies(cdp=FakeCDP()))
@@ -439,6 +541,8 @@ def test_ask_keeps_an_answer_that_arrived_before_the_browser_died(monkeypatch):
     # A dead browser after the terminal frame must not cost the query that bought it.
     class Dies(AskPage):
         def wait_for_timeout(self, ms):
+            if not self.typed:
+                return
             # The answer lands and Chrome goes away in the same poll: CDP has already
             # dispatched the frames the loop is about to be killed before re-reading.
             self.cdp.data("ask", COMPLETE)
@@ -447,13 +551,14 @@ def test_ask_keeps_an_answer_that_arrived_before_the_browser_died(monkeypatch):
     assert ask(monkeypatch, Dies(cdp=FakeCDP())).complete is True
 
 
-def test_ask_says_so_when_the_answer_was_not_in_search_mode(monkeypatch, capsys):
-    # `submit` types into the box and inherits whatever mode the profile's UI is set
-    # to; nothing here selects it (milestones 4-6). Returning the answer beats
-    # discarding a query already spent -- but silently spending research quota under a
-    # call documented as search is the thing that has to be visible.
+def test_ask_refuses_an_answer_that_came_back_in_another_mode(monkeypatch):
+    # M3 could only warn about this, because nothing selected the mode. Now that
+    # `ask` sets it and confirms the menu took, an answer in the other mode means the
+    # page did something else with the query -- and a research answer silently
+    # returned to a caller asking for search spends the wrong quota under the wrong
+    # name. Raising costs an answer already paid for, which is worth it here: `mode`
+    # is the one field a caller cannot check after the fact.
     feed = COMPLETE.replace(b'"search_mode": "SEARCH"', b'"search_mode": "RESEARCH"')
     assert feed != COMPLETE
-    r = ask(monkeypatch, AskPage(cdp=FakeCDP(), feed=feed))
-    assert r.mode == "research"
-    assert "not search" in capsys.readouterr().err
+    with pytest.raises(PplxError, match="came back as 'research'"):
+        ask(monkeypatch, AskPage(cdp=FakeCDP(), feed=feed))

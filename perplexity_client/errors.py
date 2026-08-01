@@ -75,6 +75,44 @@ class IncompleteAnswerError(PplxError):
     """
 
 
+class ModelUnavailableError(PplxError):
+    """The requested model is not one this account may pick.
+
+    A `LocalError` in spirit -- waiting will not fix it -- but deliberately not one:
+    it is raised before a query is spent, from the picker, and classing it local would
+    exempt a caller looping on a typo'd model name from any pacing at all.
+
+    Entitlement is read off the DOM rather than guessed: a model the plan can use is a
+    `menuitemradio`, one it cannot is a plain `menuitem` with a "Max" badge
+    (docs/M4-M8-findings.md). So this is the site's own answer, not our arithmetic.
+    """
+
+
+class ModelMismatchError(PplxError):
+    """A different model served the answer than the one that was requested.
+
+    Observed on the first try (docs/M4-M8-findings.md): requesting Sonar 2 sent
+    `model_preference: "experimental"` and the terminal frame came back
+    `display_model: "turbo"`. PRD §10 rates a silent model swap Medium precisely
+    because nothing downstream can see it -- the answer is fluent either way.
+
+    Never raised for `model="best"`, where auto-selection is the point (US-6).
+    """
+
+
+class ClarificationRequiredError(PplxError):
+    """Deep Research stopped to ask clarifying questions and `on_clarify="raise"`.
+
+    Carries the parsed questions so a caller can answer them on a later call rather
+    than re-running the query blind. The default is to skip, because an unattended
+    client is the primary use case (PRD §5).
+    """
+
+    def __init__(self, message: str, questions: list[object] | None = None) -> None:
+        super().__init__(message)
+        self.questions = questions or []
+
+
 class CitationError(PplxError):
     """A `[n]` marker in the answer has no citation `n`.
 
