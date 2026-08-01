@@ -176,6 +176,14 @@ def _configure(page: Page, mode: str, model: str) -> str:
             )
         return ""
     offers = adapter.offered(adapter.model_config(page))
+    if not offers and not adapter.is_best(model):
+        # Otherwise `resolve` blames the account -- "no model called 'Sonar 2'. This
+        # account's picker offers: Best" -- for what is really a failed fetch, and
+        # sends the user to check a subscription that was never the problem.
+        raise PplxError(
+            f"could not read the model catalogue ({adapter.MODEL_CONFIG}), so "
+            f"{model!r} cannot be checked against it. Retry, or pass model='best'"
+        )
     label, expected = adapter.resolve(model, offers)
     adapter.pick_model(page, label, offers)
     return expected

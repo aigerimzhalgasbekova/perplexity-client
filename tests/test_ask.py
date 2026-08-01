@@ -215,6 +215,32 @@ def test_tee_ignores_a_second_answer_stream_by_default():
     ]
 
 
+def test_tee_does_not_mistake_a_previous_turn_for_this_answer():
+    # Continuing a thread whose last turn is still generating: opening that page
+    # subscribes to `/rest/sse/perplexity_ask/reconnect/<old uuid>`, which contains
+    # ASK_PATH as a substring. Binding to it would hand the *previous* answer back as
+    # this query's -- complete, plausible, and about the wrong question.
+    cdp = FakeCDP()
+    s = adapter.tee(CDPCtx(cdp=cdp), object())
+    cdp.respond("old", ASK_URL + "/reconnect/previous-turn")
+    assert not [m for m, _ in cdp.sent if m == "Network.streamResourceContent"]
+    cdp.respond("mine", ASK_URL)
+    cdp.data("mine", COMPLETE)
+    assert s.done
+
+
+def test_a_reconnect_tee_takes_only_the_reconnect():
+    # And the mirror image: following a task must not bind whatever new query the
+    # page happens to fire while it watches.
+    cdp = FakeCDP()
+    s = adapter.tee(CDPCtx(cdp=cdp), object(), reconnect=True)
+    cdp.respond("fresh", ASK_URL)
+    assert not [m for m, _ in cdp.sent if m == "Network.streamResourceContent"]
+    cdp.respond("mine", ASK_URL + "/reconnect/task-1")
+    cdp.data("mine", b'data:{"status": "COMPLETED", "final_sse_message": true}\n\n')
+    assert s.done
+
+
 def test_tee_ignores_a_non_streaming_response_on_the_ask_path():
     cdp = FakeCDP()
     adapter.tee(CDPCtx(cdp=cdp), object())

@@ -52,6 +52,11 @@ SETTLE_TIMEOUT = 15.0
 # The one request that carries an answer. The homepage fires ~40 other REST calls
 # before it (M0), so the adapter keys on this path and ignores every other stream.
 ASK_PATH = "/rest/sse/perplexity_ask"
+# ...and its twin, which serves a *running* entry's stream to anyone who opens the
+# thread. The distinction is load-bearing rather than cosmetic: `ASK_PATH` is a
+# substring of this, so a tee that matched loosely while continuing a thread whose
+# last turn was still generating would hand back the previous answer as this query's.
+RECONNECT_PATH = ASK_PATH + "/reconnect/"
 # The resume path: plain JSON, readable from any process with the session (M0 Q5).
 #
 # The query string is load-bearing, not decoration. Asked bare, this endpoint answers
@@ -761,7 +766,7 @@ def parse_stream(frames: list[Json], allow_incomplete: bool) -> Response:
 # contracts are enforceable.
 
 
-def tee(ctx: BrowserContext, page: Page) -> Stream:
+def tee(ctx: BrowserContext, page: Page, reconnect: bool = False) -> Stream:
     """Start copying the answer stream into a `Stream`. Call before submitting.
 
     `Network.getResponseBody` returns nothing for a streaming body and neither does
@@ -771,14 +776,24 @@ def tee(ctx: BrowserContext, page: Page) -> Stream:
 
     Binds to the first matching stream and only that one: for a query there is exactly
     one answer stream, and splicing a later one onto it would assemble frames out of
-    two different answers' bytes. A research task's reconnect stream
-    (`/rest/sse/perplexity_ask/reconnect/<uuid>`) matches this path too, and is the
-    same one-per-page arrangement -- one navigation, one live feed.
+    two different answers' bytes.
+
+    `reconnect` picks the *other* stream -- `/rest/sse/perplexity_ask/reconnect/<uuid>`,
+    which serves a running entry to anyone who opens its thread. The two are told apart
+    exactly rather than by substring, because `ASK_PATH` is a prefix of the reconnect
+    URL: continuing a thread whose last turn is still generating would otherwise bind
+    the previous turn's stream and return *its* answer, complete and plausible and
+    about the wrong question.
     """
     stream = Stream()
     cdp = ctx.new_cdp_session(page)
     cdp.send("Network.enable")
     rid: str | None = None
+
+    def wanted(url: str) -> bool:
+        if reconnect:
+            return RECONNECT_PATH in url
+        return url.rstrip("/").endswith(ASK_PATH)
 
     def on_response(params: Json) -> None:
         nonlocal rid
@@ -787,7 +802,7 @@ def tee(ctx: BrowserContext, page: Page) -> Stream:
         # others, and their bytes in this buffer would corrupt every frame after them.
         if (
             rid is None
-            and ASK_PATH in (r.get("url") or "")
+            and wanted(r.get("url") or "")
             and r.get("mimeType") == "text/event-stream"
             and 200 <= (r.get("status") or 0) < 300
         ):

@@ -167,6 +167,16 @@ def menu(checked="Best", locked=("Claude Opus 5",), labels=("Best", "Sonar 2")):
     return items
 
 
+def composer(**kw):
+    """Both composer menus on one page: the mode picker and the model picker."""
+    return [
+        {"role": "button", "name": "Search"},
+        {"role": "menuitemradio", "name": "Search", "checked": True},
+        {"role": "menuitemradio", "name": "Deep research", "checked": False},
+        *menu(**kw),
+    ]
+
+
 def test_pick_activates_by_keyboard_not_by_pointer():
     # Sibling entries own submenus whose poppers cover the target, so a real click is
     # intercepted and retried until it times out (observed 2026-08-01).
@@ -228,6 +238,34 @@ def test_an_unknown_mode_is_refused_without_touching_the_page():
     with pytest.raises(PplxError, match="unknown mode"):
         adapter.pick_mode(page, "sideways")
     assert not page.acted
+
+
+def test_an_unreadable_catalogue_is_not_reported_as_an_unavailable_model():
+    # `resolve` against an empty catalogue says "no model called 'Sonar 2'. This
+    # account's picker offers: Best" -- which blames the subscription for a failed
+    # fetch and sends the user to check something that was never wrong.
+    from perplexity_client import client
+
+    class Offline(FakePage):
+        def evaluate(self, script, arg=None):
+            return None  # the fetch probe swallows its own errors and returns null
+
+    page = Offline(composer())
+    with pytest.raises(PplxError, match="could not read the model catalogue"):
+        client._configure(page, "search", "Sonar 2")
+
+
+def test_best_still_works_when_the_catalogue_cannot_be_read():
+    # No catalogue is needed to pick "Best": nothing has to be resolved and nothing
+    # can mismatch. Failing here would break the default over a transient fetch.
+    from perplexity_client import client
+
+    class Offline(FakePage):
+        def evaluate(self, script, arg=None):
+            return None
+
+    page = Offline(composer())
+    assert client._configure(page, "search", "best") == ""
 
 
 def test_menu_names_carry_badges_and_still_match():

@@ -300,6 +300,28 @@ def test_a_timeout_does_not_cancel_the_task(monkeypatch):
     assert "pplx result task-1" in str(e.value)
 
 
+def test_a_stream_that_finishes_first_does_not_fail_a_complete_answer(monkeypatch):
+    # The two sources do not flip at the same instant: the reconnect stream can carry
+    # its terminal frame while `GET /rest/thread/<uuid>` still says PENDING. Deciding
+    # "done" from the stream and then parsing the *document* would raise
+    # IncompleteAnswerError over an answer that is complete and already paid for --
+    # the exact false-negative shape of PRD §10's critical row, inverted.
+    class Ahead(FakePage):
+        """The document lags the stream by one poll."""
+
+        def __init__(self):
+            super().__init__(body({**DONE, "status": "PENDING"}), body(DONE))
+
+    finished = [{"status": "COMPLETED", "backend_uuid": "task-1"}]
+    stream = type("S", (), {"frames": finished, "cdp": None})()
+    page = Ahead()
+    r = task(monkeypatch, page)._loop(
+        page, stream, time.monotonic() + 60, 60, False, None
+    )
+    assert r.complete is True
+    assert page.polls == 2  # it waited for the document rather than raising
+
+
 def test_a_failed_task_is_not_a_timeout(monkeypatch):
     page = FakePage(body({**DONE, "status": "FAILED"}))
     with pytest.raises(PplxError, match="failed"):

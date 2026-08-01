@@ -120,7 +120,7 @@ class ResearchTask:
             # `/rest/sse/perplexity_ask/reconnect/<uuid>`, and that stream is the only
             # place a *running* task's plan and questions exist -- the thread document
             # carries no plan and no workflow block until the entry completes.
-            stream = adapter.tee(ctx, page)
+            stream = adapter.tee(ctx, page, reconnect=True)
             try:
                 self._open(page)
                 return self._loop(
@@ -143,11 +143,19 @@ class ResearchTask:
         """The poll loop, split out only so `wait` can detach the tee in a `finally`."""
         while True:
             body = self._poll(page, stream)
-            state = self.status
-            if state == "done":
+            # Settled is the *document's* verdict, not the merged view's. The stream
+            # can carry its terminal frame while the thread document still says
+            # PENDING, and returning then would parse an unfinished document and
+            # raise IncompleteAnswerError over an answer that is complete and already
+            # paid for. Waiting one more poll costs 15s and cannot be wrong.
+            settled = adapter.task_status(adapter.entry_of(body, self.task_id))
+            if settled == "done":
                 return adapter.parse_thread(body, allow_incomplete, self.task_id)
-            if state == "failed":
+            if settled == "failed":
                 raise PplxError(f"research task {self.task_id} failed")
+            # Everything else comes from the live view, which is the only place a
+            # running task's plan and questions exist.
+            state = self.status
             if state == "awaiting_input":
                 self._clarify(page)
             if on_progress and (goals := self.progress):
