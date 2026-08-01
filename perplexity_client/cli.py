@@ -3,8 +3,9 @@
 import argparse
 import sys
 
-from .chrome import PplxError, session_path
+from .chrome import session_path
 from .client import Client
+from .errors import PplxError
 
 HINT = {
     "no-session": "no session yet -- run: pplx login",

@@ -32,8 +32,9 @@ class FakeCtx:
 
 
 class FakePage:
-    def __init__(self, title="Perplexity", url=client.HOME, authed=True):
+    def __init__(self, title="Perplexity", url=client.HOME, authed=True, quota=None):
         self._title, self.url, self._authed = title, url, authed
+        self._quota = quota or {}
 
     def goto(self, url, **kw):
         pass
@@ -41,8 +42,8 @@ class FakePage:
     def title(self):
         return self._title
 
-    def evaluate(self, script):
-        return self._authed
+    def evaluate(self, script, arg=None):
+        return self._quota if arg == client.RATE_LIMIT else self._authed
 
 
 @pytest.fixture(autouse=True)
@@ -57,6 +58,17 @@ def test_save_session_writes_owner_only(config):
     assert json.loads(path.read_text()) == GOOD_STATE
     assert stat.S_IMODE(path.stat().st_mode) == 0o600
     assert not list(config.glob("*.tmp"))  # the temp file was renamed, not left behind
+
+
+def test_save_session_does_not_write_through_another_writers_temp_file(config):
+    # The race this encodes: with one shared temp name, two overlapping writers use the
+    # same path and the loser's os.replace dies with ENOENT after the winner renames it
+    # away. A per-pid name makes another writer's temp none of our business.
+    chrome.save_session(FakeCtx(GOOD_STATE))
+    other = chrome.session_path().with_name("session.json.999999.tmp")
+    other.write_text("another process, mid-write")
+    assert chrome.save_session(FakeCtx(GOOD_STATE)) is True
+    assert other.read_text() == "another process, mid-write"
 
 
 def test_save_session_refuses_to_clobber_with_anonymous_state(config):

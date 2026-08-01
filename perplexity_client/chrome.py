@@ -20,6 +20,9 @@ import time
 
 from playwright.sync_api import sync_playwright
 
+from .errors import ChromeNotFoundError, PplxError, ProfileInUseError
+from .pacing import paced
+
 # Google Chrome only, deliberately: M0 established that *this* browser is not
 # challenged. A Chromium build may well behave differently under Cloudflare, so
 # pointing at one is an explicit PPLX_CHROME opt-in rather than a silent fallback.
@@ -35,18 +38,6 @@ COMMON_ARGS = ("--no-first-run", "--no-default-browser-check")
 PORT_TIMEOUT = 30.0
 
 
-class PplxError(Exception):
-    """Base for every error this tool raises on purpose."""
-
-
-class ChromeNotFoundError(PplxError):
-    pass
-
-
-class ProfileInUseError(PplxError):
-    pass
-
-
 def config_dir() -> pathlib.Path:
     env = os.environ.get("PPLX_CONFIG_DIR")
     return pathlib.Path(env) if env else pathlib.Path.home() / ".config" / "perplexity-client"
@@ -58,6 +49,10 @@ def profile_dir() -> pathlib.Path:
 
 def session_path() -> pathlib.Path:
     return config_dir() / "session.json"
+
+
+def lock_path() -> pathlib.Path:
+    return config_dir() / "pplx.lock"
 
 
 def find_chrome() -> str:
@@ -120,7 +115,11 @@ def save_session(ctx) -> bool:
         return False
     config_dir().mkdir(parents=True, exist_ok=True, mode=0o700)
     path = session_path()
-    tmp = path.with_name(path.name + ".tmp")
+    # Per-pid temp name: two overlapping writers sharing one temp path race, and the
+    # loser's os.replace dies with ENOENT after the winner renames it away (verified,
+    # docs/M2-findings.md). The lock makes that impossible between our own runs, but
+    # this is the platform-independent half -- and Windows has no lock at all.
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.tmp")
     fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w") as f:
         json.dump(state, f)
@@ -131,12 +130,25 @@ def save_session(ctx) -> bool:
 
 
 @contextlib.contextmanager
-def chrome(headless: bool = True, url: str = "about:blank"):
+def chrome(headless: bool = True, url: str = "about:blank", interval: float = 0.0):
     """Launch Chrome on the tool's profile, attach over CDP, yield (context, page).
+
+    Runs under the advisory lock for its whole life. That is not only pacing: two
+    Chromes cannot share one profile directory, so without the lock a concurrent run
+    collides rather than queues. `interval` is the pacing floor -- 0 for a page load,
+    `pacing.default_interval()` for a caller that spends a query.
 
     Saves rotated cookies back on clean exit only, then always reaps the Chrome it
     started -- browser.close() over a CDP connection merely disconnects.
     """
+    with paced(lock_path(), interval), _launched(headless, url) as attached:
+        yield attached
+
+
+@contextlib.contextmanager
+def _launched(headless: bool, url: str):
+    # Checked inside the lock, so this can no longer be one of our own runs: it is a
+    # Chrome someone opened on the profile by hand, which no amount of waiting fixes.
     if pid := profile_owner_pid():
         raise ProfileInUseError(
             f"Chrome is already using {profile_dir()} (pid {pid}). "

@@ -1,0 +1,35 @@
+{
+  "free_queries": {
+    "available": true,
+    "remaining_detail": {
+      "kind": "not_provided"
+    }
+  },
+  "modes": {
+    "agentic_research": {
+      "available": false,
+      "remaining_detail": {
+        "kind": "exact",
+        "remaining": 0
+      }
+    },
+    "labs": {
+      "available": true,
+      "remaining_detail": {
+        "kind": "not_provided"
+      }
+    },
+    "pro_search": {
+      "available": true,
+      "remaining_detail": {
+        "kind": "not_provided"
+      }
+    },
+    "research": {
+      "available": true,
+      "remaining_detail": {
+        "kind": "not_provided"
+      }
+    }
+  }
+}
