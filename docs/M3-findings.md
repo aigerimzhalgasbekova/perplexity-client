@@ -63,8 +63,14 @@ RFC 6902 implementation, and the parser handles only these two operations: an
 unrecognised patch is ignored rather than guessed at, because a wrong guess would
 produce plausible-looking text that never existed.
 
-The index in `/chunks/<n>` is honoured rather than appended blindly, so an
-out-of-order or duplicated frame cannot shift the whole answer by one token.
+The index in `/chunks/<n>` is honoured rather than appended blindly, and bounded to
+`0 <= n <= len(chunks)` — append or overwrite, never outside the array. Both bounds
+guard demonstrated harm on a path fed straight from the network: `int("-1")` makes the
+padding a no-op and `chunks[-1] = value` **rewrites a token that really arrived**,
+inventing text the server never sent, while a large index pads without limit (an index
+of 2×10⁷ measured at 320 MB). Past the end is an error in RFC 6902 anyway, and every
+index in both captures is simply the next one — the observed stream is append-only,
+strictly increasing, no gaps and no duplicates.
 
 **The citation-index contract is enforced on complete answers only.** A stream cut
 mid-answer may legitimately carry a marker whose source had not been delivered yet;
@@ -82,6 +88,19 @@ early.
 The resume path has no `final_sse_message`; there `status == "COMPLETED"` on the entry
 is the signal, as M0 recorded.
 
+## A completion signal with no answer is refused
+
+Every lookup into the payload is `or {}`-guarded, so a renamed block, a renamed
+`markdown_block` or a renamed `answer` key all collapse to `""` — and the citation
+check then passes vacuously over zero markers. That produced `complete=True, text=""`,
+which an agent reads as *"Perplexity found nothing"*: plausible, actionable and wrong,
+which is precisely PRD §10's critical row. The two High-rated risks compose here — the
+trigger is a frontend change, and adapter isolation contains the second risk while
+doing nothing about the first.
+
+`answer_from` therefore refuses a complete answer with no text. A finished answer with
+no text is not an outcome this protocol produces, and every capture contradicts it.
+
 ## Frame boundaries are not chunk boundaries
 
 CDP's `Network.dataReceived` delivers whatever bytes arrived, in internal chunks that
@@ -94,6 +113,14 @@ timer, both get this wrong or get slow; this gets neither.
 A frame that still will not parse as JSON is skipped, not fatal. At the end of a
 truncated stream the trailing fragment is exactly that, and it is the normal case for
 US-3, not an error.
+
+The held-back block has to be **flushed when the connection ends**, though. It is held
+back because it is *usually* half-written — but if the stream closes right after the
+terminal frame and before its trailing separator, that block is the entire answer, and
+refusing it burns the query that bought a complete one. The live capture only avoids
+this by ending with `event: end_of_stream`, whose separator flushes the terminal frame
+ahead of it. `Stream.close()` does the flush; a genuinely half-written tail still fails
+to parse and is still dropped.
 
 ## What this milestone does not do
 

@@ -60,7 +60,9 @@ with `complete == False` on it.
 marker `[n]`, and both come out of the same payload — Perplexity renumbers sources
 while an answer streams, so sampling them a moment apart is how a claim ends up
 attached to the wrong URL. A marker with no source raises `CitationError` rather than
-being dropped.
+being dropped. On a partial answer (`allow_incomplete=True`) the citations are
+whatever had arrived when the stream was cut, and this check is not applied — a
+source the answer cites may simply not have been delivered yet.
 
 `ask` also refuses before it spends a query rather than after: no session, an expired
 one, a bot-detection challenge, or a mode the account has used up each fail up front.

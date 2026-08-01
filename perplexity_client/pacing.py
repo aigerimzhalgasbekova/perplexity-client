@@ -148,7 +148,14 @@ def paced(path, interval: float = 0.0):
             fails += 1  # a fresh process each iteration is the agent case, so the
             raise       # count has to outlive us to mean anything
         else:
-            fails = 0
+            # Only a run that actually spent a query may clear the debt. A lock-only
+            # page load is already exempt from *waiting out* a backoff (see `wait_for`),
+            # so letting it *clear* one means diagnosing a problem erases the caution it
+            # earned -- and `status` returns "challenged" without raising, so the single
+            # most alarming thing this tool can report would reset the pacing that being
+            # challenged accrued. Diagnose-then-retry is the natural agent loop.
+            if interval:
+                fails = 0
         finally:
             # Stamped on release, not on acquire: the lock is held for the whole run,
             # so "time since the last run finished" is the only spacing that exists.

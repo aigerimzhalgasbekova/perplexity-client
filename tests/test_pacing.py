@@ -113,9 +113,25 @@ def test_failure_count_survives_the_process_that_failed(lock, monkeypatch):
             with paced(lock):
                 raise RuntimeError("transient")
         assert json.loads(lock.read_text())["fails"] == expected
-    with paced(lock):  # a clean run clears the debt
+    with paced(lock, interval=0.01):  # a clean run that spent a query clears the debt
         pass
     assert json.loads(lock.read_text())["fails"] == 0
+
+
+def test_a_page_load_cannot_clear_a_debt_it_never_pays(lock, monkeypatch):
+    # `status` and `login` are exempt from *waiting out* a backoff, so they must also be
+    # exempt from *clearing* one -- otherwise diagnosing a problem erases the caution it
+    # earned. `status` returning "challenged" is a clean run: without this guard, the
+    # single most alarming thing the tool can report resets the pacing that being
+    # challenged accrued, and a diagnose-then-retry loop never backs off at all.
+    monkeypatch.setattr("perplexity_client.pacing.BACKOFF_BASE", 0.01)
+    with pytest.raises(RuntimeError):
+        with paced(lock, interval=0.01):
+            raise RuntimeError("challenged")
+    assert json.loads(lock.read_text())["fails"] == 1
+    with paced(lock):  # a lock-only page load: no query spent, no debt cleared
+        pass
+    assert json.loads(lock.read_text())["fails"] == 1
 
 
 def test_a_local_misconfiguration_is_not_a_failure(lock):

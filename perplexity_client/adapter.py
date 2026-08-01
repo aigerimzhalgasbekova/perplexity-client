@@ -131,6 +131,15 @@ def answer_from(entry: dict, complete: bool) -> Response:
     cites = _citations(((blocks.get("web_results") or {}).get("web_result_block")
                         or {}).get("web_results"))
     if complete:
+        if not text:
+            # Every lookup above is `or {}`-guarded, so a renamed block collapses to ""
+            # and the marker check below then passes vacuously -- handing back
+            # `complete=True, text=""`, which an agent reads as "Perplexity found
+            # nothing". Plausible, actionable and wrong: PRD §10's critical row. A
+            # finished answer with no text is not an outcome this protocol produces.
+            raise IncompleteAnswerError(
+                "the completion signal arrived but the answer block was empty -- "
+                "perplexity.ai's frontend has most likely changed. Run: pplx doctor")
         # Enforced on complete answers only: a stream cut mid-answer may carry a marker
         # whose source had not been delivered yet, and raising on output the caller
         # explicitly opted into would be a false alarm (docs/M3-findings.md).
@@ -196,6 +205,18 @@ class Stream:
         *complete, self._buf = self._buf.split(FRAME_SEP)
         self.frames += [f for block in complete if (f := _frame(block)) is not None]
 
+    def close(self) -> None:
+        """No more bytes are coming. Flush the block `feed` was holding back.
+
+        That block is held back because it is *usually* half-written -- but if the
+        connection ended right after the terminal frame and before its separator, it is
+        the whole answer, and refusing it would burn the query that bought a complete
+        one. `_frame` returns None for genuinely half-written JSON, so this cannot
+        admit a partial frame.
+        """
+        self.feed(FRAME_SEP)
+        self.ended = True
+
     @property
     def done(self) -> bool:
         return terminal(self.frames) is not None
@@ -239,8 +260,14 @@ def _apply(chunks: list[str], patch: dict) -> list[str]:
             i = int(path.rsplit("/", 1)[1])
         except ValueError:
             return chunks
-        # The index is honoured rather than appended to: a repeated or reordered frame
-        # would otherwise shift every token after it.
+        # Append or overwrite, never outside the array. Both bounds guard real harm on
+        # a path fed straight from the network: `int("-1")` makes the padding a no-op
+        # and `chunks[-1] = ...` rewrites a token that really arrived -- inventing text
+        # the server never sent -- while a large index pads without limit (a 2e7 index
+        # measured at 320MB). Past the end is an error in RFC 6902 anyway, and every
+        # index in both captures is simply the next one.
+        if not 0 <= i <= len(chunks):
+            return chunks
         chunks += [""] * (i + 1 - len(chunks))
         chunks[i] = str(patch.get("value", ""))
     return chunks
@@ -317,9 +344,23 @@ def tee(ctx, page) -> Stream:
         # Keyed on the one request that carries an answer: the homepage fires dozens of
         # others, and their bytes in this buffer would corrupt every frame after them.
         if rid is None and ASK_PATH in (r.get("url") or "") \
-                and r.get("mimeType") == "text/event-stream":
+                and r.get("mimeType") == "text/event-stream" \
+                and 200 <= (r.get("status") or 0) < 300:
+            # Status checked too: an error response on this path would bind `rid`, and
+            # the frontend's retry -- the one carrying the actual answer -- would then
+            # be dropped as someone else's. The user gets told the frontend changed
+            # when in fact the server pushed back.
+            try:
+                got = cdp.send("Network.streamResourceContent",
+                               {"requestId": params.get("requestId")})
+            except Exception:
+                # "Request not found" if it finished during the round-trip. Binding
+                # anyway would leave the stream silently dead, since every later
+                # dataReceived arrives without a `data` field once streaming is off;
+                # and letting this escape the handler surfaces as a raw traceback from
+                # inside the poll loop, bypassing the diagnosis in `_blame`.
+                return
             rid = params.get("requestId")
-            got = cdp.send("Network.streamResourceContent", {"requestId": rid})
             # Whatever arrived before we asked. Dropping it loses the head of the
             # stream, and with it every frame boundary after it.
             stream.feed(base64.b64decode(got.get("bufferedData") or ""))
@@ -331,9 +372,9 @@ def tee(ctx, page) -> Stream:
     def on_end(params):
         # CDP delivers every `dataReceived` before the request finishes, so nothing is
         # lost by stopping here -- and both endings, clean and failed, mean the same
-        # thing to us: no more bytes are coming.
+        # thing to us: no more bytes are coming, so the held-back tail can be flushed.
         if params.get("requestId") == rid:
-            stream.ended = True
+            stream.close()
 
     cdp.on("Network.responseReceived", on_response)
     cdp.on("Network.dataReceived", on_data)

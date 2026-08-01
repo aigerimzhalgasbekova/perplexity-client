@@ -41,9 +41,10 @@ class FakeCDP:
     def detach(self):
         self.detached = True
 
-    def respond(self, rid, url, mime="text/event-stream"):
+    def respond(self, rid, url, mime="text/event-stream", status=200):
         self.handlers["Network.responseReceived"](
-            {"requestId": rid, "response": {"url": url, "mimeType": mime}})
+            {"requestId": rid,
+             "response": {"url": url, "mimeType": mime, "status": status}})
 
     def data(self, rid, raw: bytes):
         self.handlers["Network.dataReceived"]({"requestId": rid, "data": b64(raw)})
@@ -151,6 +152,42 @@ def test_tee_ignores_bytes_from_every_other_request():
     cdp.data("ask", COMPLETE)
     assert s.done
     assert s.frames == adapter.frames(COMPLETE)
+
+
+def test_tee_does_not_bind_to_an_error_response(monkeypatch):
+    # A 429 on this path with this mime type would bind `rid`, and the frontend's retry
+    # -- the one carrying the actual answer -- would then be dropped as "not ours". The
+    # user is told the frontend changed and sent to `doctor`, which spends another
+    # query, on an account that just pushed back.
+    cdp = FakeCDP()
+    s = adapter.tee(CDPCtx(cdp=cdp), object())
+    cdp.respond("429", ASK_URL, status=429)
+    assert not [m for m, _ in cdp.sent if m == "Network.streamResourceContent"]
+    cdp.respond("retry", ASK_URL)
+    cdp.data("retry", COMPLETE)
+    assert s.done
+
+
+def test_tee_leaves_the_request_unbound_when_streaming_cannot_be_enabled():
+    # `streamResourceContent` raises "Request not found" if the request finished during
+    # the round-trip. Binding `rid` first leaves the stream silently dead -- every later
+    # dataReceived is dropped as someone else's -- and the exception escapes the CDP
+    # event dispatch, which surfaces as the raw traceback _blame exists to prevent.
+    cdp = FakeCDP()
+    calls = []
+
+    def send(method, params=None):
+        calls.append(method)
+        if method == "Network.streamResourceContent" and len(calls) < 3:
+            raise RuntimeError("Request not found")
+        return {"bufferedData": ""}
+
+    cdp.send = send
+    s = adapter.tee(CDPCtx(cdp=cdp), object())
+    cdp.respond("dead", ASK_URL)  # must not raise out of the handler
+    cdp.respond("live", ASK_URL)
+    cdp.data("live", COMPLETE)
+    assert s.done
 
 
 def test_tee_keeps_the_bytes_that_arrived_before_the_tee_started():

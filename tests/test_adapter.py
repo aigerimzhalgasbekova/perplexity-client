@@ -61,6 +61,32 @@ def test_a_marker_past_the_citation_list_is_an_error():
         adapter.answer_from(entry, complete=True)
 
 
+def test_a_complete_answer_with_no_text_is_refused():
+    # The single worst outcome this tool can produce (PRD §10): every lookup into the
+    # payload is `or {}`-guarded, so a renamed block collapses to "" and the marker
+    # check then passes vacuously. An agent reads `complete=True, text=""` as
+    # "Perplexity found nothing" -- plausible, actionable and wrong.
+    fin = adapter.terminal(adapter.frames(COMPLETE))
+    moved = {**fin, "blocks": [b for b in fin["blocks"]
+                               if b.get("intended_usage") != "ask_text"]}
+    with pytest.raises(IncompleteAnswerError):
+        adapter.answer_from(moved, complete=True)
+
+
+def test_an_answer_block_that_only_holds_a_diff_is_refused_too():
+    # The other shape of the same drift: the block is there but never assembled.
+    fin = adapter.terminal(adapter.frames(COMPLETE))
+    blocks = [{"intended_usage": "ask_text", "diff_block": {"field": "markdown_block"}}
+              if b.get("intended_usage") == "ask_text" else b for b in fin["blocks"]]
+    with pytest.raises(IncompleteAnswerError):
+        adapter.answer_from({**fin, "blocks": blocks}, complete=True)
+
+
+def test_an_empty_partial_answer_is_still_allowed():
+    # `allow_incomplete=True` over a stream cut before any text is legitimately empty.
+    assert adapter.answer_from({}, complete=False).text == ""
+
+
 def test_zero_is_not_a_citation_marker():
     # citations[n-1] has no meaning for n == 0, and Python would happily index [-1].
     entry = {"blocks": [
@@ -139,20 +165,38 @@ def test_stream_is_not_done_until_the_terminal_frame_lands():
     assert not s.done and len(s.frames) > 10
 
 
-def test_chunk_index_is_honoured_not_appended():
-    # An out-of-order or repeated frame must not shift every token after it by one.
-    fs = [{"backend_uuid": "id", "display_model": "m", "search_mode": "SEARCH",
+def patched(*patches, **top):
+    fs = [{"backend_uuid": "id", "display_model": "m", "search_mode": "SEARCH", **top,
            "blocks": [{"intended_usage": "ask_text", "diff_block": {
-               "field": "markdown_block",
-               "patches": [{"op": "replace", "path": "",
-                            "value": {"chunks": ["a", "b"]}}]}}]},
-          {"blocks": [{"intended_usage": "ask_text", "diff_block": {
-              "field": "markdown_block",
-              "patches": [{"op": "add", "path": "/chunks/3", "value": "d"},
-                          {"op": "add", "path": "/chunks/2", "value": "c"}]}}]}]
-    r = adapter._partial(fs)
+               "field": "markdown_block", "patches": list(patches)}}]}]
+    return adapter._partial(fs)
+
+
+def test_chunks_append_in_order():
+    r = patched({"op": "replace", "path": "", "value": {"chunks": ["a", "b"]}},
+                {"op": "add", "path": "/chunks/2", "value": "c"},
+                {"op": "add", "path": "/chunks/3", "value": "d"})
     assert r.text == "abcd"
     assert r.thread_id == "id" and r.model == "m" and r.complete is False
+
+
+def test_a_patch_before_the_start_never_rewrites_delivered_text():
+    # int() takes "-1" happily, the padding is then a no-op, and chunks[-1] = value
+    # overwrites the last token that really arrived -- producing text the server never
+    # sent, which is exactly what this replay exists not to do.
+    r = patched({"op": "replace", "path": "",
+                 "value": {"chunks": ["Canberra ", "is the capital."]}},
+                {"op": "add", "path": "/chunks/-1", "value": "is NOT the capital."})
+    assert r.text == "Canberra is the capital."
+
+
+def test_a_patch_past_the_end_is_refused():
+    # Beyond the array's length is an error per RFC 6902, and the observed wire never
+    # does it -- every index in both captures is the next one. Honouring it would mean
+    # padding with tokens nobody sent, and a hostile index would allocate without bound.
+    r = patched({"op": "replace", "path": "", "value": {"chunks": ["a"]}},
+                {"op": "add", "path": "/chunks/20000000", "value": "x"})
+    assert r.text == "a"
 
 
 def test_unknown_patch_operations_are_ignored_not_guessed():
@@ -184,6 +228,29 @@ def test_partial_does_not_enforce_the_citation_contract():
 def test_partial_keeps_the_citations_that_did_arrive():
     r = adapter.parse_stream(adapter.frames(TRUNCATED), allow_incomplete=True)
     assert r.citations and all(c.url for c in r.citations)
+
+
+def test_stream_flushes_a_terminal_frame_the_connection_ended_on():
+    # `feed` keeps the trailing block back because it is usually half-written. If the
+    # connection closes right after the terminal frame and before its separator, that
+    # held-back block *is* the whole answer -- and refusing it burns the query that
+    # bought a complete answer.
+    blocks = COMPLETE.split(adapter.FRAME_SEP)
+    term = next(i for i, b in enumerate(blocks) if b'"final_sse_message": true' in b)
+    s = adapter.Stream()
+    s.feed(adapter.FRAME_SEP.join(blocks[:term + 1]))
+    assert not s.done  # still held back: more bytes could always follow
+    s.close()
+    assert s.done and s.ended
+
+
+def test_closing_a_stream_cut_mid_frame_admits_nothing():
+    s = adapter.Stream()
+    s.feed(COMPLETE[:len(COMPLETE) // 3])
+    before = len(s.frames)
+    s.close()
+    # The tail is half-written JSON, not a frame. Flushing must not invent one.
+    assert not s.done and len(s.frames) == before
 
 
 def test_stream_does_not_report_done_on_a_half_delivered_terminal_frame():

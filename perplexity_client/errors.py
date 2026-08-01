@@ -43,9 +43,9 @@ class SessionExpiredError(PplxError):
     throttled or blocked can surface here rather than as `challenged` -- M1 found the
     auth probe answers `200 {}` from behind an interstitial -- and that is precisely a
     case the backoff should slow down. And the cost of counting it is small: the 20s
-    interval floor already exceeds the backoff until the fourth consecutive failure,
-    and the `pplx login` that fixes it takes the lock at `interval=0` and occupies a
-    human for longer than the floor anyway.
+    interval floor already exceeds the backoff until the fourth consecutive failure, so
+    a user who hits this once, re-logs in and retries pays nothing. Only a loop that
+    kept asking against a dead session pays, and slowing that down is the point.
     """
 
 
