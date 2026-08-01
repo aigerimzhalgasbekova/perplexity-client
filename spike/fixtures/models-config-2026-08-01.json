@@ -1,0 +1,825 @@
+{
+ "models": {
+  "turbo": {
+   "label": "Best",
+   "description": "Adapts to each query",
+   "mode": "search",
+   "provider": "PERPLEXITY"
+  },
+  "pplx_pro": {
+   "label": "Best",
+   "description": "Automatically selects the best model based on the query",
+   "mode": "search",
+   "provider": null
+  },
+  "pplx_pro_upgraded": {
+   "label": "Pro",
+   "description": "Automatically selects the most responsive model based on the query",
+   "mode": "search",
+   "provider": "PERPLEXITY"
+  },
+  "experimental": {
+   "label": "Sonar 2",
+   "description": "Perplexity's latest in-house model.",
+   "mode": "search",
+   "provider": "PERPLEXITY"
+  },
+  "glm_5_2": {
+   "label": "GLM-5.2",
+   "description": "Z.ai's advanced model",
+   "mode": "search",
+   "provider": "ZAI"
+  },
+  "gpt4o": {
+   "label": "GPT-4o",
+   "description": "OpenAI's versatile model",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt41": {
+   "label": "GPT-4.1",
+   "description": "OpenAI's advanced model",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt5": {
+   "label": "GPT-5",
+   "description": "OpenAI's latest model",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt5_thinking": {
+   "label": "GPT-5 Thinking",
+   "description": "OpenAI's latest model with thinking",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt51": {
+   "label": "GPT-5.1",
+   "description": "OpenAI's latest model",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt51_thinking": {
+   "label": "GPT-5.1 Thinking",
+   "description": "OpenAI's latest model with thinking",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt51_low_thinking": {
+   "label": "GPT-5.1 Low Thinking",
+   "description": "OpenAI's latest model with low reasoning effort",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt5_mini": {
+   "label": "GPT-5 Mini",
+   "description": "OpenAI's compact model",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt5_nano": {
+   "label": "GPT-5 Nano",
+   "description": "OpenAI's smallest model",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt5_pro": {
+   "label": "GPT-5 Pro",
+   "description": "OpenAI's latest, most powerful reasoning model",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "chatgpt_tools": {
+   "label": "ChatGPT Tools",
+   "description": "OpenAI's tool-enabled model",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt52": {
+   "label": "GPT-5.2",
+   "description": "OpenAI's latest model",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt52_thinking": {
+   "label": "GPT-5.2 Thinking",
+   "description": "OpenAI's latest model with thinking",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt52_pro": {
+   "label": "GPT-5.2 Pro",
+   "description": "OpenAI's most powerful reasoning model",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt54": {
+   "label": "GPT-5.4",
+   "description": "OpenAI's versatile model",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt54_thinking": {
+   "label": "GPT-5.4 Thinking",
+   "description": "OpenAI's versatile model with thinking",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt55": {
+   "label": "GPT-5.5",
+   "description": "OpenAI's latest model",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt55_thinking": {
+   "label": "GPT-5.5 Thinking",
+   "description": "OpenAI's latest model with thinking",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt56_sol": {
+   "label": "GPT-5.6 Sol",
+   "description": "OpenAI's most powerful model",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt56_sol_thinking": {
+   "label": "GPT-5.6 Sol Thinking",
+   "description": "OpenAI's most powerful model with reasoning",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt56_terra": {
+   "label": "GPT-5.6 Terra",
+   "description": "OpenAI's versatile model",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt56_terra_thinking": {
+   "label": "GPT-5.6 Terra Thinking",
+   "description": "OpenAI's versatile model with thinking",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "claude2": {
+   "label": "Claude Sonnet 4.0",
+   "description": "Anthropic's advanced model",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude37sonnetthinking": {
+   "label": "Claude Sonnet 4.0 Thinking",
+   "description": "Anthropic's reasoning model",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude40sonnetthinking": {
+   "label": "Claude Sonnet 4.0 Thinking",
+   "description": "Anthropic's reasoning model",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "gemini25pro": {
+   "label": "Gemini 2.5 Pro",
+   "description": "Google's latest model",
+   "mode": "search",
+   "provider": "GOOGLE"
+  },
+  "gemini30pro": {
+   "label": "Gemini 3 Pro",
+   "description": "Google's most advanced model",
+   "mode": "search",
+   "provider": "GOOGLE"
+  },
+  "gemini30flash": {
+   "label": "Gemini 3 Flash",
+   "description": "Google's fast model",
+   "mode": "search",
+   "provider": "GOOGLE"
+  },
+  "gemini30flash_high": {
+   "label": "Gemini 3 Flash Thinking",
+   "description": "Google's fast model",
+   "mode": "search",
+   "provider": "GOOGLE"
+  },
+  "gemini31pro_low": {
+   "label": "Gemini 3.1 Pro",
+   "description": "Google's latest model",
+   "mode": "search",
+   "provider": "GOOGLE"
+  },
+  "gemini31pro_high": {
+   "label": "Gemini 3.1 Pro Thinking",
+   "description": "Google's latest model with thinking",
+   "mode": "search",
+   "provider": "GOOGLE"
+  },
+  "gemini35flash": {
+   "label": "Gemini 3.5 Flash",
+   "description": "Google's fast model",
+   "mode": "search",
+   "provider": "GOOGLE"
+  },
+  "gemini35flash_medium": {
+   "label": "Gemini 3.5 Flash Medium Thinking",
+   "description": "Google's fast model with medium thinking",
+   "mode": "search",
+   "provider": "GOOGLE"
+  },
+  "gemini35flash_high": {
+   "label": "Gemini 3.5 Flash Thinking",
+   "description": "Google's fast model with thinking",
+   "mode": "search",
+   "provider": "GOOGLE"
+  },
+  "grok": {
+   "label": "Grok 3 Beta",
+   "description": "xAI's Grok 3 model",
+   "mode": "search",
+   "provider": "XAI"
+  },
+  "claude40opus": {
+   "label": "Claude Opus 4.0",
+   "description": "Anthropic's Opus reasoning model",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude40opusthinking": {
+   "label": "Claude Opus 4.0 Thinking",
+   "description": "Anthropic's Opus reasoning model with thinking",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude41opus": {
+   "label": "Claude Opus 4.1",
+   "description": "Anthropic's Opus reasoning model",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude41opusthinking": {
+   "label": "Claude Opus 4.1 Thinking",
+   "description": "Anthropic's Opus reasoning model with thinking",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude45opus": {
+   "label": "Claude Opus 4.5",
+   "description": "Anthropic's most advanced model",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude45opusthinking": {
+   "label": "Claude Opus 4.5 Thinking",
+   "description": "Anthropic's Opus reasoning model with thinking",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude46opus": {
+   "label": "Claude Opus 4.6",
+   "description": "Anthropic's most advanced model",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude46opusthinking": {
+   "label": "Claude Opus 4.6 Thinking",
+   "description": "Anthropic's Opus reasoning model with thinking",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude47opus": {
+   "label": "Claude Opus 4.7",
+   "description": "Anthropic's most advanced model",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude47opusthinking": {
+   "label": "Claude Opus 4.7 Thinking",
+   "description": "Anthropic's most advanced model with thinking",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude48opus": {
+   "label": "Claude Opus 4.8",
+   "description": "Anthropic's most advanced model",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude48opusthinking": {
+   "label": "Claude Opus 4.8 Thinking",
+   "description": "Anthropic's most advanced model with thinking",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude50opus": {
+   "label": "Claude Opus 5",
+   "description": "Anthropic's most advanced model",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude50opusthinking": {
+   "label": "Claude Opus 5 Thinking",
+   "description": "Anthropic's most advanced model with thinking",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude45sonnet": {
+   "label": "Claude Sonnet 4.5",
+   "description": "Anthropic's fast model",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude45sonnetthinking": {
+   "label": "Claude Sonnet 4.5 Thinking",
+   "description": "Anthropic's newest reasoning model",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude46sonnet": {
+   "label": "Claude Sonnet 4.6",
+   "description": "Anthropic's fast model",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude46sonnetthinking": {
+   "label": "Claude Sonnet 4.6 Thinking",
+   "description": "Anthropic's newest reasoning model",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude50sonnet": {
+   "label": "Claude Sonnet 5",
+   "description": "Anthropic's fast model",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude50sonnetthinking": {
+   "label": "Claude Sonnet 5 Thinking",
+   "description": "Anthropic's newest reasoning model",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude45haiku": {
+   "label": "Claude Haiku 4.5",
+   "description": "Anthropic's compact model",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "claude45haikuthinking": {
+   "label": "Claude Haiku 4.5 Thinking",
+   "description": "Anthropic's compact reasoning model",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "kimik2thinking": {
+   "label": "Kimi K2",
+   "description": "Moonshot AI's latest model",
+   "mode": "search",
+   "provider": "MOONSHOT_AI"
+  },
+  "kimik25thinking": {
+   "label": "Kimi K2.5 Thinking",
+   "description": "Moonshot AI's latest model",
+   "mode": "search",
+   "provider": "MOONSHOT_AI"
+  },
+  "kimik26instant": {
+   "label": "Kimi K2.6",
+   "description": "Moonshot AI's latest model",
+   "mode": "search",
+   "provider": "MOONSHOT_AI"
+  },
+  "kimik26thinking": {
+   "label": "Kimi K2.6 Thinking",
+   "description": "Moonshot AI's latest model with thinking",
+   "mode": "search",
+   "provider": "MOONSHOT_AI"
+  },
+  "kimik3thinking": {
+   "label": "Kimi K3",
+   "description": "Moonshot AI's latest model with thinking",
+   "mode": "search",
+   "provider": "MOONSHOT_AI"
+  },
+  "grok4": {
+   "label": "Grok 4",
+   "description": "xAI's reasoning model",
+   "mode": "search",
+   "provider": "XAI"
+  },
+  "grok4nonthinking": {
+   "label": "Grok 4",
+   "description": "xAI's advanced model",
+   "mode": "search",
+   "provider": "XAI"
+  },
+  "grok41reasoning": {
+   "label": "Grok 4.1",
+   "description": "xAI's latest model",
+   "mode": "search",
+   "provider": "XAI"
+  },
+  "grok41nonreasoning": {
+   "label": "Grok 4.1",
+   "description": "xAI's latest model",
+   "mode": "search",
+   "provider": "XAI"
+  },
+  "grok45low": {
+   "label": "Grok 4.5",
+   "description": "xAI's most advanced model",
+   "mode": "search",
+   "provider": "XAI"
+  },
+  "grok45medium": {
+   "label": "Grok 4.5 Thinking",
+   "description": "xAI's most advanced model",
+   "mode": "search",
+   "provider": "XAI"
+  },
+  "nv_nemotron_3_super": {
+   "label": "Nemotron 3 Super",
+   "description": "NVIDIA's Nemotron 3 Super 120B model",
+   "mode": "search",
+   "provider": "NVIDIA"
+  },
+  "nv_nemotron_3_ultra": {
+   "label": "Nemotron 3 Ultra",
+   "description": "NVIDIA's Nemotron 3 Ultra 550B model",
+   "mode": "search",
+   "provider": "NVIDIA"
+  },
+  "o4mini": {
+   "label": "o4-mini",
+   "description": "OpenAI's latest reasoning model",
+   "mode": "research",
+   "provider": "OPENAI"
+  },
+  "o3pro": {
+   "label": "o3-pro",
+   "description": "OpenAI's powerful reasoning model",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "pplx_sonar_internal_testing": {
+   "label": "Sonar Testing - Alpha",
+   "description": "Sonar model alpha variant",
+   "mode": "search",
+   "provider": "SONAR"
+  },
+  "pplx_sonar_internal_testing_v2": {
+   "label": "Sonar Testing - Beta",
+   "description": "Sonar model beta variant",
+   "mode": "search",
+   "provider": "SONAR"
+  },
+  "pplx_alpha": {
+   "label": "Deep research",
+   "description": "Fast and thorough for routine research",
+   "mode": "research",
+   "provider": "PERPLEXITY"
+  },
+  "pplx_beta": {
+   "label": "Create files and apps",
+   "description": "Multi-step tasks with advanced troubleshooting",
+   "mode": "studio",
+   "provider": "PERPLEXITY"
+  },
+  "pplx_study": {
+   "label": "Study",
+   "description": "Fast model for routine research",
+   "mode": "study",
+   "provider": "PERPLEXITY"
+  },
+  "pplx_agentic_research": {
+   "label": "Agentic research",
+   "description": "Delegate research tasks to specialised sub-agents",
+   "mode": "agentic_research",
+   "provider": "PERPLEXITY"
+  },
+  "pplx_asi": {
+   "label": "Computer",
+   "description": "Computer (default model)",
+   "mode": "asi",
+   "provider": "ANTHROPIC"
+  },
+  "pplx_asi_openrouter": {
+   "label": "OpenRouter",
+   "description": "Computer powered by OpenRouter",
+   "mode": "asi",
+   "provider": "PERPLEXITY"
+  },
+  "pplx_asi_glm": {
+   "label": "Preview (GLM 5.2-based)",
+   "description": "Computer powered by GLM 5.2",
+   "mode": "asi",
+   "provider": "PERPLEXITY"
+  },
+  "pplx_asi_kimi_k3": {
+   "label": "Kimi K3",
+   "description": "Computer powered by Kimi K3",
+   "mode": "asi",
+   "provider": "MOONSHOT_AI"
+  },
+  "pplx_asi_opus": {
+   "label": "Claude Opus 5",
+   "description": "Computer powered by Claude Opus 5",
+   "mode": "asi",
+   "provider": "ANTHROPIC"
+  },
+  "pplx_asi_opus_fast": {
+   "label": "Claude Opus 5 Fast",
+   "description": "Computer powered by Claude Opus 5 in fast mode",
+   "mode": "asi",
+   "provider": "ANTHROPIC"
+  },
+  "pplx_asi_fable_5": {
+   "label": "Claude Fable 5",
+   "description": "Computer powered by Claude Fable 5",
+   "mode": "asi",
+   "provider": "ANTHROPIC"
+  },
+  "pplx_asi_opus_thinking": {
+   "label": "Claude Opus 4.8 Thinking",
+   "description": "Computer powered by Claude Opus 4.8 with thinking",
+   "mode": "asi",
+   "provider": "ANTHROPIC"
+  },
+  "pplx_asi_gpt54": {
+   "label": "GPT-5.4",
+   "description": "Computer powered by GPT-5.4",
+   "mode": "asi",
+   "provider": "OPENAI"
+  },
+  "pplx_asi_gpt_55": {
+   "label": "GPT-5.5",
+   "description": "Computer powered by GPT-5.5",
+   "mode": "asi",
+   "provider": "OPENAI"
+  },
+  "pplx_asi_gpt_56_sol": {
+   "label": "GPT-5.6 Sol",
+   "description": "Computer powered by GPT-5.6 Sol",
+   "mode": "asi",
+   "provider": "OPENAI"
+  },
+  "pplx_asi_grok_45": {
+   "label": "Grok 4.5",
+   "description": "Computer powered by Grok 4.5",
+   "mode": "asi",
+   "provider": "XAI"
+  },
+  "pplx_asi_kimi": {
+   "label": "Kimi K2.5",
+   "description": "Computer powered by Kimi K2.5",
+   "mode": "asi",
+   "provider": "FIREWORKS"
+  },
+  "pplx_asi_qwen": {
+   "label": "Qwen 3.6 Plus",
+   "description": "Computer powered by Qwen 3.6 Plus",
+   "mode": "asi",
+   "provider": "FIREWORKS"
+  },
+  "pplx_asi_sonnet": {
+   "label": "Claude Sonnet 5",
+   "description": "Computer powered by Claude Sonnet 5",
+   "mode": "asi",
+   "provider": "ANTHROPIC"
+  },
+  "pplx_asi_sonnet_thinking": {
+   "label": "Claude Sonnet 5 Thinking",
+   "description": "Computer powered by Claude Sonnet 5 with thinking",
+   "mode": "asi",
+   "provider": "ANTHROPIC"
+  },
+  "pplx_business_assistant": {
+   "label": "Business Assistant",
+   "description": "Business AI assistant",
+   "mode": "asi",
+   "provider": "ANTHROPIC"
+  },
+  "pplx_document_review": {
+   "label": "Document Review",
+   "description": "Comprehensive document analysis and fact-checking",
+   "mode": "document_review",
+   "provider": "PERPLEXITY"
+  },
+  "comet_browser_agent": {
+   "label": "Best",
+   "description": "Selects the best available browser agent model",
+   "mode": "browser_agent",
+   "provider": null
+  },
+  "comet_browser_agent_sonnet": {
+   "label": "Claude Sonnet 5",
+   "description": "Browser agent powered by Claude Sonnet 5",
+   "mode": "browser_agent",
+   "provider": "ANTHROPIC"
+  },
+  "comet_browser_agent_opus": {
+   "label": "Claude Opus 4.8",
+   "description": "Browser agent powered by Claude Opus 4.8",
+   "mode": "browser_agent",
+   "provider": "ANTHROPIC"
+  },
+  "claudecode": {
+   "label": "Claude Code",
+   "description": "Anthropic's coding agent",
+   "mode": "search",
+   "provider": "ANTHROPIC"
+  },
+  "codex": {
+   "label": "Codex",
+   "description": "OpenAI's coding agent",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "gpt53codex": {
+   "label": "GPT-5.3 Codex",
+   "description": "OpenAI's coding model",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "nanobananapro": {
+   "label": "Nano Banana Pro",
+   "description": "Google's advanced image generation model",
+   "mode": "search",
+   "provider": "GOOGLE"
+  },
+  "nanobanana2": {
+   "label": "Nano Banana 2",
+   "description": "Google's image generation model",
+   "mode": "search",
+   "provider": "GOOGLE"
+  },
+  "sora2": {
+   "label": "Sora 2",
+   "description": "OpenAI's video generation model",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "sora2pro": {
+   "label": "Sora 2 Pro",
+   "description": "OpenAI's advanced video generation model",
+   "mode": "search",
+   "provider": "OPENAI"
+  },
+  "veo31": {
+   "label": "Veo 3.1",
+   "description": "Google's video generation model",
+   "mode": "search",
+   "provider": "GOOGLE"
+  },
+  "veo31fast": {
+   "label": "Veo 3.1 Fast",
+   "description": "Google's fast video generation model",
+   "mode": "search",
+   "provider": "GOOGLE"
+  }
+ },
+ "search_config": [
+  {
+   "label": "Sonar 2",
+   "description": "Perplexity's latest in-house model.",
+   "has_new_tag": false,
+   "subscription_tier": "pro",
+   "non_reasoning_model": "experimental",
+   "reasoning_model": null,
+   "text_only_model": false,
+   "audience": null,
+   "is_default": false
+  },
+  {
+   "label": "Claude Sonnet 5",
+   "description": "Browser agent powered by Claude Sonnet 5",
+   "has_new_tag": false,
+   "subscription_tier": "pro",
+   "non_reasoning_model": "comet_browser_agent_sonnet",
+   "reasoning_model": null,
+   "text_only_model": false,
+   "audience": null,
+   "is_default": false
+  },
+  {
+   "label": "Claude Opus 4.8",
+   "description": "Browser agent powered by Claude Opus 4.8",
+   "has_new_tag": false,
+   "subscription_tier": "max",
+   "non_reasoning_model": "comet_browser_agent_opus",
+   "reasoning_model": null,
+   "text_only_model": false,
+   "audience": null,
+   "is_default": false
+  },
+  {
+   "label": "GPT-5.6 Terra",
+   "description": "OpenAI's versatile model",
+   "has_new_tag": false,
+   "subscription_tier": "pro",
+   "non_reasoning_model": "gpt56_terra",
+   "reasoning_model": "gpt56_terra_thinking",
+   "text_only_model": false,
+   "audience": null,
+   "is_default": false
+  },
+  {
+   "label": "GPT-5.6 Sol",
+   "description": "OpenAI's most powerful model",
+   "has_new_tag": false,
+   "subscription_tier": "max",
+   "non_reasoning_model": "gpt56_sol",
+   "reasoning_model": "gpt56_sol_thinking",
+   "text_only_model": false,
+   "audience": null,
+   "is_default": false
+  },
+  {
+   "label": "Gemini 3.1 Pro",
+   "description": "Google's latest model",
+   "has_new_tag": false,
+   "subscription_tier": "pro",
+   "non_reasoning_model": null,
+   "reasoning_model": "gemini31pro_high",
+   "text_only_model": false,
+   "audience": null,
+   "is_default": false
+  },
+  {
+   "label": "Claude Sonnet 5",
+   "description": "Anthropic's fast model",
+   "has_new_tag": false,
+   "subscription_tier": "pro",
+   "non_reasoning_model": "claude50sonnet",
+   "reasoning_model": "claude50sonnetthinking",
+   "text_only_model": false,
+   "audience": null,
+   "is_default": false
+  },
+  {
+   "label": "Claude Opus 5",
+   "description": "Anthropic's most advanced model",
+   "has_new_tag": false,
+   "subscription_tier": "max",
+   "non_reasoning_model": "claude50opus",
+   "reasoning_model": "claude50opusthinking",
+   "text_only_model": false,
+   "audience": null,
+   "is_default": false
+  },
+  {
+   "label": "Kimi K3",
+   "description": "Moonshot AI's latest model. Hosted in the US.",
+   "has_new_tag": true,
+   "subscription_tier": "pro",
+   "non_reasoning_model": null,
+   "reasoning_model": "kimik3thinking",
+   "text_only_model": false,
+   "audience": null,
+   "is_default": false
+  },
+  {
+   "label": "GLM 5.2",
+   "description": "Z.ai's most advanced model. Hosted in the US.",
+   "has_new_tag": false,
+   "subscription_tier": "pro",
+   "non_reasoning_model": null,
+   "reasoning_model": "glm_5_2",
+   "text_only_model": false,
+   "audience": null,
+   "is_default": false
+  },
+  {
+   "label": "Grok 4.5",
+   "description": "xAI's most advanced model",
+   "has_new_tag": false,
+   "subscription_tier": "pro",
+   "non_reasoning_model": "grok45low",
+   "reasoning_model": "grok45medium",
+   "text_only_model": false,
+   "audience": null,
+   "is_default": false
+  },
+  {
+   "label": "Nemotron 3 Ultra",
+   "description": "NVIDIA's Nemotron 3 Ultra 550B model",
+   "has_new_tag": false,
+   "subscription_tier": "pro",
+   "non_reasoning_model": null,
+   "reasoning_model": "nv_nemotron_3_ultra",
+   "text_only_model": false,
+   "audience": null,
+   "is_default": false
+  }
+ ],
+ "default_models": {
+  "search": "pplx_pro",
+  "research": "pplx_alpha",
+  "agentic_research": "pplx_agentic_research",
+  "study": "pplx_study",
+  "document_review": "pplx_document_review",
+  "browser_agent": "comet_browser_agent",
+  "asi": "pplx_asi"
+ }
+}

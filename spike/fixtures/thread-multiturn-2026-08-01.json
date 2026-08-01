@@ -1,0 +1,3696 @@
+{
+ "background_entries": [],
+ "entries": [
+  {
+   "backend_uuid": "d236db28-526f-49a1-9a21-faa33c3ad928",
+   "context_uuid": "8d16e733-43e2-45d7-906c-666b9af45020",
+   "uuid": "db5aa602-46c7-42da-9e65-c7db90e0477f",
+   "frontend_context_uuid": "f7b6936c-a8f9-4dac-a8d0-804fe633e8a1",
+   "frontend_uuid": "db5aa602-46c7-42da-9e65-c7db90e0477f",
+   "status": "COMPLETED",
+   "thread_title": "what is the capital of Australia and why is it not Sydney",
+   "related_queries": [
+    "How was the location for Canberra selected and designed",
+    "What is the role of the Australian Capital Territory today",
+    "History of Australian Federation in 1901",
+    "Major cities in Australia and their state capitals",
+    "Comparison of planned cities vs historical capitals"
+   ],
+   "display_model": "turbo",
+   "user_selected_model": "experimental",
+   "personalized": true,
+   "mode": "COPILOT",
+   "query_str": "what is the capital of Australia and why is it not Sydney",
+   "search_focus": "internet",
+   "source": "default",
+   "attachments": [],
+   "updated_datetime": "2026-08-01T13:09:00.696556",
+   "read_write_token": "REDACTED",
+   "step_type": "FINAL",
+   "author_id": "REDACTED",
+   "author_username": "REDACTED",
+   "author_image": "REDACTED",
+   "bookmark_state": "NOT_BOOKMARKED",
+   "s3_social_preview_url": "https://ppl-ai-public.s3.amazonaws.com/static/img/pplx-default-preview.png",
+   "thread_access": 1,
+   "thread_url_slug": "d236db28-526f-49a1-9a21-faa33c3ad928",
+   "query_source": "default",
+   "privacy_state": "NONE",
+   "gpt4": false,
+   "sources": {
+    "sources": [
+     "web"
+    ]
+   },
+   "entry_created_datetime": "2026-08-01T13:08:23.996003+00:00",
+   "entry_updated_datetime": "2026-08-01T13:08:30.268855+00:00",
+   "blocks": [
+    {
+     "intended_usage": "plan",
+     "plan_block": {
+      "progress": "DONE",
+      "goals": [
+       {
+        "id": "0",
+        "description": "Searching the web",
+        "final": true,
+        "todo_task_status": "INCOMPLETE"
+       }
+      ],
+      "final": true
+     }
+    },
+    {
+     "intended_usage": "ask_text_0_markdown",
+     "markdown_block": {
+      "progress": "DONE",
+      "chunks": [
+       "The capital of Australia is **Canberra**, not Sydney.[1][2][3]"
+      ],
+      "chunk_starting_offset": 0,
+      "answer": "The capital of Australia is **Canberra**, not Sydney.[1][2][3]",
+      "inline_token_annotations": []
+     }
+    },
+    {
+     "intended_usage": "ask_text_1_markdown",
+     "markdown_block": {
+      "progress": "DONE",
+      "chunks": [
+       "## Why Canberra and not Sydney?"
+      ],
+      "chunk_starting_offset": 0,
+      "answer": "## Why Canberra and not Sydney?",
+      "inline_token_annotations": []
+     }
+    },
+    {
+     "intended_usage": "ask_text_2_markdown",
+     "markdown_block": {
+      "progress": "DONE",
+      "chunks": [
+       "Canberra was chosen as a **political compromise** between Australia\u2019s two largest and most rival cities at the time of federation: **Sydney** and **Melbourne**.[2][4][8]\n\nWhen Australia federated in 1901, both Sydney (in New South Wales) and Melbourne (in Victoria) lobbied intensely to become the national capital.  Neither side was willing to concede, so the framers of the Australian Constitution wrote in a solution:[11][2]\n\n- The capital would be located **within New South Wales** (satisfying Sydney\u2019s state).[9][14]\n- But it had to be **at least 100 miles (161 km) from Sydney** (so Sydney wouldn\u2019t dominate).[14][9]\n- Until the new capital was ready, **Melbourne would serve as the interim seat of government**.[9][11]\n\nIn 1908, the site that became Canberra was selected, and the city was formally founded in 1913 as a **purpose-built, planned capital**.  The federal parliament officially moved from Melbourne to Canberra in **1927**.[4][6][13][2][11][9]"
+      ],
+      "chunk_starting_offset": 0,
+      "answer": "Canberra was chosen as a **political compromise** between Australia\u2019s two largest and most rival cities at the time of federation: **Sydney** and **Melbourne**.[2][4][8]\n\nWhen Australia federated in 1901, both Sydney (in New South Wales) and Melbourne (in Victoria) lobbied intensely to become the national capital.  Neither side was willing to concede, so the framers of the Australian Constitution wrote in a solution:[11][2]\n\n- The capital would be located **within New South Wales** (satisfying Sydney\u2019s state).[9][14]\n- But it had to be **at least 100 miles (161 km) from Sydney** (so Sydney wouldn\u2019t dominate).[14][9]\n- Until the new capital was ready, **Melbourne would serve as the interim seat of government**.[9][11]\n\nIn 1908, the site that became Canberra was selected, and the city was formally founded in 1913 as a **purpose-built, planned capital**.  The federal parliament officially moved from Melbourne to Canberra in **1927**.[4][6][13][2][11][9]",
+      "inline_token_annotations": []
+     }
+    },
+    {
+     "intended_usage": "ask_text_3_markdown",
+     "markdown_block": {
+      "progress": "DONE",
+      "chunks": [
+       "## Key points"
+      ],
+      "chunk_starting_offset": 0,
+      "answer": "## Key points",
+      "inline_token_annotations": []
+     }
+    },
+    {
+     "intended_usage": "ask_text_4_markdown",
+     "markdown_block": {
+      "progress": "DONE",
+      "chunks": [
+       "- **Sydney** is the capital of the state of **New South Wales**, not the nation.[2][9]\n- **Canberra** lies in the **Australian Capital Territory (ACT)**, a federal territory created specifically for the national capital.[1][3][12]\n- The choice was deliberately **neutral and inland**, to avoid favouring either Sydney or Melbourne and to symbolize a capital for the whole federation.[4][13][2]"
+      ],
+      "chunk_starting_offset": 0,
+      "answer": "- **Sydney** is the capital of the state of **New South Wales**, not the nation.[2][9]\n- **Canberra** lies in the **Australian Capital Territory (ACT)**, a federal territory created specifically for the national capital.[1][3][12]\n- The choice was deliberately **neutral and inland**, to avoid favouring either Sydney or Melbourne and to symbolize a capital for the whole federation.[4][13][2]",
+      "media_items": [
+       {
+        "medium": "image",
+        "image": "https://upload.wikimedia.org/wikipedia/commons/2/23/Overlooking_Canberra,_Parliament_House,_War_Memorial.jpg",
+        "image_width": 2517,
+        "image_height": 1564,
+        "url": "https://en.wikipedia.org/wiki/List_of_Australian_capital_cities",
+        "name": "List of Australian capital cities - Wikipedia",
+        "source": "sapi_images",
+        "thumbnail": "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/27ddc6ff-34e4-5796-a9e8-305900caaab9/01a84265-e09c-5682-92ce-681c89a1afe2.jpg",
+        "thumbnail_height": 318,
+        "thumbnail_width": 512,
+        "caption": "View of Canberra showing the Australian War Memorial, Anzac Parade leading across Lake Burley Griffin towards Parliament House on Capital Hill.",
+        "citation_info": {
+         "url": "https://en.wikipedia.org/wiki/List_of_Australian_capital_cities",
+         "domain_name": "wikipedia",
+         "favicon_url": "https://www.google.com/s2/favicons?sz=32&domain=en.wikipedia.org"
+        }
+       },
+       {
+        "medium": "image",
+        "image": "https://e8jyptdrnaz.exactdn.com/wp-content/uploads/2016/09/FEA_Canberra_MAIN-e1475765739102.jpg?strip=all&lossy=1&ssl=1",
+        "image_width": 1795,
+        "image_height": 1000,
+        "url": "https://robbreport.com.my/travel/discover-canberra-australias-capital-city/",
+        "name": "Discover Canberra, Australia's capital city | Robb Report Malaysia",
+        "source": "sapi_images",
+        "thumbnail": "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/3a8bdb90-1815-5ffa-b7fc-e708b50b62bc/ae32f7a9-0956-5273-a65b-dd5eccce34c9.jpg",
+        "thumbnail_height": 167,
+        "thumbnail_width": 300,
+        "thumbnail_512_smart": "https://pplx-res.cloudinary.com/image/upload/t_thumbnail_512_smart/v1774238461/vlm-captioner-thumbnails/gu2m0kqa5lgbgyrwebvu.jpg",
+        "caption": "Australian Parliament House",
+        "citation_info": {
+         "url": "https://robbreport.com.my/travel/discover-canberra-australias-capital-city/",
+         "domain_name": "robbreport",
+         "favicon_url": "https://www.google.com/s2/favicons?sz=32&domain=robbreport.com.my"
+        }
+       }
+      ],
+      "inline_token_annotations": []
+     }
+    },
+    {
+     "intended_usage": "ask_text_4_images",
+     "inline_entity_block": {
+      "media_block": {
+       "media_items": [
+        {
+         "medium": "image",
+         "image": "https://upload.wikimedia.org/wikipedia/commons/2/23/Overlooking_Canberra,_Parliament_House,_War_Memorial.jpg",
+         "image_width": 2517,
+         "image_height": 1564,
+         "url": "https://en.wikipedia.org/wiki/List_of_Australian_capital_cities",
+         "name": "List of Australian capital cities - Wikipedia",
+         "source": "sapi_images",
+         "thumbnail": "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/27ddc6ff-34e4-5796-a9e8-305900caaab9/01a84265-e09c-5682-92ce-681c89a1afe2.jpg",
+         "thumbnail_height": 318,
+         "thumbnail_width": 512,
+         "caption": "View of Canberra showing the Australian War Memorial, Anzac Parade leading across Lake Burley Griffin towards Parliament House on Capital Hill.",
+         "citation_info": {
+          "url": "https://en.wikipedia.org/wiki/List_of_Australian_capital_cities",
+          "domain_name": "wikipedia",
+          "favicon_url": "https://www.google.com/s2/favicons?sz=32&domain=en.wikipedia.org"
+         }
+        },
+        {
+         "medium": "image",
+         "image": "https://e8jyptdrnaz.exactdn.com/wp-content/uploads/2016/09/FEA_Canberra_MAIN-e1475765739102.jpg?strip=all&lossy=1&ssl=1",
+         "image_width": 1795,
+         "image_height": 1000,
+         "url": "https://robbreport.com.my/travel/discover-canberra-australias-capital-city/",
+         "name": "Discover Canberra, Australia's capital city | Robb Report Malaysia",
+         "source": "sapi_images",
+         "thumbnail": "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/3a8bdb90-1815-5ffa-b7fc-e708b50b62bc/ae32f7a9-0956-5273-a65b-dd5eccce34c9.jpg",
+         "thumbnail_height": 167,
+         "thumbnail_width": 300,
+         "thumbnail_512_smart": "https://pplx-res.cloudinary.com/image/upload/t_thumbnail_512_smart/v1774238461/vlm-captioner-thumbnails/gu2m0kqa5lgbgyrwebvu.jpg",
+         "caption": "Australian Parliament House",
+         "citation_info": {
+          "url": "https://robbreport.com.my/travel/discover-canberra-australias-capital-city/",
+          "domain_name": "robbreport",
+          "favicon_url": "https://www.google.com/s2/favicons?sz=32&domain=robbreport.com.my"
+         }
+        }
+       ],
+       "generated_media_items": []
+      }
+     }
+    },
+    {
+     "intended_usage": "ask_text",
+     "markdown_block": {
+      "progress": "DONE",
+      "chunks": [
+       "The capital of Australia i",
+       "s **Canberra**,",
+       " not Syd",
+       "ney.[1][2][3]",
+       "\n",
+       "## Why Canberra",
+       " and not Sydney?",
+       "\n",
+       "Canberra",
+       " was chosen as a **polit",
+       "ical compromise** between Austr",
+       "alia\u2019s two largest",
+       " and most rival citie",
+       "s at the tim",
+       "e of federation: **Sydney** and **Melbourn",
+       "e**.[2]",
+       "[4][8]\n\nWhen Australia f",
+       "ederate",
+       "d in 1901, both Sydn",
+       "ey (in New South Wa",
+       "les) and Melbourne (in Vict",
+       "oria) lobbied inten",
+       "sely to become the nati",
+       "onal capi",
+       "tal.  Nei",
+       "ther ",
+       "side was willing to con",
+       "cede, so the ",
+       "framer",
+       "s of the Australian Constitution wrot",
+       "e in a solu",
+       "tion:[11][2]\n\n- The capital would be locate",
+       "d **wi",
+       "thin New South Wal",
+       "es** (satisfying Sydn",
+       "ey\u2019s sta",
+       "te).[9][14]\n-",
+       " But it had to b",
+       "e **at leas",
+       "t 100 miles",
+       " (161 km) from Sy",
+       "dney**",
+       " (so Sydney wo",
+       "uldn\u2019t domina",
+       "te).",
+       "[14][9]\n- Until the new cap",
+       "ital was r",
+       "eady, **Melbourne w",
+       "ould serve as the interim ",
+       "seat of governmen",
+       "t**.[9]",
+       "[11]\n\nIn ",
+       "1908, the site ",
+       "that became Canb",
+       "erra was sele",
+       "cted, and",
+       " the city was formally fou",
+       "nded in",
+       " 191",
+       "3 as a **pur",
+       "pose-built, planned cap",
+       "ita",
+       "l**.  The federal parlia",
+       "ment officially moved from Melbourn",
+       "e to Canberra i",
+       "n **192",
+       "7**.[4][6][13][2][11][9]",
+       "\n",
+       "## Key po",
+       "ints",
+       "\n",
+       "- **Sydney** is the cap",
+       "ital of",
+       " the state of **New S",
+       "outh Wales**, not",
+       " the na",
+       "t",
+       "ion.[2][9]\n- **Canb",
+       "erra** ",
+       "lies in the **Austra",
+       "lian Capital Territory (ACT",
+       ")**, a federal terri",
+       "tory created specifically for the nati",
+       "onal capi",
+       "tal.[1][3][12]\n- The ch",
+       "oice was delibera",
+       "tely **neu",
+       "tral and inlan",
+       "d**, to avoid fa",
+       "vouring either Sydney or Melbo",
+       "urne and to sy",
+       "mboli",
+       "ze a cap",
+       "ital for the whole federa",
+       "t",
+       "ion.[4]",
+       "[13][2]"
+      ],
+      "chunk_starting_offset": 0,
+      "answer": "The capital of Australia is **Canberra**, not Sydney.[1][2][3]\n## Why Canberra and not Sydney?\nCanberra was chosen as a **political compromise** between Australia\u2019s two largest and most rival cities at the time of federation: **Sydney** and **Melbourne**.[2][4][8]\n\nWhen Australia federated in 1901, both Sydney (in New South Wales) and Melbourne (in Victoria) lobbied intensely to become the national capital.  Neither side was willing to concede, so the framers of the Australian Constitution wrote in a solution:[11][2]\n\n- The capital would be located **within New South Wales** (satisfying Sydney\u2019s state).[9][14]\n- But it had to be **at least 100 miles (161 km) from Sydney** (so Sydney wouldn\u2019t dominate).[14][9]\n- Until the new capital was ready, **Melbourne would serve as the interim seat of government**.[9][11]\n\nIn 1908, the site that became Canberra was selected, and the city was formally founded in 1913 as a **purpose-built, planned capital**.  The federal parliament officially moved from Melbourne to Canberra in **1927**.[4][6][13][2][11][9]\n## Key points\n- **Sydney** is the capital of the state of **New South Wales**, not the nation.[2][9]\n- **Canberra** lies in the **Australian Capital Territory (ACT)**, a federal territory created specifically for the national capital.[3][12][1]\n- The choice was deliberately **neutral and inland**, to avoid favouring either Sydney or Melbourne and to symbolize a capital for the whole federation.[13][4][2]"
+     }
+    },
+    {
+     "intended_usage": "workflow_root",
+     "workflow_block": {
+      "version": "1.0",
+      "status": "WORKFLOW_COMPLETED",
+      "headline": "",
+      "completed_at": "",
+      "predicted_completion_at": "",
+      "steps": [
+       {
+        "status": "WORKFLOW_COMPLETED",
+        "title": "Searching the web",
+        "items": [
+         {
+          "id": "023f3468-de96-4f0c-977c-aff5b7459705",
+          "type": "WORKFLOW_ITEM_QUERIES",
+          "payload": {
+           "queries_payload": {
+            "queries": [
+             "capital of Australia",
+             "why is Canberra capital not Sydney"
+            ]
+           }
+          }
+         },
+         {
+          "id": "c8b0f20f-230c-455f-b758-e4adc07afc34",
+          "type": "WORKFLOW_ITEM_SOURCES",
+          "payload": {
+           "sources_payload": {
+            "sources": [
+             {
+              "name": "Canberra - Wikipedia",
+              "snippet": "",
+              "url": "https://en.wikipedia.org/wiki/Canberra",
+              "meta_data": {
+               "client": "web",
+               "date": "2001-08-27",
+               "domain_name": "Wikimedia Foundation, Inc.",
+               "published_date": "2001-08-27T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false,
+              "trust": {
+               "level": 2,
+               "name": "trusted",
+               "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+              }
+             },
+             {
+              "name": "What is the Capital of Australia? - Mappr",
+              "snippet": "The capital of Australia is Canberra. The city is located in the Australian Capital Territory, 150 kilometers inland from the country\u2019s southeast coast.",
+              "url": "https://www.mappr.co/capital-cities/australia/",
+              "meta_data": {
+               "client": "web",
+               "date": "2024-03-04",
+               "domain_name": "Mappr",
+               "description": "The capital of Australia is Canberra. The city is located in the Australian Capital Territory, 150 kilometers inland from the country\u2019s southeast coast.",
+               "published_date": "2024-03-04T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false
+             },
+             {
+              "name": "Australia | History, Cities, Population, Capital, Map, & Facts",
+              "snippet": "Australia is the smallest continent and one of the largest countries on Earth, lying between the Pacific and Indian oceans in the Southern Hemisphere. Its capital city is Canberra, and its most important economic and cultural centers are Sydney and Melbourne.",
+              "url": "https://www.britannica.com/place/Australia",
+              "meta_data": {
+               "client": "web",
+               "date": "2026-06-08",
+               "domain_name": "Encyclopedia Britannica",
+               "description": "Australia is the smallest continent and one of the largest countries on Earth, lying between the Pacific and Indian oceans in the Southern Hemisphere. Its capital city is Canberra, and its most important economic and cultural centers are Sydney and Melbourne.",
+               "published_date": "2026-06-08T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false,
+              "trust": {
+               "level": 2,
+               "name": "trusted",
+               "description": "is trusted for professionally edited general-reference and educational articles across history, science, culture, and other subjects"
+              }
+             },
+             {
+              "name": "What is the Capital of Australia? Canberra Facts & History - USAnalysis.org",
+              "snippet": "You\u2019ve probably been asked \u201cWhat is the capital of Australia?\u201d more than once. The answer is Canberra \u2014 but the story behind that answer is a fascinating tale of political compromise, rivalries, and a purpose-built city. Official capital: Canberra \u00b7 Population of Canberra (2021): 484,630 \u00b7 Year named capital: 1913 \u00b7 Federal territory: Australian Capital [\u2026]",
+              "url": "https://usanalysis.org/blog/what-is-the-capital-of-australia/",
+              "meta_data": {
+               "client": "web",
+               "date": "2026-07-16",
+               "domain_name": "usanalysis.org",
+               "description": "You\u2019ve probably been asked \u201cWhat is the capital of Australia?\u201d more than once. The answer is Canberra \u2014 but the story behind that answer is a fascinating tale of political compromise, rivalries, and a purpose-built city. Official capital: Canberra \u00b7 Population of Canberra (2021): 484,630 \u00b7 Year named capital: 1913 \u00b7 Federal territory: Australian Capital [\u2026]",
+               "published_date": "2026-07-16T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false
+             },
+             {
+              "name": "Australia - Wikipedia",
+              "snippet": "",
+              "url": "https://en.wikipedia.org/wiki/Australia",
+              "meta_data": {
+               "client": "web",
+               "date": "2001-11-04",
+               "domain_name": "Wikimedia Foundation, Inc.",
+               "published_date": "2001-11-04T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false,
+              "trust": {
+               "level": 2,
+               "name": "trusted",
+               "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+              }
+             },
+             {
+              "name": "Portal:Geography/Featured article/28 - Wikipedia",
+              "snippet": "",
+              "url": "https://en.wikipedia.org/wiki/Portal:Geography/Featured_article/28",
+              "meta_data": {
+               "client": "web",
+               "date": "2022-01-01",
+               "domain_name": "en.wikipedia.org",
+               "published_date": "2022-01-01T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false,
+              "trust": {
+               "level": 2,
+               "name": "trusted",
+               "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+              }
+             },
+             {
+              "name": "Sydney isn't the capital of Australia!",
+              "snippet": "Read about the capital of Australia, why it's not what you expected, and the many reasons you should definitely visit the beautiful country. Find out more!",
+              "url": "https://ovolohotels.com/ovolo/blog/sydney-isnt-the-capital-of-australia/",
+              "meta_data": {
+               "client": "web",
+               "date": "2015-09-30",
+               "domain_name": "Ovolo Hotels",
+               "description": "Read about the capital of Australia, why it's not what you expected, and the many reasons you should definitely visit the beautiful country. Find out more!",
+               "published_date": "2015-09-30T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false
+             },
+             {
+              "name": "How Canberra Became the Capital of Australia",
+              "snippet": "Wondering why Canberra, not Sydney or Melbourne, is the capital of Australia? Discover how it was chosen, what makes it unique, and why it\u2019s worth visiting.",
+              "url": "https://www.remitly.com/blog/en-au/lifestyle-culture/capital-of-australia/",
+              "meta_data": {
+               "client": "web",
+               "date": "2025-05-29",
+               "domain_name": "Beyond Borders by Remitly",
+               "description": "Wondering why Canberra, not Sydney or Melbourne, is the capital of Australia? Discover how it was chosen, what makes it unique, and why it\u2019s worth visiting.",
+               "published_date": "2025-05-29T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false,
+              "trust": {
+               "level": 2,
+               "name": "trusted",
+               "description": "is trusted for official international money-transfer services, account support, fees, licensing, and corporate information"
+              }
+             },
+             {
+              "name": "List of Australian capital cities - Wikipedia",
+              "snippet": "",
+              "url": "https://en.wikipedia.org/wiki/List_of_Australian_capital_cities",
+              "meta_data": {
+               "client": "web",
+               "date": "2005-12-05",
+               "domain_name": "Wikimedia Foundation, Inc.",
+               "published_date": "2005-12-05T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false,
+              "trust": {
+               "level": 2,
+               "name": "trusted",
+               "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+              }
+             },
+             {
+              "name": "[Solved] Capital of Australia:",
+              "snippet": "The correct answer is Canberra. Key Points Canberra is the capital city of Australia, located in the southeastern part of the country within the Australian",
+              "url": "https://testbook.com/question-answer/capital-of-australia--69d4f1ac9e4bb2d6cb4f660b",
+              "meta_data": {
+               "client": "web",
+               "date": "2026-07-15",
+               "domain_name": "Testbook",
+               "description": "The correct answer is Canberra. Key Points Canberra is the capital city of Australia, located in the southeastern part of the country within the Australian",
+               "published_date": "2026-07-15T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false
+             },
+             {
+              "name": "What Is The Capital Of Australia?",
+              "snippet": "Located at the Australian Capital Territory's northern end is Canberra, the capital and largest inland city of Australia.",
+              "url": "https://www.worldatlas.com/articles/what-is-the-capital-of-australia.html",
+              "meta_data": {
+               "client": "web",
+               "date": "2018-06-27",
+               "domain_name": "WorldAtlas",
+               "description": "Located at the Australian Capital Territory's northern end is Canberra, the capital and largest inland city of Australia.",
+               "published_date": "2018-06-27T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false
+             },
+             {
+              "name": "Canberra | History, Map, Population, Climate, & Facts - Britannica",
+              "snippet": "Canberra, federal capital of the Commonwealth of Australia. It occupies part of the Australian Capital Territory, in southern Australia, and is about 150 miles (240 km) southwest of Sydney. Canberra lies astride the Molonglo River, which is a tributary of the Murrumbidgee River.",
+              "url": "https://www.britannica.com/place/Canberra",
+              "meta_data": {
+               "client": "web",
+               "date": "2026-06-03",
+               "domain_name": "Encyclopedia Britannica",
+               "description": "Canberra, federal capital of the Commonwealth of Australia. It occupies part of the Australian Capital Territory, in southern Australia, and is about 150 miles (240 km) southwest of Sydney. Canberra lies astride the Molonglo River, which is a tributary of the Murrumbidgee River.",
+               "published_date": "2026-06-03T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false,
+              "trust": {
+               "level": 2,
+               "name": "trusted",
+               "description": "is trusted for professionally edited general-reference and educational articles across history, science, culture, and other subjects"
+              }
+             },
+             {
+              "name": "Canberra: Discover the Capital City of Australia",
+              "snippet": "When people think of Australia, images of the Sydney Opera House, the Great Barrier Reef, and the vast Outback often come to mind. However, the question \"what i",
+              "url": "https://imba.missouri.edu/capitol-of-australia-2998004720.html",
+              "meta_data": {
+               "client": "web",
+               "domain_name": "Imba Missouri Insights",
+               "description": "When people think of Australia, images of the Sydney Opera House, the Great Barrier Reef, and the vast Outback often come to mind. However, the question \"what i"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false
+             },
+             {
+              "name": "What is the capital of Australia?",
+              "snippet": "Discover Australia's capital city! Many people guess Sydney or Melbourne, but the answer might surprise you. Learn the fascinating history behind this choice.",
+              "url": "https://www.vedantu.com/question-answer/what-is-the-capital-of-australia-692febb7fd13621f5a4ecf12",
+              "meta_data": {
+               "client": "web",
+               "date": "2025-12-03",
+               "domain_name": "vedantu.com",
+               "description": "Discover Australia's capital city! Many people guess Sydney or Melbourne, but the answer might surprise you. Learn the fascinating history behind this choice.",
+               "published_date": "2025-12-03T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false
+             },
+             {
+              "name": "What is the capital of Australia? If you thought it ...",
+              "snippet": "Neither Sydney nor Melbourne, Australia's capital is Canberra. Here's the story of how the country's capital was decided.",
+              "url": "https://youtooproject.com/en/blog/australia-en/capital-of-australia-canberra/",
+              "meta_data": {
+               "client": "web",
+               "date": "2024-09-22",
+               "domain_name": "Youtooproject",
+               "description": "Neither Sydney nor Melbourne, Australia's capital is Canberra. Here's the story of how the country's capital was decided.",
+               "published_date": "2024-09-22T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false
+             }
+            ]
+           }
+          }
+         }
+        ],
+        "started_at": "",
+        "completed_at": "",
+        "icon": "search",
+        "source_tier": "SOURCE_TIER_DEFAULT",
+        "id": "b16d5c0b-fc02-4597-91a5-89ed70de52b8"
+       }
+      ],
+      "snapshots": []
+     }
+    },
+    {
+     "intended_usage": "web_results",
+     "web_result_block": {
+      "progress": "DONE",
+      "web_results": [
+       {
+        "name": "Canberra - Wikipedia",
+        "snippet": "Canberra (/\u02c8k\u00e6nbr\u0259/ ^\u24d8^ *KAN-br\u0259*; Ngunawal: *Kanbarra*) is the capital city of Australia and the largest population centre in the Australian Capital Territory. ... Canberra was established following the federation of the Australian colonies to serve as the seat of government for the new nation, being a compromise between Sydney and Melbourne, Australia\u2019s two largest cities.",
+        "timestamp": "2001-08-27T00:00:00",
+        "url": "https://en.wikipedia.org/wiki/Canberra",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/2016896b-fa24-50f2-bfe7-41314e0cd9cc/01a84265-e09c-5682-92ce-681c89a1afe2.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+        }
+       },
+       {
+        "name": "What is the Capital of Australia? - Mappr",
+        "snippet": "The capital of Australia is Canberra. The city is located in the Australian Capital Territory, 150 kilometers inland from the country\u2019s southeast coast.",
+        "timestamp": "2024-03-04T00:00:00",
+        "url": "https://www.mappr.co/capital-cities/australia/",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/bc23429f-9fe3-5ff9-a52e-eec36df5496d/e0fc49c2-5962-580a-acd6-7c74e5ad0f2a.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       },
+       {
+        "name": "Australia | History, Cities, Population, Capital, Map, & Facts",
+        "snippet": "Australia is the smallest continent and one of the largest countries on Earth, lying between the Pacific and Indian oceans in the Southern Hemisphere. Its capital city is Canberra, and its most important economic and cultural centers are Sydney and Melbourne.",
+        "timestamp": "2026-06-08T00:00:00",
+        "url": "https://www.britannica.com/place/Australia",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/fc7ec0b1-5112-5246-bdc9-af830e2bbf8a/e91e73d4-022b-59db-9713-717a2a198855.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for professionally edited general-reference and educational articles across history, science, culture, and other subjects"
+        }
+       },
+       {
+        "name": "What is the Capital of Australia? Canberra Facts & History - USAnalysis.org",
+        "snippet": "You\u2019ve probably been asked \u201cWhat is the capital of Australia?\u201d more than once. The answer is Canberra \u2014 but the story behind that answer is a fascinating tale of political compromise, rivalries, and a purpose-built city. Official capital: Canberra \u00b7 Population of Canberra (2021): 484,630 \u00b7 Year named capital: 1913 \u00b7 Federal territory: Australian Capital [\u2026]",
+        "timestamp": "2026-07-16T00:00:00",
+        "url": "https://usanalysis.org/blog/what-is-the-capital-of-australia/",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": []
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       },
+       {
+        "name": "Australia - Wikipedia",
+        "snippet": "Canberra is the nation's capital, while its most populous cities are Sydney and Melbourne, each with a population of more than five million. ... CapitalCanberra 35\u00b018\u203229\u2033S 149\u00b007\u203228\u2033E\ufeff / \ufeff35.30806\u00b0S 149.12444\u00b0E",
+        "timestamp": "2001-11-04T00:00:00",
+        "url": "https://en.wikipedia.org/wiki/Australia",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Flag_of_Australia_%28converted%29.svg/1280px-Flag_of_Australia_%28converted%29.svg.png"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+        }
+       },
+       {
+        "name": "Portal:Geography/Featured article/28 - Wikipedia",
+        "snippet": "Canberra is the capital city of Australia and with a population of just over 323,000 is Australia's largest inland city. Canberra was selected as the location of the nation's capital in 1908 as a compromise between Sydney and Melbourne and is unusual amongst Australian capital cities as an entirely purpose-built, planned city.",
+        "timestamp": "2022-01-01T00:00:00",
+        "url": "https://en.wikipedia.org/wiki/Portal:Geography/Featured_article/28",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": []
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+        }
+       },
+       {
+        "name": "Sydney isn't the capital of Australia!",
+        "snippet": "Read about the capital of Australia, why it's not what you expected, and the many reasons you should definitely visit the beautiful country. Find out more!",
+        "timestamp": "2015-09-30T00:00:00",
+        "url": "https://ovolohotels.com/ovolo/blog/sydney-isnt-the-capital-of-australia/",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/f3a4b6cd-36f9-51ca-8508-d4d1d536451e/31036264-ef9a-5313-9361-33e8625377d9.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       },
+       {
+        "name": "How Canberra Became the Capital of Australia",
+        "snippet": "Wondering why Canberra, not Sydney or Melbourne, is the capital of Australia? Discover how it was chosen, what makes it unique, and why it\u2019s worth visiting.",
+        "timestamp": "2025-05-29T00:00:00",
+        "url": "https://www.remitly.com/blog/en-au/lifestyle-culture/capital-of-australia/",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/95af20e1-38da-595c-a020-6a89407d3677/63dfe864-bbdb-5fdb-8334-b6d2f2ff7617.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for official international money-transfer services, account support, fees, licensing, and corporate information"
+        }
+       },
+       {
+        "name": "List of Australian capital cities - Wikipedia",
+        "snippet": "There are eight capital cities in Australia, each of which functions as the seat of government for the state or territory in which it is located. One of these, Canberra, is also the national capital. Section 125 of the Constitution of Australia specified that the seat of the national government, that is, the national capital, would be in its own territory within New South Wales, at least 100 miles (161 km) from Sydney. The Constitution specified that until this national capital was ready, the...",
+        "timestamp": "2005-12-05T00:00:00",
+        "url": "https://en.wikipedia.org/wiki/List_of_Australian_capital_cities",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Skylines_of_Sydney_CBD_seen_from_North_Sydney%2C_August_2022%2C_04.jpg/1280px-Skylines_of_Sydney_CBD_seen_from_North_Sydney%2C_August_2022%2C_04.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+        }
+       },
+       {
+        "name": "[Solved] Capital of Australia:",
+        "snippet": "The correct answer is Canberra. Key Points Canberra is the capital city of Australia, located in the southeastern part of the country within the Australian",
+        "timestamp": "2026-07-15T00:00:00",
+        "url": "https://testbook.com/question-answer/capital-of-australia--69d4f1ac9e4bb2d6cb4f660b",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/f309bc4e-aeac-5bd3-ad4d-7de55575fc9e/33194e52-4b5c-52d4-b6f9-95270b376552.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       },
+       {
+        "name": "What Is The Capital Of Australia?",
+        "snippet": "Located at the Australian Capital Territory's northern end is Canberra, the capital and largest inland city of Australia.",
+        "timestamp": "2018-06-27T00:00:00",
+        "url": "https://www.worldatlas.com/articles/what-is-the-capital-of-australia.html",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/06e6c331-5874-5df7-9ee2-c82eb3e78a0e/14b98223-512e-542b-80cb-2a7ef4373de1.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       },
+       {
+        "name": "Canberra | History, Map, Population, Climate, & Facts - Britannica",
+        "snippet": "Canberra, federal capital of the Commonwealth of Australia. It occupies part of the Australian Capital Territory, in southern Australia, and is about 150 miles (240 km) southwest of Sydney. Canberra lies astride the Molonglo River, which is a tributary of the Murrumbidgee River.",
+        "timestamp": "2026-06-03T00:00:00",
+        "url": "https://www.britannica.com/place/Canberra",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/9eb65d32-1d6b-59a5-8572-bd4afa1dbb68/e91e73d4-022b-59db-9713-717a2a198855.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for professionally edited general-reference and educational articles across history, science, culture, and other subjects"
+        }
+       },
+       {
+        "name": "Canberra: Discover the Capital City of Australia",
+        "snippet": "When people think of Australia, images of the Sydney Opera House, the Great Barrier Reef, and the vast Outback often come to mind. However, the question \"what i",
+        "timestamp": "",
+        "url": "https://imba.missouri.edu/capitol-of-australia-2998004720.html",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": []
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       },
+       {
+        "name": "What is the capital of Australia?",
+        "snippet": "Discover Australia's capital city! Many people guess Sydney or Melbourne, but the answer might surprise you. Learn the fascinating history behind this choice.",
+        "timestamp": "2025-12-03T00:00:00",
+        "url": "https://www.vedantu.com/question-answer/what-is-the-capital-of-australia-692febb7fd13621f5a4ecf12",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": []
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       },
+       {
+        "name": "What is the capital of Australia? If you thought it ...",
+        "snippet": "Neither Sydney nor Melbourne, Australia's capital is Canberra. Here's the story of how the country's capital was decided.",
+        "timestamp": "2024-09-22T00:00:00",
+        "url": "https://youtooproject.com/en/blog/australia-en/capital-of-australia-canberra/",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/4a549263-8a03-5f80-b7ef-6c10496d380c/d4b21e70-db22-5959-9b12-63fa6475155f.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       }
+      ]
+     }
+    },
+    {
+     "intended_usage": "answer_tabs",
+     "answer_tabs_block": {
+      "modes": [
+       {
+        "answer_mode_type": "ANSWER"
+       },
+       {
+        "answer_mode_type": "SOURCES"
+       },
+       {
+        "answer_mode_type": "IMAGE"
+       }
+      ],
+      "reformulated_queries": [
+       "capital of Australia"
+      ]
+     }
+    },
+    {
+     "intended_usage": "sources_answer_mode",
+     "sources_mode_block": {
+      "answer_mode_type": "SOURCES",
+      "progress": "DONE",
+      "web_results": [
+       {
+        "name": "Canberra - Wikipedia",
+        "snippet": "Canberra (/\u02c8k\u00e6nbr\u0259/ ^\u24d8^ *KAN-br\u0259*; Ngunawal: *Kanbarra*) is the capital city of Australia and the largest population centre in the Australian Capital Territory. ... Canberra was established following the federation of the Australian colonies to serve as the seat of government for the new nation, being a compromise between Sydney and Melbourne, Australia\u2019s two largest cities.",
+        "timestamp": "2001-08-27T00:00:00",
+        "url": "https://en.wikipedia.org/wiki/Canberra",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/2016896b-fa24-50f2-bfe7-41314e0cd9cc/01a84265-e09c-5682-92ce-681c89a1afe2.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+        }
+       },
+       {
+        "name": "What is the Capital of Australia? - Mappr",
+        "snippet": "The capital of Australia is Canberra. The city is located in the Australian Capital Territory, 150 kilometers inland from the country\u2019s southeast coast.",
+        "timestamp": "2024-03-04T00:00:00",
+        "url": "https://www.mappr.co/capital-cities/australia/",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/bc23429f-9fe3-5ff9-a52e-eec36df5496d/e0fc49c2-5962-580a-acd6-7c74e5ad0f2a.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       },
+       {
+        "name": "Australia | History, Cities, Population, Capital, Map, & Facts",
+        "snippet": "Australia is the smallest continent and one of the largest countries on Earth, lying between the Pacific and Indian oceans in the Southern Hemisphere. Its capital city is Canberra, and its most important economic and cultural centers are Sydney and Melbourne.",
+        "timestamp": "2026-06-08T00:00:00",
+        "url": "https://www.britannica.com/place/Australia",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/fc7ec0b1-5112-5246-bdc9-af830e2bbf8a/e91e73d4-022b-59db-9713-717a2a198855.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for professionally edited general-reference and educational articles across history, science, culture, and other subjects"
+        }
+       },
+       {
+        "name": "What is the Capital of Australia? Canberra Facts & History - USAnalysis.org",
+        "snippet": "You\u2019ve probably been asked \u201cWhat is the capital of Australia?\u201d more than once. The answer is Canberra \u2014 but the story behind that answer is a fascinating tale of political compromise, rivalries, and a purpose-built city. Official capital: Canberra \u00b7 Population of Canberra (2021): 484,630 \u00b7 Year named capital: 1913 \u00b7 Federal territory: Australian Capital [\u2026]",
+        "timestamp": "2026-07-16T00:00:00",
+        "url": "https://usanalysis.org/blog/what-is-the-capital-of-australia/",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": []
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       },
+       {
+        "name": "Australia - Wikipedia",
+        "snippet": "Canberra is the nation's capital, while its most populous cities are Sydney and Melbourne, each with a population of more than five million. ... CapitalCanberra 35\u00b018\u203229\u2033S 149\u00b007\u203228\u2033E\ufeff / \ufeff35.30806\u00b0S 149.12444\u00b0E",
+        "timestamp": "2001-11-04T00:00:00",
+        "url": "https://en.wikipedia.org/wiki/Australia",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Flag_of_Australia_%28converted%29.svg/1280px-Flag_of_Australia_%28converted%29.svg.png"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+        }
+       },
+       {
+        "name": "Portal:Geography/Featured article/28 - Wikipedia",
+        "snippet": "Canberra is the capital city of Australia and with a population of just over 323,000 is Australia's largest inland city. Canberra was selected as the location of the nation's capital in 1908 as a compromise between Sydney and Melbourne and is unusual amongst Australian capital cities as an entirely purpose-built, planned city.",
+        "timestamp": "2022-01-01T00:00:00",
+        "url": "https://en.wikipedia.org/wiki/Portal:Geography/Featured_article/28",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": []
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+        }
+       },
+       {
+        "name": "Sydney isn't the capital of Australia!",
+        "snippet": "Read about the capital of Australia, why it's not what you expected, and the many reasons you should definitely visit the beautiful country. Find out more!",
+        "timestamp": "2015-09-30T00:00:00",
+        "url": "https://ovolohotels.com/ovolo/blog/sydney-isnt-the-capital-of-australia/",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/f3a4b6cd-36f9-51ca-8508-d4d1d536451e/31036264-ef9a-5313-9361-33e8625377d9.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       },
+       {
+        "name": "How Canberra Became the Capital of Australia",
+        "snippet": "Wondering why Canberra, not Sydney or Melbourne, is the capital of Australia? Discover how it was chosen, what makes it unique, and why it\u2019s worth visiting.",
+        "timestamp": "2025-05-29T00:00:00",
+        "url": "https://www.remitly.com/blog/en-au/lifestyle-culture/capital-of-australia/",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/95af20e1-38da-595c-a020-6a89407d3677/63dfe864-bbdb-5fdb-8334-b6d2f2ff7617.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for official international money-transfer services, account support, fees, licensing, and corporate information"
+        }
+       },
+       {
+        "name": "List of Australian capital cities - Wikipedia",
+        "snippet": "There are eight capital cities in Australia, each of which functions as the seat of government for the state or territory in which it is located. One of these, Canberra, is also the national capital. Section 125 of the Constitution of Australia specified that the seat of the national government, that is, the national capital, would be in its own territory within New South Wales, at least 100 miles (161 km) from Sydney. The Constitution specified that until this national capital was ready, the...",
+        "timestamp": "2005-12-05T00:00:00",
+        "url": "https://en.wikipedia.org/wiki/List_of_Australian_capital_cities",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Skylines_of_Sydney_CBD_seen_from_North_Sydney%2C_August_2022%2C_04.jpg/1280px-Skylines_of_Sydney_CBD_seen_from_North_Sydney%2C_August_2022%2C_04.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+        }
+       },
+       {
+        "name": "[Solved] Capital of Australia:",
+        "snippet": "The correct answer is Canberra. Key Points Canberra is the capital city of Australia, located in the southeastern part of the country within the Australian",
+        "timestamp": "2026-07-15T00:00:00",
+        "url": "https://testbook.com/question-answer/capital-of-australia--69d4f1ac9e4bb2d6cb4f660b",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/f309bc4e-aeac-5bd3-ad4d-7de55575fc9e/33194e52-4b5c-52d4-b6f9-95270b376552.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       },
+       {
+        "name": "What Is The Capital Of Australia?",
+        "snippet": "Located at the Australian Capital Territory's northern end is Canberra, the capital and largest inland city of Australia.",
+        "timestamp": "2018-06-27T00:00:00",
+        "url": "https://www.worldatlas.com/articles/what-is-the-capital-of-australia.html",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/06e6c331-5874-5df7-9ee2-c82eb3e78a0e/14b98223-512e-542b-80cb-2a7ef4373de1.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       },
+       {
+        "name": "Canberra | History, Map, Population, Climate, & Facts - Britannica",
+        "snippet": "Canberra, federal capital of the Commonwealth of Australia. It occupies part of the Australian Capital Territory, in southern Australia, and is about 150 miles (240 km) southwest of Sydney. Canberra lies astride the Molonglo River, which is a tributary of the Murrumbidgee River.",
+        "timestamp": "2026-06-03T00:00:00",
+        "url": "https://www.britannica.com/place/Canberra",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/9eb65d32-1d6b-59a5-8572-bd4afa1dbb68/e91e73d4-022b-59db-9713-717a2a198855.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for professionally edited general-reference and educational articles across history, science, culture, and other subjects"
+        }
+       },
+       {
+        "name": "Canberra: Discover the Capital City of Australia",
+        "snippet": "When people think of Australia, images of the Sydney Opera House, the Great Barrier Reef, and the vast Outback often come to mind. However, the question \"what i",
+        "timestamp": "",
+        "url": "https://imba.missouri.edu/capitol-of-australia-2998004720.html",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": []
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       },
+       {
+        "name": "What is the capital of Australia?",
+        "snippet": "Discover Australia's capital city! Many people guess Sydney or Melbourne, but the answer might surprise you. Learn the fascinating history behind this choice.",
+        "timestamp": "2025-12-03T00:00:00",
+        "url": "https://www.vedantu.com/question-answer/what-is-the-capital-of-australia-692febb7fd13621f5a4ecf12",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": []
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       },
+       {
+        "name": "What is the capital of Australia? If you thought it ...",
+        "snippet": "Neither Sydney nor Melbourne, Australia's capital is Canberra. Here's the story of how the country's capital was decided.",
+        "timestamp": "2024-09-22T00:00:00",
+        "url": "https://youtooproject.com/en/blog/australia-en/capital-of-australia-canberra/",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/4a549263-8a03-5f80-b7ef-6c10496d380c/d4b21e70-db22-5959-9b12-63fa6475155f.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       }
+      ],
+      "result_count": 15,
+      "rows": [
+       {
+        "web_result": {
+         "name": "Canberra - Wikipedia",
+         "snippet": "Canberra (/\u02c8k\u00e6nbr\u0259/ ^\u24d8^ *KAN-br\u0259*; Ngunawal: *Kanbarra*) is the capital city of Australia and the largest population centre in the Australian Capital Territory. ... Canberra was established following the federation of the Australian colonies to serve as the seat of government for the new nation, being a compromise between Sydney and Melbourne, Australia\u2019s two largest cities.",
+         "timestamp": "2001-08-27T00:00:00",
+         "url": "https://en.wikipedia.org/wiki/Canberra",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": [
+           "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/2016896b-fa24-50f2-bfe7-41314e0cd9cc/01a84265-e09c-5682-92ce-681c89a1afe2.jpg"
+          ]
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false,
+         "trust": {
+          "level": 2,
+          "name": "trusted",
+          "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+         }
+        },
+        "status": "UNSORTED",
+        "citation": 1
+       },
+       {
+        "web_result": {
+         "name": "What is the Capital of Australia? - Mappr",
+         "snippet": "The capital of Australia is Canberra. The city is located in the Australian Capital Territory, 150 kilometers inland from the country\u2019s southeast coast.",
+         "timestamp": "2024-03-04T00:00:00",
+         "url": "https://www.mappr.co/capital-cities/australia/",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": [
+           "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/bc23429f-9fe3-5ff9-a52e-eec36df5496d/e0fc49c2-5962-580a-acd6-7c74e5ad0f2a.jpg"
+          ]
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false
+        },
+        "status": "UNSORTED",
+        "citation": 2
+       },
+       {
+        "web_result": {
+         "name": "Australia | History, Cities, Population, Capital, Map, & Facts",
+         "snippet": "Australia is the smallest continent and one of the largest countries on Earth, lying between the Pacific and Indian oceans in the Southern Hemisphere. Its capital city is Canberra, and its most important economic and cultural centers are Sydney and Melbourne.",
+         "timestamp": "2026-06-08T00:00:00",
+         "url": "https://www.britannica.com/place/Australia",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": [
+           "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/fc7ec0b1-5112-5246-bdc9-af830e2bbf8a/e91e73d4-022b-59db-9713-717a2a198855.jpg"
+          ]
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false,
+         "trust": {
+          "level": 2,
+          "name": "trusted",
+          "description": "is trusted for professionally edited general-reference and educational articles across history, science, culture, and other subjects"
+         }
+        },
+        "status": "UNSORTED",
+        "citation": 3
+       },
+       {
+        "web_result": {
+         "name": "What is the Capital of Australia? Canberra Facts & History - USAnalysis.org",
+         "snippet": "You\u2019ve probably been asked \u201cWhat is the capital of Australia?\u201d more than once. The answer is Canberra \u2014 but the story behind that answer is a fascinating tale of political compromise, rivalries, and a purpose-built city. Official capital: Canberra \u00b7 Population of Canberra (2021): 484,630 \u00b7 Year named capital: 1913 \u00b7 Federal territory: Australian Capital [\u2026]",
+         "timestamp": "2026-07-16T00:00:00",
+         "url": "https://usanalysis.org/blog/what-is-the-capital-of-australia/",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": []
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false
+        },
+        "status": "UNSORTED",
+        "citation": 4
+       },
+       {
+        "web_result": {
+         "name": "Australia - Wikipedia",
+         "snippet": "Canberra is the nation's capital, while its most populous cities are Sydney and Melbourne, each with a population of more than five million. ... CapitalCanberra 35\u00b018\u203229\u2033S 149\u00b007\u203228\u2033E\ufeff / \ufeff35.30806\u00b0S 149.12444\u00b0E",
+         "timestamp": "2001-11-04T00:00:00",
+         "url": "https://en.wikipedia.org/wiki/Australia",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": [
+           "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Flag_of_Australia_%28converted%29.svg/1280px-Flag_of_Australia_%28converted%29.svg.png"
+          ]
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false,
+         "trust": {
+          "level": 2,
+          "name": "trusted",
+          "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+         }
+        },
+        "status": "UNSORTED",
+        "citation": 5
+       },
+       {
+        "web_result": {
+         "name": "Portal:Geography/Featured article/28 - Wikipedia",
+         "snippet": "Canberra is the capital city of Australia and with a population of just over 323,000 is Australia's largest inland city. Canberra was selected as the location of the nation's capital in 1908 as a compromise between Sydney and Melbourne and is unusual amongst Australian capital cities as an entirely purpose-built, planned city.",
+         "timestamp": "2022-01-01T00:00:00",
+         "url": "https://en.wikipedia.org/wiki/Portal:Geography/Featured_article/28",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": []
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false,
+         "trust": {
+          "level": 2,
+          "name": "trusted",
+          "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+         }
+        },
+        "status": "UNSORTED",
+        "citation": 6
+       },
+       {
+        "web_result": {
+         "name": "Sydney isn't the capital of Australia!",
+         "snippet": "Read about the capital of Australia, why it's not what you expected, and the many reasons you should definitely visit the beautiful country. Find out more!",
+         "timestamp": "2015-09-30T00:00:00",
+         "url": "https://ovolohotels.com/ovolo/blog/sydney-isnt-the-capital-of-australia/",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": [
+           "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/f3a4b6cd-36f9-51ca-8508-d4d1d536451e/31036264-ef9a-5313-9361-33e8625377d9.jpg"
+          ]
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false
+        },
+        "status": "UNSORTED",
+        "citation": 7
+       },
+       {
+        "web_result": {
+         "name": "How Canberra Became the Capital of Australia",
+         "snippet": "Wondering why Canberra, not Sydney or Melbourne, is the capital of Australia? Discover how it was chosen, what makes it unique, and why it\u2019s worth visiting.",
+         "timestamp": "2025-05-29T00:00:00",
+         "url": "https://www.remitly.com/blog/en-au/lifestyle-culture/capital-of-australia/",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": [
+           "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/95af20e1-38da-595c-a020-6a89407d3677/63dfe864-bbdb-5fdb-8334-b6d2f2ff7617.jpg"
+          ]
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false,
+         "trust": {
+          "level": 2,
+          "name": "trusted",
+          "description": "is trusted for official international money-transfer services, account support, fees, licensing, and corporate information"
+         }
+        },
+        "status": "UNSORTED",
+        "citation": 8
+       },
+       {
+        "web_result": {
+         "name": "List of Australian capital cities - Wikipedia",
+         "snippet": "There are eight capital cities in Australia, each of which functions as the seat of government for the state or territory in which it is located. One of these, Canberra, is also the national capital. Section 125 of the Constitution of Australia specified that the seat of the national government, that is, the national capital, would be in its own territory within New South Wales, at least 100 miles (161 km) from Sydney. The Constitution specified that until this national capital was ready, the...",
+         "timestamp": "2005-12-05T00:00:00",
+         "url": "https://en.wikipedia.org/wiki/List_of_Australian_capital_cities",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": [
+           "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Skylines_of_Sydney_CBD_seen_from_North_Sydney%2C_August_2022%2C_04.jpg/1280px-Skylines_of_Sydney_CBD_seen_from_North_Sydney%2C_August_2022%2C_04.jpg"
+          ]
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false,
+         "trust": {
+          "level": 2,
+          "name": "trusted",
+          "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+         }
+        },
+        "status": "UNSORTED",
+        "citation": 9
+       },
+       {
+        "web_result": {
+         "name": "[Solved] Capital of Australia:",
+         "snippet": "The correct answer is Canberra. Key Points Canberra is the capital city of Australia, located in the southeastern part of the country within the Australian",
+         "timestamp": "2026-07-15T00:00:00",
+         "url": "https://testbook.com/question-answer/capital-of-australia--69d4f1ac9e4bb2d6cb4f660b",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": [
+           "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/f309bc4e-aeac-5bd3-ad4d-7de55575fc9e/33194e52-4b5c-52d4-b6f9-95270b376552.jpg"
+          ]
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false
+        },
+        "status": "UNSORTED",
+        "citation": 10
+       },
+       {
+        "web_result": {
+         "name": "What Is The Capital Of Australia?",
+         "snippet": "Located at the Australian Capital Territory's northern end is Canberra, the capital and largest inland city of Australia.",
+         "timestamp": "2018-06-27T00:00:00",
+         "url": "https://www.worldatlas.com/articles/what-is-the-capital-of-australia.html",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": [
+           "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/06e6c331-5874-5df7-9ee2-c82eb3e78a0e/14b98223-512e-542b-80cb-2a7ef4373de1.jpg"
+          ]
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false
+        },
+        "status": "UNSORTED",
+        "citation": 11
+       },
+       {
+        "web_result": {
+         "name": "Canberra | History, Map, Population, Climate, & Facts - Britannica",
+         "snippet": "Canberra, federal capital of the Commonwealth of Australia. It occupies part of the Australian Capital Territory, in southern Australia, and is about 150 miles (240 km) southwest of Sydney. Canberra lies astride the Molonglo River, which is a tributary of the Murrumbidgee River.",
+         "timestamp": "2026-06-03T00:00:00",
+         "url": "https://www.britannica.com/place/Canberra",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": [
+           "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/9eb65d32-1d6b-59a5-8572-bd4afa1dbb68/e91e73d4-022b-59db-9713-717a2a198855.jpg"
+          ]
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false,
+         "trust": {
+          "level": 2,
+          "name": "trusted",
+          "description": "is trusted for professionally edited general-reference and educational articles across history, science, culture, and other subjects"
+         }
+        },
+        "status": "UNSORTED",
+        "citation": 12
+       },
+       {
+        "web_result": {
+         "name": "Canberra: Discover the Capital City of Australia",
+         "snippet": "When people think of Australia, images of the Sydney Opera House, the Great Barrier Reef, and the vast Outback often come to mind. However, the question \"what i",
+         "timestamp": "",
+         "url": "https://imba.missouri.edu/capitol-of-australia-2998004720.html",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": []
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false
+        },
+        "status": "UNSORTED",
+        "citation": 13
+       },
+       {
+        "web_result": {
+         "name": "What is the capital of Australia?",
+         "snippet": "Discover Australia's capital city! Many people guess Sydney or Melbourne, but the answer might surprise you. Learn the fascinating history behind this choice.",
+         "timestamp": "2025-12-03T00:00:00",
+         "url": "https://www.vedantu.com/question-answer/what-is-the-capital-of-australia-692febb7fd13621f5a4ecf12",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": []
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false
+        },
+        "status": "UNSORTED",
+        "citation": 14
+       },
+       {
+        "web_result": {
+         "name": "What is the capital of Australia? If you thought it ...",
+         "snippet": "Neither Sydney nor Melbourne, Australia's capital is Canberra. Here's the story of how the country's capital was decided.",
+         "timestamp": "2024-09-22T00:00:00",
+         "url": "https://youtooproject.com/en/blog/australia-en/capital-of-australia-canberra/",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": [
+           "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/4a549263-8a03-5f80-b7ef-6c10496d380c/d4b21e70-db22-5959-9b12-63fa6475155f.jpg"
+          ]
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false
+        },
+        "status": "UNSORTED",
+        "citation": 15
+       }
+      ]
+     }
+    },
+    {
+     "intended_usage": "pending_followups",
+     "pending_followups_block": {
+      "followups": []
+     }
+    }
+   ],
+   "related_query_items": [
+    {
+     "text": "How was the location for Canberra selected and designed",
+     "type": "DEFAULT"
+    },
+    {
+     "text": "What is the role of the Australian Capital Territory today",
+     "type": "DEFAULT"
+    },
+    {
+     "text": "History of Australian Federation in 1901",
+     "type": "DEFAULT"
+    },
+    {
+     "text": "Major cities in Australia and their state capitals",
+     "type": "DEFAULT"
+    },
+    {
+     "text": "Comparison of planned cities vs historical capitals",
+     "type": "DEFAULT"
+    }
+   ],
+   "access_level": "PRIVATE_READ",
+   "answer_modes": [
+    {
+     "answer_mode_type": "IMAGE",
+     "has_preview": false
+    },
+    {
+     "answer_mode_type": "SOURCES"
+    }
+   ],
+   "structured_answer_block_usages": [
+    "workflow_root",
+    "ask_text_0_markdown",
+    "ask_text_1_markdown",
+    "ask_text_2_markdown",
+    "ask_text_3_markdown",
+    "ask_text_4_markdown",
+    "ask_text_4_images"
+   ],
+   "reconnectable": false,
+   "classifier_results": {
+    "personal_search": false,
+    "skip_search": false,
+    "widget_type": null,
+    "hide_nav": false,
+    "hide_sources": false,
+    "image_generation": false,
+    "time_widget": false,
+    "mhe_predictions": {
+     "skip_search": false,
+     "image_generation_intent": false,
+     "time_widget": false,
+     "places_search_intent": false,
+     "shopping_intent": false,
+     "image_preview": false,
+     "video_preview": false,
+     "nav_intent": false,
+     "study_intent": null,
+     "personal_search": false,
+     "weather_widget": false,
+     "finance_widget_gating": false,
+     "calculator_widget": false,
+     "comet_nav_widget_combined_target": false,
+     "finance_agent_gating": false
+    },
+    "mhe_predictions_full": {
+     "skip_search": {
+      "is_true": false,
+      "probability": null,
+      "threshold": null
+     },
+     "image_generation_intent": {
+      "is_true": false,
+      "probability": 0.00023078918,
+      "threshold": 0.98
+     },
+     "time_widget": {
+      "is_true": false,
+      "probability": 0.0019302368,
+      "threshold": 0.8
+     },
+     "places_search_intent": {
+      "is_true": false,
+      "probability": 0.004058838,
+      "threshold": 0.85
+     },
+     "shopping_intent": {
+      "is_true": false,
+      "probability": 4.2676926e-05,
+      "threshold": 0.8
+     },
+     "image_preview": {
+      "is_true": false,
+      "probability": 0.037353516,
+      "threshold": 0.42
+     },
+     "video_preview": {
+      "is_true": false,
+      "probability": 5.1498413e-05,
+      "threshold": 0.5
+     },
+     "nav_intent": {
+      "is_true": false,
+      "probability": 0.00020313263,
+      "threshold": 0.5
+     },
+     "study_intent": null,
+     "personal_search": {
+      "is_true": false,
+      "probability": null,
+      "threshold": null
+     },
+     "skip_personal_search": {
+      "is_true": true,
+      "probability": 1,
+      "threshold": 0.95
+     },
+     "weather_widget": {
+      "is_true": false,
+      "probability": 0.0010986328,
+      "threshold": 0.4
+     },
+     "finance_widget_gating": {
+      "is_true": false,
+      "probability": 0.0001487732,
+      "threshold": 0.53
+     },
+     "calculator_widget": {
+      "is_true": false,
+      "probability": 0.00044441223,
+      "threshold": 0.3
+     },
+     "comet_nav_widget_combined_target": {
+      "is_true": false,
+      "probability": 0.0006866455,
+      "threshold": 0.5
+     },
+     "domain_subdomain": {
+      "label": "SCIENCE/GEOGRAPHY",
+      "probability": 0.953125
+     },
+     "finance_agent_gating": {
+      "is_true": false,
+      "probability": 1.4722347e-05,
+      "threshold": 0.7
+     }
+    }
+   },
+   "search_implementation_mode": "fast",
+   "query_language": "en",
+   "search_mode": "SEARCH",
+   "social_info": {
+    "view_count": 0,
+    "fork_count": 0,
+    "like_count": 0,
+    "user_likes": false
+   },
+   "featured_images": []
+  },
+  {
+   "backend_uuid": "34fe6257-be0a-478d-9a7b-aa168bf47176",
+   "context_uuid": "8d16e733-43e2-45d7-906c-666b9af45020",
+   "uuid": "43e4163d-7c43-42fb-891f-eb606492ac89",
+   "frontend_context_uuid": "f7b6936c-a8f9-4dac-a8d0-804fe633e8a1",
+   "frontend_uuid": "43e4163d-7c43-42fb-891f-eb606492ac89",
+   "status": "COMPLETED",
+   "thread_title": "what is the capital of Australia and why is it not Sydney",
+   "related_queries": [
+    "Compare the historical reasons behind New Zealand's capital move to Wellington in 1865 versus Australia's selection of Canberra in 1913. Research the economic, political, and geographic pressures in both nations at the time, specifically the role of population growth, regional rivalry between larger urban centers (like Auckland vs Wellington, and Sydney vs Melbourne), and the eventual compromise that shaped both capitals. Present the comparison in a structured report that contrasts the legislative and symbolic outcomes of these two distinct selection processes",
+    "Build an interactive timeline of New Zealand's capital cities from 1840 to the present. Map the tenure of Russell, Auckland, and Wellington, detailing for each: the specific economic catalysts for the move, the key political actors involved, the resulting infrastructure growth in the new city, and why the current capital of Wellington remains the center of government despite Auckland's larger population. Include a filterable comparison of institutional density (parliament, courts, diplomatic hubs) between all three historic capitals across their respective terms",
+    "History of New Zealand's Parliament Buildings",
+    "Comparison of New Zealand's largest cities by population",
+    "Role of the Governor-General in New Zealand politics"
+   ],
+   "display_model": "turbo",
+   "user_selected_model": "turbo",
+   "personalized": true,
+   "mode": "COPILOT",
+   "query_str": "and what is the capital of New Zealand",
+   "search_focus": "internet",
+   "source": "default",
+   "attachments": [],
+   "updated_datetime": "2026-08-01T13:09:00.696556",
+   "read_write_token": "REDACTED",
+   "step_type": "FINAL",
+   "s3_social_preview_url": "https://ppl-ai-public.s3.amazonaws.com/static/img/pplx-default-preview.png",
+   "thread_access": 1,
+   "thread_url_slug": "d236db28-526f-49a1-9a21-faa33c3ad928",
+   "query_source": "default",
+   "privacy_state": "NONE",
+   "gpt4": false,
+   "sources": {
+    "sources": [
+     "web"
+    ]
+   },
+   "entry_created_datetime": "2026-08-01T13:08:54.641126+00:00",
+   "entry_updated_datetime": "2026-08-01T13:09:00.614725+00:00",
+   "blocks": [
+    {
+     "intended_usage": "plan",
+     "plan_block": {
+      "progress": "DONE",
+      "goals": [
+       {
+        "id": "0",
+        "description": "Searching the web",
+        "final": true,
+        "todo_task_status": "INCOMPLETE"
+       }
+      ],
+      "final": true
+     }
+    },
+    {
+     "intended_usage": "ask_text_0_markdown",
+     "markdown_block": {
+      "progress": "DONE",
+      "chunks": [
+       "The capital of New Zealand is **Wellington**.[1][2][3]"
+      ],
+      "chunk_starting_offset": 0,
+      "answer": "The capital of New Zealand is **Wellington**.[1][2][3]",
+      "inline_token_annotations": []
+     }
+    },
+    {
+     "intended_usage": "ask_text_1_markdown",
+     "markdown_block": {
+      "progress": "DONE",
+      "chunks": [
+       "## Why Wellington?"
+      ],
+      "chunk_starting_offset": 0,
+      "answer": "## Why Wellington?",
+      "inline_token_annotations": []
+     }
+    },
+    {
+     "intended_usage": "ask_text_2_markdown",
+     "markdown_block": {
+      "progress": "DONE",
+      "chunks": [
+       "Wellington has been New Zealand\u2019s capital since **1865**, when it replaced **Auckland**.  The move was driven by:[1][3][5]\n\n- **Central location**: Wellington is at the southern tip of the North Island, much closer to the South Island than Auckland, making it more accessible for a country with population and economic activity spread across both main islands.[2][6][10]\n- **Strategic harbour**: Its natural, well-sheltered harbour made it a strong candidate for a national administrative and commercial centre.[9]"
+      ],
+      "chunk_starting_offset": 0,
+      "answer": "Wellington has been New Zealand\u2019s capital since **1865**, when it replaced **Auckland**.  The move was driven by:[1][3][5]\n\n- **Central location**: Wellington is at the southern tip of the North Island, much closer to the South Island than Auckland, making it more accessible for a country with population and economic activity spread across both main islands.[2][6][10]\n- **Strategic harbour**: Its natural, well-sheltered harbour made it a strong candidate for a national administrative and commercial centre.[9]",
+      "media_items": [
+       {
+        "medium": "image",
+        "image": "https://cdn.britannica.com/25/180825-050-B4693350/Wellington-Harbour-New-Zealand.jpg",
+        "image_width": 1024,
+        "image_height": 576,
+        "url": "https://www.britannica.com/place/Wellington-New-Zealand",
+        "name": "Wellington | New Zealand, Map, Population, & Facts | Britannica",
+        "source": "sapi_images",
+        "thumbnail": "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/e6203bd5-e04e-5361-a3cb-04fd130ca25b/e91e73d4-022b-59db-9713-717a2a198855.jpg",
+        "thumbnail_height": 169,
+        "thumbnail_width": 300,
+        "thumbnail_512_smart": "https://pplx-res.cloudinary.com/image/upload/t_thumbnail_512_smart/pplx_search_images/cddf6e643242b767221acc70818d4bade93123a0.jpg",
+        "caption": "Wellington skyline at dusk",
+        "citation_info": {
+         "url": "https://www.britannica.com/place/Wellington-New-Zealand",
+         "domain_name": "britannica",
+         "favicon_url": "https://www.google.com/s2/favicons?sz=32&domain=britannica.com"
+        }
+       }
+      ],
+      "inline_token_annotations": []
+     }
+    },
+    {
+     "intended_usage": "ask_text_2_images",
+     "inline_entity_block": {
+      "media_block": {
+       "media_items": [
+        {
+         "medium": "image",
+         "image": "https://cdn.britannica.com/25/180825-050-B4693350/Wellington-Harbour-New-Zealand.jpg",
+         "image_width": 1024,
+         "image_height": 576,
+         "url": "https://www.britannica.com/place/Wellington-New-Zealand",
+         "name": "Wellington | New Zealand, Map, Population, & Facts | Britannica",
+         "source": "sapi_images",
+         "thumbnail": "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/e6203bd5-e04e-5361-a3cb-04fd130ca25b/e91e73d4-022b-59db-9713-717a2a198855.jpg",
+         "thumbnail_height": 169,
+         "thumbnail_width": 300,
+         "thumbnail_512_smart": "https://pplx-res.cloudinary.com/image/upload/t_thumbnail_512_smart/pplx_search_images/cddf6e643242b767221acc70818d4bade93123a0.jpg",
+         "caption": "Wellington skyline at dusk",
+         "citation_info": {
+          "url": "https://www.britannica.com/place/Wellington-New-Zealand",
+          "domain_name": "britannica",
+          "favicon_url": "https://www.google.com/s2/favicons?sz=32&domain=britannica.com"
+         }
+        }
+       ],
+       "generated_media_items": []
+      }
+     }
+    },
+    {
+     "intended_usage": "ask_text_3_markdown",
+     "markdown_block": {
+      "progress": "DONE",
+      "chunks": [
+       "- **Political decision**: After about a decade of debate, a commission recommended moving the capital from Auckland, and the government formally relocated in 1865.[5][10]\n\nBefore Auckland, the very first capital (briefly, in 1840) was **Russell (Okiato)** in the Bay of Islands.[8][5]\n\nToday, Wellington hosts Parliament, the Prime Minister\u2019s offices, the Governor-General\u2019s residence, and New Zealand\u2019s highest courts.[2][3][5]"
+      ],
+      "chunk_starting_offset": 0,
+      "answer": "- **Political decision**: After about a decade of debate, a commission recommended moving the capital from Auckland, and the government formally relocated in 1865.[5][10]\n\nBefore Auckland, the very first capital (briefly, in 1840) was **Russell (Okiato)** in the Bay of Islands.[8][5]\n\nToday, Wellington hosts Parliament, the Prime Minister\u2019s offices, the Governor-General\u2019s residence, and New Zealand\u2019s highest courts.[2][3][5]",
+      "media_items": [
+       {
+        "medium": "image",
+        "image": "https://cdn.mappr.co/wp-content/uploads/2023/07/wellington-geography.jpg",
+        "image_width": 2559,
+        "image_height": 1706,
+        "url": "https://www.mappr.co/capital-cities/new-zealand/",
+        "name": "What is the Capital of New Zealand? | Mappr",
+        "source": "sapi_images",
+        "thumbnail": "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/0fad6b0d-d0b5-580d-ab95-1e865c57686b/e0fc49c2-5962-580a-acd6-7c74e5ad0f2a.jpg",
+        "thumbnail_height": 200,
+        "thumbnail_width": 300,
+        "thumbnail_512_smart": "https://pplx-res.cloudinary.com/image/upload/t_thumbnail_512_smart/pplx_search_images/6892c2389ea52f293adf68c78c311801fe25171b.jpg",
+        "caption": "Wellington harbor view",
+        "citation_info": {
+         "url": "https://www.mappr.co/capital-cities/new-zealand/",
+         "domain_name": "mappr",
+         "favicon_url": "https://www.google.com/s2/favicons?sz=32&domain=mappr.co"
+        }
+       }
+      ],
+      "inline_token_annotations": []
+     }
+    },
+    {
+     "intended_usage": "ask_text_3_images",
+     "inline_entity_block": {
+      "media_block": {
+       "media_items": [
+        {
+         "medium": "image",
+         "image": "https://cdn.mappr.co/wp-content/uploads/2023/07/wellington-geography.jpg",
+         "image_width": 2559,
+         "image_height": 1706,
+         "url": "https://www.mappr.co/capital-cities/new-zealand/",
+         "name": "What is the Capital of New Zealand? | Mappr",
+         "source": "sapi_images",
+         "thumbnail": "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/0fad6b0d-d0b5-580d-ab95-1e865c57686b/e0fc49c2-5962-580a-acd6-7c74e5ad0f2a.jpg",
+         "thumbnail_height": 200,
+         "thumbnail_width": 300,
+         "thumbnail_512_smart": "https://pplx-res.cloudinary.com/image/upload/t_thumbnail_512_smart/pplx_search_images/6892c2389ea52f293adf68c78c311801fe25171b.jpg",
+         "caption": "Wellington harbor view",
+         "citation_info": {
+          "url": "https://www.mappr.co/capital-cities/new-zealand/",
+          "domain_name": "mappr",
+          "favicon_url": "https://www.google.com/s2/favicons?sz=32&domain=mappr.co"
+         }
+        }
+       ],
+       "generated_media_items": []
+      }
+     }
+    },
+    {
+     "intended_usage": "ask_text",
+     "markdown_block": {
+      "progress": "DONE",
+      "chunks": [
+       "The capital of New Zealan",
+       "d is **Wellingto",
+       "n**.[1][2]",
+       "[3]",
+       "\n",
+       "## Why Wellington?",
+       "\n",
+       "Wellington has been",
+       " New Zealand\u2019s capital sinc",
+       "e **186",
+       "5**, when it repl",
+       "aced **Aucklan",
+       "d**. ",
+       " The move was driven by:[1][3][5]\n\n- **Central location**: Wellington is at the southern tip of the North Isl",
+       "and, much cl",
+       "oser to the S",
+       "outh Island ",
+       "than Auckland, ma",
+       "king it more accessible",
+       " for a country with popula",
+       "tion and econ",
+       "omic activity spread across both ",
+       "main isla",
+       "nds.[2]",
+       "[6][10]\n- *",
+       "*Strategic har",
+       "bour**: Its natural, well-sheltered har",
+       "bour made it a st",
+       "rong candidate f",
+       "or a nati",
+       "onal administra",
+       "tive and commer",
+       "cial cen",
+       "tre.[9]",
+       "\n",
+       "- **Polit",
+       "ical deci",
+       "sion**: After about a decade of debate, a commission recomme",
+       "nded moving the capital ",
+       "from Auckland, and the govern",
+       "ment formally reloc",
+       "ated in 1",
+       "865.[5][10]\n\nBefore Auck",
+       "land, the ",
+       "very first capit",
+       "al (brie",
+       "fly, in",
+       " 1840) wa",
+       "s **Russe",
+       "ll (Okiato)** in the",
+       " Bay of Isla",
+       "nds.",
+       "[8][5]\n\nToday, Wellin",
+       "gton h",
+       "osts Parlia",
+       "ment, the P",
+       "rime Minister\u2019s off",
+       "ices, the Gove",
+       "rnor-General\u2019s residence,",
+       " and New Zealand\u2019s highest cou",
+       "rts.[2]",
+       "[3][5]"
+      ],
+      "chunk_starting_offset": 0,
+      "answer": "The capital of New Zealand is **Wellington**.[1][2][3]\n## Why Wellington?\nWellington has been New Zealand\u2019s capital since **1865**, when it replaced **Auckland**.  The move was driven by:[3][5][1]\n\n- **Central location**: Wellington is at the southern tip of the North Island, much closer to the South Island than Auckland, making it more accessible for a country with population and economic activity spread across both main islands.[2][6][10]\n- **Strategic harbour**: Its natural, well-sheltered harbour made it a strong candidate for a national administrative and commercial centre.[9]\n- **Political decision**: After about a decade of debate, a commission recommended moving the capital from Auckland, and the government formally relocated in 1865.[5][10]\n\nBefore Auckland, the very first capital (briefly, in 1840) was **Russell (Okiato)** in the Bay of Islands.[8][5]\n\nToday, Wellington hosts Parliament, the Prime Minister\u2019s offices, the Governor-General\u2019s residence, and New Zealand\u2019s highest courts.[2][3][5]"
+     }
+    },
+    {
+     "intended_usage": "workflow_root",
+     "workflow_block": {
+      "version": "1.0",
+      "status": "WORKFLOW_COMPLETED",
+      "headline": "",
+      "completed_at": "",
+      "predicted_completion_at": "",
+      "steps": [
+       {
+        "status": "WORKFLOW_COMPLETED",
+        "title": "Searching the web",
+        "items": [
+         {
+          "id": "d333791d-d133-4f13-b599-498129f16c52",
+          "type": "WORKFLOW_ITEM_QUERIES",
+          "payload": {
+           "queries_payload": {
+            "queries": [
+             "capital of New Zealand"
+            ]
+           }
+          }
+         },
+         {
+          "id": "27a0ff9f-2325-4a66-9bf7-f54af348c8d4",
+          "type": "WORKFLOW_ITEM_SOURCES",
+          "payload": {
+           "sources_payload": {
+            "sources": [
+             {
+              "name": "Capital of New Zealand - Wikipedia",
+              "snippet": "",
+              "url": "https://en.wikipedia.org/wiki/Capital_of_New_Zealand",
+              "meta_data": {
+               "client": "web",
+               "date": "2010-05-08",
+               "domain_name": "Wikimedia Foundation, Inc.",
+               "published_date": "2010-05-08T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false,
+              "trust": {
+               "level": 2,
+               "name": "trusted",
+               "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+              }
+             },
+             {
+              "name": "Capital city",
+              "snippet": "",
+              "url": "https://teara.govt.nz/en/capital-city/print",
+              "meta_data": {
+               "client": "web",
+               "date": "2011-09-13",
+               "domain_name": "teara.govt.nz",
+               "published_date": "2011-09-13T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false,
+              "trust": {
+               "level": 2,
+               "name": "trusted",
+               "description": "is trusted for curated New Zealand history, culture, environment, and society"
+              }
+             },
+             {
+              "name": "Wellington - Wikipedia",
+              "snippet": "",
+              "url": "https://en.wikipedia.org/wiki/Wellington",
+              "meta_data": {
+               "client": "web",
+               "date": "2001-11-03",
+               "domain_name": "Wikimedia Foundation, Inc.",
+               "published_date": "2001-11-03T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false,
+              "trust": {
+               "level": 2,
+               "name": "trusted",
+               "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+              }
+             },
+             {
+              "name": "New Zealand - Wikipedia",
+              "snippet": "",
+              "url": "https://en.wikipedia.org/wiki/New_Zealand",
+              "meta_data": {
+               "client": "web",
+               "date": "2001-10-29",
+               "domain_name": "Wikimedia Foundation, Inc.",
+               "published_date": "2001-10-29T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false,
+              "trust": {
+               "level": 2,
+               "name": "trusted",
+               "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+              }
+             },
+             {
+              "name": "K\u014drero: Capital city",
+              "snippet": "New Zealand has had three capital cities \u2013 first at Russell, in the Bay of Islands, in 1840, then, just a year later, at Auckland. Since 1865 the more centrally located Wellington has been the country\u2019s capital. In 2011 travel publisher Lonely Planet dubbed Wellington the \u2018coolest little capital in the world\u2019.",
+              "url": "https://teara.govt.nz/mi/capital-city",
+              "meta_data": {
+               "client": "web",
+               "date": "2004-02-01",
+               "domain_name": "teara.govt.nz",
+               "description": "New Zealand has had three capital cities \u2013 first at Russell, in the Bay of Islands, in 1840, then, just a year later, at Auckland. Since 1865 the more centrally located Wellington has been the country\u2019s capital. In 2011 travel publisher Lonely Planet dubbed Wellington the \u2018coolest little capital in the world\u2019.",
+               "published_date": "2004-02-01T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false,
+              "trust": {
+               "level": 2,
+               "name": "trusted",
+               "description": "is trusted for curated New Zealand history, culture, environment, and society"
+              }
+             },
+             {
+              "name": "What is the Capital of New Zealand? - Mappr",
+              "snippet": "Wellington is the capital of New Zealand. It's the world's southernmost capital city of a sovereign state, known for its stunning harbor and hillside suburban",
+              "url": "https://www.mappr.co/capital-cities/new-zealand/",
+              "meta_data": {
+               "client": "web",
+               "date": "2024-03-13",
+               "domain_name": "Mappr",
+               "description": "Wellington is the capital of New Zealand. It's the world's southernmost capital city of a sovereign state, known for its stunning harbor and hillside suburban",
+               "published_date": "2024-03-13T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false
+             },
+             {
+              "name": "New Zealand | History, Map, Flag, Capital, Population, & Facts",
+              "snippet": "New Zealand, island country in the South Pacific Ocean, the southwesternmost part of Polynesia. The country comprises two main islands\u2014the North and South islands\u2014and a number of small islands, some of them hundreds of miles from the main group. The capital city is Wellington and the largest urban area Auckland.",
+              "url": "https://www.britannica.com/place/New-Zealand",
+              "meta_data": {
+               "client": "web",
+               "date": "2026-06-05",
+               "domain_name": "Encyclopedia Britannica",
+               "description": "New Zealand, island country in the South Pacific Ocean, the southwesternmost part of Polynesia. The country comprises two main islands\u2014the North and South islands\u2014and a number of small islands, some of them hundreds of miles from the main group. The capital city is Wellington and the largest urban area Auckland.",
+               "published_date": "2026-06-05T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false,
+              "trust": {
+               "level": 2,
+               "name": "trusted",
+               "description": "is trusted for professionally edited general-reference and educational articles across history, science, culture, and other subjects"
+              }
+             },
+             {
+              "name": "Capital City of New Zealand",
+              "snippet": "The capital city of New Zealand is Wellington. Capital city of New Zealand information, maps, weather, images and useful links for information.",
+              "url": "https://www.lovenewzealand.net.nz/capital-city-of-new-zealand.php",
+              "meta_data": {
+               "client": "web",
+               "date": "2013-01-01",
+               "domain_name": "lovenewzealand.net.nz",
+               "description": "The capital city of New Zealand is Wellington. Capital city of New Zealand information, maps, weather, images and useful links for information.",
+               "published_date": "2013-01-01T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false
+             },
+             {
+              "name": "Wellington | New Zealand, Map, Population, & Facts - Britannica",
+              "snippet": "Wellington, capital city, port, and major commercial centre of New Zealand, located in the extreme south of North Island. It lies on the shores and hills surrounding Wellington Harbour (Port Nicholson), an almost landlocked bay that is ranked among the world\u2019s finest harbours. Mount Victoria rises",
+              "url": "https://www.britannica.com/place/Wellington-New-Zealand",
+              "meta_data": {
+               "client": "web",
+               "date": "2025-11-26",
+               "domain_name": "Encyclopedia Britannica",
+               "description": "Wellington, capital city, port, and major commercial centre of New Zealand, located in the extreme south of North Island. It lies on the shores and hills surrounding Wellington Harbour (Port Nicholson), an almost landlocked bay that is ranked among the world\u2019s finest harbours. Mount Victoria rises",
+               "published_date": "2025-11-26T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false,
+              "trust": {
+               "level": 2,
+               "name": "trusted",
+               "description": "is trusted for professionally edited general-reference and educational articles across history, science, culture, and other subjects"
+              }
+             },
+             {
+              "name": "What Is The Capital Of New Zealand? - World Atlas",
+              "snippet": "Since 1865, Wellington, located on the southwestern tip of North Island, has served as the capital city of New Zealand.",
+              "url": "https://www.worldatlas.com/articles/what-is-the-capital-of-new-zealand.html",
+              "meta_data": {
+               "client": "web",
+               "date": "2017-04-25",
+               "domain_name": "WorldAtlas",
+               "description": "Since 1865, Wellington, located on the southwestern tip of North Island, has served as the capital city of New Zealand.",
+               "published_date": "2017-04-25T00:00:00"
+              },
+              "is_attachment": false,
+              "is_navigational": false,
+              "is_focused_web": false,
+              "is_memory": false,
+              "is_conversation_history": false,
+              "is_conversation_summary": false
+             }
+            ]
+           }
+          }
+         }
+        ],
+        "started_at": "",
+        "completed_at": "",
+        "icon": "search",
+        "source_tier": "SOURCE_TIER_DEFAULT",
+        "id": "64afe28c-975f-46c5-a603-571afffaf95c"
+       }
+      ],
+      "snapshots": []
+     }
+    },
+    {
+     "intended_usage": "web_results",
+     "web_result_block": {
+      "progress": "DONE",
+      "web_results": [
+       {
+        "name": "Capital of New Zealand - Wikipedia",
+        "snippet": "The capital of New Zealand has been Wellington since 1865. ... The move of the capital from Auckland to Wellington was undertaken in 1865, and Wellington has been New Zealand's capital since.",
+        "timestamp": "2010-05-08T00:00:00",
+        "url": "https://en.wikipedia.org/wiki/Capital_of_New_Zealand",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": []
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+        }
+       },
+       {
+        "name": "Capital city",
+        "snippet": "New Zealand\u2019s capital city is Wellington, situated at the southern tip of the North Island, near the centre of the country. Wellington is the site of the country\u2019s national Parliament, of the executive (offices of the cabinet and the prime minister) and of the official residences of the prime minister and the sovereign\u2019s representative, the governor-general. It is also the location of the country\u2019s two highest judicial bodies, the Court of Appeal and the Supreme Court.",
+        "timestamp": "2011-09-13T00:00:00",
+        "url": "https://teara.govt.nz/en/capital-city/print",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": []
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for curated New Zealand history, culture, environment, and society"
+        }
+       },
+       {
+        "name": "Wellington - Wikipedia",
+        "snippet": "Wellington is the capital city of New Zealand. ... The city has served as New Zealand's capital since 1865, a status that is not defined in legislation, but established by convention; the New Zealand Government and Parliament, the Supreme Court and most of the public services are based in the city. ... The capital was moved to Wellington in 1865. Wellington became the capital city in place of Auckland, which William Hobson had made the capital in 1841. ... Wellington's status as the capital is...",
+        "timestamp": "2001-11-03T00:00:00",
+        "url": "https://en.wikipedia.org/wiki/Wellington",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/e31f4658-d60e-561b-823e-3cc3a4323121/01a84265-e09c-5682-92ce-681c89a1afe2.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+        }
+       },
+       {
+        "name": "New Zealand - Wikipedia",
+        "snippet": "New Zealand's capital city is Wellington, and its most populous city is Auckland. ... CapitalWellington 41\u00b018\u2032S 174\u00b047\u2032E\ufeff / \ufeff41.300\u00b0S 174.783\u00b0E",
+        "timestamp": "2001-10-29T00:00:00",
+        "url": "https://en.wikipedia.org/wiki/New_Zealand",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/01bd58e9-9309-5bcf-9898-de624b4e1d40/01a84265-e09c-5682-92ce-681c89a1afe2.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+        }
+       },
+       {
+        "name": "K\u014drero: Capital city",
+        "snippet": "New Zealand has had three capital cities \u2013 first at Russell, in the Bay of Islands, in 1840, then, just a year later, at Auckland. Since 1865 the more centrally located Wellington has been the country\u2019s capital. In 2011 travel publisher Lonely Planet dubbed Wellington the \u2018coolest little capital in the world\u2019.",
+        "timestamp": "2004-02-01T00:00:00",
+        "url": "https://teara.govt.nz/mi/capital-city",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": []
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for curated New Zealand history, culture, environment, and society"
+        }
+       },
+       {
+        "name": "What is the Capital of New Zealand? - Mappr",
+        "snippet": "Wellington is the capital of New Zealand. It's the world's southernmost capital city of a sovereign state, known for its stunning harbor and hillside suburban",
+        "timestamp": "2024-03-13T00:00:00",
+        "url": "https://www.mappr.co/capital-cities/new-zealand/",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/0fad6b0d-d0b5-580d-ab95-1e865c57686b/e0fc49c2-5962-580a-acd6-7c74e5ad0f2a.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       },
+       {
+        "name": "New Zealand | History, Map, Flag, Capital, Population, & Facts",
+        "snippet": "New Zealand, island country in the South Pacific Ocean, the southwesternmost part of Polynesia. The country comprises two main islands\u2014the North and South islands\u2014and a number of small islands, some of them hundreds of miles from the main group. The capital city is Wellington and the largest urban area Auckland.",
+        "timestamp": "2026-06-05T00:00:00",
+        "url": "https://www.britannica.com/place/New-Zealand",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/4630d5d0-629d-5037-b4fe-5630994aeca9/e91e73d4-022b-59db-9713-717a2a198855.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for professionally edited general-reference and educational articles across history, science, culture, and other subjects"
+        }
+       },
+       {
+        "name": "Capital City of New Zealand",
+        "snippet": "The capital city of New Zealand is Wellington. Capital city of New Zealand information, maps, weather, images and useful links for information.",
+        "timestamp": "2013-01-01T00:00:00",
+        "url": "https://www.lovenewzealand.net.nz/capital-city-of-new-zealand.php",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": []
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       },
+       {
+        "name": "Wellington | New Zealand, Map, Population, & Facts - Britannica",
+        "snippet": "Wellington, capital city, port, and major commercial centre of New Zealand, located in the extreme south of North Island. It lies on the shores and hills surrounding Wellington Harbour (Port Nicholson), an almost landlocked bay that is ranked among the world\u2019s finest harbours. Mount Victoria rises",
+        "timestamp": "2025-11-26T00:00:00",
+        "url": "https://www.britannica.com/place/Wellington-New-Zealand",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://www.britannica.com/place/com.britannica.mendel.util.entities.Image@31972b50"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for professionally edited general-reference and educational articles across history, science, culture, and other subjects"
+        }
+       },
+       {
+        "name": "What Is The Capital Of New Zealand? - World Atlas",
+        "snippet": "Since 1865, Wellington, located on the southwestern tip of North Island, has served as the capital city of New Zealand.",
+        "timestamp": "2017-04-25T00:00:00",
+        "url": "https://www.worldatlas.com/articles/what-is-the-capital-of-new-zealand.html",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/08e88c39-d7fa-5285-8294-b20a7df6e282/14b98223-512e-542b-80cb-2a7ef4373de1.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       }
+      ]
+     }
+    },
+    {
+     "intended_usage": "answer_tabs",
+     "answer_tabs_block": {
+      "modes": [
+       {
+        "answer_mode_type": "ANSWER"
+       },
+       {
+        "answer_mode_type": "SOURCES"
+       },
+       {
+        "answer_mode_type": "IMAGE"
+       }
+      ],
+      "reformulated_queries": [
+       "capital of New Zealand"
+      ]
+     }
+    },
+    {
+     "intended_usage": "sources_answer_mode",
+     "sources_mode_block": {
+      "answer_mode_type": "SOURCES",
+      "progress": "DONE",
+      "web_results": [
+       {
+        "name": "Capital of New Zealand - Wikipedia",
+        "snippet": "The capital of New Zealand has been Wellington since 1865. ... The move of the capital from Auckland to Wellington was undertaken in 1865, and Wellington has been New Zealand's capital since.",
+        "timestamp": "2010-05-08T00:00:00",
+        "url": "https://en.wikipedia.org/wiki/Capital_of_New_Zealand",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": []
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+        }
+       },
+       {
+        "name": "Capital city",
+        "snippet": "New Zealand\u2019s capital city is Wellington, situated at the southern tip of the North Island, near the centre of the country. Wellington is the site of the country\u2019s national Parliament, of the executive (offices of the cabinet and the prime minister) and of the official residences of the prime minister and the sovereign\u2019s representative, the governor-general. It is also the location of the country\u2019s two highest judicial bodies, the Court of Appeal and the Supreme Court.",
+        "timestamp": "2011-09-13T00:00:00",
+        "url": "https://teara.govt.nz/en/capital-city/print",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": []
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for curated New Zealand history, culture, environment, and society"
+        }
+       },
+       {
+        "name": "Wellington - Wikipedia",
+        "snippet": "Wellington is the capital city of New Zealand. ... The city has served as New Zealand's capital since 1865, a status that is not defined in legislation, but established by convention; the New Zealand Government and Parliament, the Supreme Court and most of the public services are based in the city. ... The capital was moved to Wellington in 1865. Wellington became the capital city in place of Auckland, which William Hobson had made the capital in 1841. ... Wellington's status as the capital is...",
+        "timestamp": "2001-11-03T00:00:00",
+        "url": "https://en.wikipedia.org/wiki/Wellington",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/e31f4658-d60e-561b-823e-3cc3a4323121/01a84265-e09c-5682-92ce-681c89a1afe2.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+        }
+       },
+       {
+        "name": "New Zealand - Wikipedia",
+        "snippet": "New Zealand's capital city is Wellington, and its most populous city is Auckland. ... CapitalWellington 41\u00b018\u2032S 174\u00b047\u2032E\ufeff / \ufeff41.300\u00b0S 174.783\u00b0E",
+        "timestamp": "2001-10-29T00:00:00",
+        "url": "https://en.wikipedia.org/wiki/New_Zealand",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/01bd58e9-9309-5bcf-9898-de624b4e1d40/01a84265-e09c-5682-92ce-681c89a1afe2.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+        }
+       },
+       {
+        "name": "K\u014drero: Capital city",
+        "snippet": "New Zealand has had three capital cities \u2013 first at Russell, in the Bay of Islands, in 1840, then, just a year later, at Auckland. Since 1865 the more centrally located Wellington has been the country\u2019s capital. In 2011 travel publisher Lonely Planet dubbed Wellington the \u2018coolest little capital in the world\u2019.",
+        "timestamp": "2004-02-01T00:00:00",
+        "url": "https://teara.govt.nz/mi/capital-city",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": []
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for curated New Zealand history, culture, environment, and society"
+        }
+       },
+       {
+        "name": "What is the Capital of New Zealand? - Mappr",
+        "snippet": "Wellington is the capital of New Zealand. It's the world's southernmost capital city of a sovereign state, known for its stunning harbor and hillside suburban",
+        "timestamp": "2024-03-13T00:00:00",
+        "url": "https://www.mappr.co/capital-cities/new-zealand/",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/0fad6b0d-d0b5-580d-ab95-1e865c57686b/e0fc49c2-5962-580a-acd6-7c74e5ad0f2a.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       },
+       {
+        "name": "New Zealand | History, Map, Flag, Capital, Population, & Facts",
+        "snippet": "New Zealand, island country in the South Pacific Ocean, the southwesternmost part of Polynesia. The country comprises two main islands\u2014the North and South islands\u2014and a number of small islands, some of them hundreds of miles from the main group. The capital city is Wellington and the largest urban area Auckland.",
+        "timestamp": "2026-06-05T00:00:00",
+        "url": "https://www.britannica.com/place/New-Zealand",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/4630d5d0-629d-5037-b4fe-5630994aeca9/e91e73d4-022b-59db-9713-717a2a198855.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for professionally edited general-reference and educational articles across history, science, culture, and other subjects"
+        }
+       },
+       {
+        "name": "Capital City of New Zealand",
+        "snippet": "The capital city of New Zealand is Wellington. Capital city of New Zealand information, maps, weather, images and useful links for information.",
+        "timestamp": "2013-01-01T00:00:00",
+        "url": "https://www.lovenewzealand.net.nz/capital-city-of-new-zealand.php",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": []
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       },
+       {
+        "name": "Wellington | New Zealand, Map, Population, & Facts - Britannica",
+        "snippet": "Wellington, capital city, port, and major commercial centre of New Zealand, located in the extreme south of North Island. It lies on the shores and hills surrounding Wellington Harbour (Port Nicholson), an almost landlocked bay that is ranked among the world\u2019s finest harbours. Mount Victoria rises",
+        "timestamp": "2025-11-26T00:00:00",
+        "url": "https://www.britannica.com/place/Wellington-New-Zealand",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://www.britannica.com/place/com.britannica.mendel.util.entities.Image@31972b50"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false,
+        "trust": {
+         "level": 2,
+         "name": "trusted",
+         "description": "is trusted for professionally edited general-reference and educational articles across history, science, culture, and other subjects"
+        }
+       },
+       {
+        "name": "What Is The Capital Of New Zealand? - World Atlas",
+        "snippet": "Since 1865, Wellington, located on the southwestern tip of North Island, has served as the capital city of New Zealand.",
+        "timestamp": "2017-04-25T00:00:00",
+        "url": "https://www.worldatlas.com/articles/what-is-the-capital-of-new-zealand.html",
+        "meta_data": {
+         "citation_domain_name": null,
+         "client": "web",
+         "images": [
+          "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/08e88c39-d7fa-5285-8294-b20a7df6e282/14b98223-512e-542b-80cb-2a7ef4373de1.jpg"
+         ]
+        },
+        "is_attachment": false,
+        "is_image": false,
+        "is_code_interpreter": false,
+        "is_knowledge_card": false,
+        "is_navigational": false,
+        "is_widget": false,
+        "is_focused_web": false,
+        "is_client_context": false,
+        "is_memory": false,
+        "is_conversation_history": false,
+        "is_conversation_summary": false
+       }
+      ],
+      "result_count": 10,
+      "rows": [
+       {
+        "web_result": {
+         "name": "Capital of New Zealand - Wikipedia",
+         "snippet": "The capital of New Zealand has been Wellington since 1865. ... The move of the capital from Auckland to Wellington was undertaken in 1865, and Wellington has been New Zealand's capital since.",
+         "timestamp": "2010-05-08T00:00:00",
+         "url": "https://en.wikipedia.org/wiki/Capital_of_New_Zealand",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": []
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false,
+         "trust": {
+          "level": 2,
+          "name": "trusted",
+          "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+         }
+        },
+        "status": "UNSORTED",
+        "citation": 1
+       },
+       {
+        "web_result": {
+         "name": "Capital city",
+         "snippet": "New Zealand\u2019s capital city is Wellington, situated at the southern tip of the North Island, near the centre of the country. Wellington is the site of the country\u2019s national Parliament, of the executive (offices of the cabinet and the prime minister) and of the official residences of the prime minister and the sovereign\u2019s representative, the governor-general. It is also the location of the country\u2019s two highest judicial bodies, the Court of Appeal and the Supreme Court.",
+         "timestamp": "2011-09-13T00:00:00",
+         "url": "https://teara.govt.nz/en/capital-city/print",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": []
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false,
+         "trust": {
+          "level": 2,
+          "name": "trusted",
+          "description": "is trusted for curated New Zealand history, culture, environment, and society"
+         }
+        },
+        "status": "UNSORTED",
+        "citation": 2
+       },
+       {
+        "web_result": {
+         "name": "Wellington - Wikipedia",
+         "snippet": "Wellington is the capital city of New Zealand. ... The city has served as New Zealand's capital since 1865, a status that is not defined in legislation, but established by convention; the New Zealand Government and Parliament, the Supreme Court and most of the public services are based in the city. ... The capital was moved to Wellington in 1865. Wellington became the capital city in place of Auckland, which William Hobson had made the capital in 1841. ... Wellington's status as the capital is...",
+         "timestamp": "2001-11-03T00:00:00",
+         "url": "https://en.wikipedia.org/wiki/Wellington",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": [
+           "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/e31f4658-d60e-561b-823e-3cc3a4323121/01a84265-e09c-5682-92ce-681c89a1afe2.jpg"
+          ]
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false,
+         "trust": {
+          "level": 2,
+          "name": "trusted",
+          "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+         }
+        },
+        "status": "UNSORTED",
+        "citation": 3
+       },
+       {
+        "web_result": {
+         "name": "New Zealand - Wikipedia",
+         "snippet": "New Zealand's capital city is Wellington, and its most populous city is Auckland. ... CapitalWellington 41\u00b018\u2032S 174\u00b047\u2032E\ufeff / \ufeff41.300\u00b0S 174.783\u00b0E",
+         "timestamp": "2001-10-29T00:00:00",
+         "url": "https://en.wikipedia.org/wiki/New_Zealand",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": [
+           "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/01bd58e9-9309-5bcf-9898-de624b4e1d40/01a84265-e09c-5682-92ce-681c89a1afe2.jpg"
+          ]
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false,
+         "trust": {
+          "level": 2,
+          "name": "trusted",
+          "description": "is trusted for broad, cited secondary-reference information across education, science, history, and general knowledge"
+         }
+        },
+        "status": "UNSORTED",
+        "citation": 4
+       },
+       {
+        "web_result": {
+         "name": "K\u014drero: Capital city",
+         "snippet": "New Zealand has had three capital cities \u2013 first at Russell, in the Bay of Islands, in 1840, then, just a year later, at Auckland. Since 1865 the more centrally located Wellington has been the country\u2019s capital. In 2011 travel publisher Lonely Planet dubbed Wellington the \u2018coolest little capital in the world\u2019.",
+         "timestamp": "2004-02-01T00:00:00",
+         "url": "https://teara.govt.nz/mi/capital-city",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": []
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false,
+         "trust": {
+          "level": 2,
+          "name": "trusted",
+          "description": "is trusted for curated New Zealand history, culture, environment, and society"
+         }
+        },
+        "status": "UNSORTED",
+        "citation": 5
+       },
+       {
+        "web_result": {
+         "name": "What is the Capital of New Zealand? - Mappr",
+         "snippet": "Wellington is the capital of New Zealand. It's the world's southernmost capital city of a sovereign state, known for its stunning harbor and hillside suburban",
+         "timestamp": "2024-03-13T00:00:00",
+         "url": "https://www.mappr.co/capital-cities/new-zealand/",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": [
+           "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/0fad6b0d-d0b5-580d-ab95-1e865c57686b/e0fc49c2-5962-580a-acd6-7c74e5ad0f2a.jpg"
+          ]
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false
+        },
+        "status": "UNSORTED",
+        "citation": 6
+       },
+       {
+        "web_result": {
+         "name": "New Zealand | History, Map, Flag, Capital, Population, & Facts",
+         "snippet": "New Zealand, island country in the South Pacific Ocean, the southwesternmost part of Polynesia. The country comprises two main islands\u2014the North and South islands\u2014and a number of small islands, some of them hundreds of miles from the main group. The capital city is Wellington and the largest urban area Auckland.",
+         "timestamp": "2026-06-05T00:00:00",
+         "url": "https://www.britannica.com/place/New-Zealand",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": [
+           "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/4630d5d0-629d-5037-b4fe-5630994aeca9/e91e73d4-022b-59db-9713-717a2a198855.jpg"
+          ]
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false,
+         "trust": {
+          "level": 2,
+          "name": "trusted",
+          "description": "is trusted for professionally edited general-reference and educational articles across history, science, culture, and other subjects"
+         }
+        },
+        "status": "UNSORTED",
+        "citation": 7
+       },
+       {
+        "web_result": {
+         "name": "Capital City of New Zealand",
+         "snippet": "The capital city of New Zealand is Wellington. Capital city of New Zealand information, maps, weather, images and useful links for information.",
+         "timestamp": "2013-01-01T00:00:00",
+         "url": "https://www.lovenewzealand.net.nz/capital-city-of-new-zealand.php",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": []
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false
+        },
+        "status": "UNSORTED",
+        "citation": 8
+       },
+       {
+        "web_result": {
+         "name": "Wellington | New Zealand, Map, Population, & Facts - Britannica",
+         "snippet": "Wellington, capital city, port, and major commercial centre of New Zealand, located in the extreme south of North Island. It lies on the shores and hills surrounding Wellington Harbour (Port Nicholson), an almost landlocked bay that is ranked among the world\u2019s finest harbours. Mount Victoria rises",
+         "timestamp": "2025-11-26T00:00:00",
+         "url": "https://www.britannica.com/place/Wellington-New-Zealand",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": [
+           "https://www.britannica.com/place/com.britannica.mendel.util.entities.Image@31972b50"
+          ]
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false,
+         "trust": {
+          "level": 2,
+          "name": "trusted",
+          "description": "is trusted for professionally edited general-reference and educational articles across history, science, culture, and other subjects"
+         }
+        },
+        "status": "UNSORTED",
+        "citation": 9
+       },
+       {
+        "web_result": {
+         "name": "What Is The Capital Of New Zealand? - World Atlas",
+         "snippet": "Since 1865, Wellington, located on the southwestern tip of North Island, has served as the capital city of New Zealand.",
+         "timestamp": "2017-04-25T00:00:00",
+         "url": "https://www.worldatlas.com/articles/what-is-the-capital-of-new-zealand.html",
+         "meta_data": {
+          "citation_domain_name": null,
+          "client": "web",
+          "images": [
+           "https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/08e88c39-d7fa-5285-8294-b20a7df6e282/14b98223-512e-542b-80cb-2a7ef4373de1.jpg"
+          ]
+         },
+         "is_attachment": false,
+         "is_image": false,
+         "is_code_interpreter": false,
+         "is_knowledge_card": false,
+         "is_navigational": false,
+         "is_widget": false,
+         "is_focused_web": false,
+         "is_client_context": false,
+         "is_memory": false,
+         "is_conversation_history": false,
+         "is_conversation_summary": false
+        },
+        "status": "UNSORTED",
+        "citation": 10
+       }
+      ]
+     }
+    },
+    {
+     "intended_usage": "pending_followups",
+     "pending_followups_block": {
+      "followups": []
+     }
+    }
+   ],
+   "related_query_items": [
+    {
+     "text": "Compare the historical reasons behind New Zealand's capital move to Wellington in 1865 versus Australia's selection of Canberra in 1913. Research the economic, political, and geographic pressures in both nations at the time, specifically the role of population growth, regional rivalry between larger urban centers (like Auckland vs Wellington, and Sydney vs Melbourne), and the eventual compromise that shaped both capitals. Present the comparison in a structured report that contrasts the legislative and symbolic outcomes of these two distinct selection processes",
+     "type": "UPSELL",
+     "upsell_type": "computer_related_query",
+     "query_params": {},
+     "uuid": "eee16aeb-4cde-4276-88eb-206c05cf5804",
+     "display_text": "Compare why New Zealand's capital moved to Wellington vs Australia's capital to Canberra \u2014 historical trade-offs and political outcomes"
+    },
+    {
+     "text": "Build an interactive timeline of New Zealand's capital cities from 1840 to the present. Map the tenure of Russell, Auckland, and Wellington, detailing for each: the specific economic catalysts for the move, the key political actors involved, the resulting infrastructure growth in the new city, and why the current capital of Wellington remains the center of government despite Auckland's larger population. Include a filterable comparison of institutional density (parliament, courts, diplomatic hubs) between all three historic capitals across their respective terms",
+     "type": "UPSELL",
+     "upsell_type": "computer_related_query",
+     "query_params": {},
+     "uuid": "9dfd098e-64ca-43d1-8dac-73136bdb0d45",
+     "display_text": "Interactive timeline: New Zealand's three capitals (Russell, Auckland, Wellington) and the forces that forced each shift since 1840"
+    },
+    {
+     "text": "History of New Zealand's Parliament Buildings",
+     "type": "DEFAULT"
+    },
+    {
+     "text": "Comparison of New Zealand's largest cities by population",
+     "type": "DEFAULT"
+    },
+    {
+     "text": "Role of the Governor-General in New Zealand politics",
+     "type": "DEFAULT"
+    }
+   ],
+   "access_level": "PRIVATE_READ",
+   "answer_modes": [
+    {
+     "answer_mode_type": "IMAGE",
+     "has_preview": false
+    },
+    {
+     "answer_mode_type": "SOURCES"
+    }
+   ],
+   "structured_answer_block_usages": [
+    "workflow_root",
+    "ask_text_0_markdown",
+    "ask_text_1_markdown",
+    "ask_text_2_markdown",
+    "ask_text_2_images",
+    "ask_text_3_markdown",
+    "ask_text_3_images"
+   ],
+   "reconnectable": false,
+   "classifier_results": {
+    "personal_search": false,
+    "skip_search": false,
+    "widget_type": null,
+    "hide_nav": false,
+    "hide_sources": false,
+    "image_generation": false,
+    "time_widget": false,
+    "mhe_predictions": {
+     "skip_search": false,
+     "image_generation_intent": false,
+     "time_widget": false,
+     "places_search_intent": false,
+     "shopping_intent": false,
+     "image_preview": false,
+     "video_preview": false,
+     "nav_intent": false,
+     "study_intent": null,
+     "personal_search": false,
+     "weather_widget": false,
+     "finance_widget_gating": false,
+     "calculator_widget": false,
+     "comet_nav_widget_combined_target": false,
+     "finance_agent_gating": false
+    },
+    "mhe_predictions_full": {
+     "skip_search": {
+      "is_true": false,
+      "probability": null,
+      "threshold": null
+     },
+     "image_generation_intent": {
+      "is_true": false,
+      "probability": 0.00031471252,
+      "threshold": 0.98
+     },
+     "time_widget": {
+      "is_true": false,
+      "probability": 0.0012435913,
+      "threshold": 0.8
+     },
+     "places_search_intent": {
+      "is_true": false,
+      "probability": 0.0039367676,
+      "threshold": 0.85
+     },
+     "shopping_intent": {
+      "is_true": false,
+      "probability": 6.198883e-05,
+      "threshold": 0.8
+     },
+     "image_preview": {
+      "is_true": false,
+      "probability": 0.072753906,
+      "threshold": 0.42
+     },
+     "video_preview": {
+      "is_true": false,
+      "probability": 5.4836273e-05,
+      "threshold": 0.5
+     },
+     "nav_intent": {
+      "is_true": false,
+      "probability": 0.00048828125,
+      "threshold": 0.5
+     },
+     "study_intent": null,
+     "personal_search": {
+      "is_true": false,
+      "probability": null,
+      "threshold": null
+     },
+     "skip_personal_search": {
+      "is_true": true,
+      "probability": 1,
+      "threshold": 0.95
+     },
+     "weather_widget": {
+      "is_true": false,
+      "probability": 0.00077819824,
+      "threshold": 0.4
+     },
+     "finance_widget_gating": {
+      "is_true": false,
+      "probability": 0.00014019012,
+      "threshold": 0.53
+     },
+     "calculator_widget": {
+      "is_true": false,
+      "probability": 0.0005531311,
+      "threshold": 0.3
+     },
+     "comet_nav_widget_combined_target": {
+      "is_true": false,
+      "probability": 0.0011672974,
+      "threshold": 0.5
+     },
+     "domain_subdomain": {
+      "label": "SCIENCE/GEOGRAPHY",
+      "probability": 0.9921875
+     },
+     "finance_agent_gating": {
+      "is_true": false,
+      "probability": 2.014637e-05,
+      "threshold": 0.7
+     }
+    }
+   },
+   "search_implementation_mode": "fast",
+   "query_language": "en",
+   "search_mode": "SEARCH"
+  }
+ ],
+ "has_next_page": false,
+ "next_cursor": null,
+ "status": "success",
+ "thread_metadata": {
+  "author_id": "REDACTED",
+  "author_image": "REDACTED",
+  "author_username": "REDACTED",
+  "bookmark_state": "NOT_BOOKMARKED",
+  "collection_info": null,
+  "created_at": "2026-08-01T13:08:23.763867",
+  "crons": null,
+  "is_frozen_thread": false,
+  "local_workspace_directories": null,
+  "locked_reason": null,
+  "mode": "2",
+  "parent_info": null,
+  "sensitive_claims_visibility": null,
+  "subscribe_entry_uuids": null,
+  "thread_status": "completed",
+  "thread_status_summary": null,
+  "thread_status_summary_enum": null,
+  "title": "what is the capital of Australia and why is it not Sydney",
+  "updated_at": "2026-08-01T13:09:00.696556",
+  "wake_at": null,
+  "workflow_snapshots": null
+ }
+}

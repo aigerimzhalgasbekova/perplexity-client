@@ -26,6 +26,24 @@ def finished():
     )
 
 
+def test_the_reconnect_streams_framing_is_read_too():
+    # Byte-for-byte the head of a real `/rest/sse/perplexity_ask/reconnect/<uuid>`
+    # response (2026-08-01): LF endings where the ask stream uses CRLF, `data:` with
+    # no space, and an SSE comment first. Requiring either detail cost every frame --
+    # invisibly, because a stream with no recognised frames looks like one that sent
+    # nothing at all, which is exactly how a running research task reports itself.
+    raw = b': hello\n\nevent:message\ndata:{"status": "PENDING", "uuid": "x"}\n\n'
+    assert [f["status"] for f in adapter.frames(raw)] == ["PENDING"]
+
+
+def test_both_framings_survive_arriving_a_byte_at_a_time():
+    raw = b'event:message\ndata:{"a": 1}\n\nevent: message\r\ndata: {"a": 2}\r\n\r\n'
+    s = adapter.Stream()
+    for i in range(len(raw)):
+        s.feed(raw[i : i + 1])
+    assert [f["a"] for f in s.frames] == [1, 2]
+
+
 def test_answer_from_reads_the_terminal_frame():
     r = finished()
     assert r.text.startswith("The capital of Australia")

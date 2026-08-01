@@ -1,0 +1,479 @@
+{
+ "asked": {
+  "backend_uuid": "9f977224-96c8-483f-bdb2-1525fc2acfa2",
+  "context_uuid": "1a247b9b-53f0-4388-8038-89b7b9b96644",
+  "uuid": "0808b060-0bbd-4616-8490-16c6e03307d8",
+  "frontend_context_uuid": "9085c79c-46ac-451c-bf0c-a4afa4bb322d",
+  "display_model": "pplx_alpha",
+  "mode": "COPILOT",
+  "search_focus": "internet",
+  "source": "default",
+  "attachments": [],
+  "read_write_token": "REDACTED",
+  "thread_url_slug": "9f977224-96c8-483f-bdb2-1525fc2acfa2",
+  "expect_search_results": "false",
+  "gpt4": false,
+  "text_completed": false,
+  "blocks": [
+   {
+    "intended_usage": "plan",
+    "diff_block": {
+     "field": "plan_block",
+     "patches": [
+      {
+       "op": "replace",
+       "path": "/goals/0/final",
+       "value": true
+      }
+     ]
+    }
+   },
+   {
+    "intended_usage": "workflow_root",
+    "diff_block": {
+     "field": "workflow_block",
+     "patches": [
+      {
+       "op": "replace",
+       "path": "/status",
+       "value": "WORKFLOW_AWAITING_USER"
+      },
+      {
+       "op": "replace",
+       "path": "/steps/0/status",
+       "value": "WORKFLOW_AWAITING_USER"
+      },
+      {
+       "op": "add",
+       "path": "/steps/0/items/0",
+       "value": {
+        "id": "3897e35c-ea9d-4ba7-98b5-00f109904294",
+        "type": "WORKFLOW_ITEM_USER_QUESTIONS",
+        "payload": {
+         "user_questions_payload": {
+          "title": "Help me focus the Australia vs New Zealand economic policy comparison",
+          "timeout_seconds": 60,
+          "fields": [
+           {
+            "field_name": "Which policy areas should the comparison focus on most?",
+            "options": [
+             {
+              "title": "Fiscal policy (spending, taxation, deficits) (Recommended)",
+              "description": "",
+              "is_free_text_selection": false
+             },
+             {
+              "title": "Monetary policy and interest rates",
+              "description": "",
+              "is_free_text_selection": false
+             },
+             {
+              "title": "COVID response and recovery packages",
+              "description": "",
+              "is_free_text_selection": false
+             },
+             {
+              "title": "Labor, migration, and housing policies",
+              "description": "",
+              "is_free_text_selection": false
+             },
+             {
+              "is_free_text_selection": true,
+              "title_type": "OTHER"
+             }
+            ],
+            "allow_multichoice": false,
+            "allow_free_text": true
+           },
+           {
+            "field_name": "What level of detail are you looking for?",
+            "options": [
+             {
+              "title": "High-level narrative with key turning points (Recommended)",
+              "description": "",
+              "is_free_text_selection": false
+             },
+             {
+              "title": "Data-heavy with lots of specific metrics and numbers",
+              "description": "",
+              "is_free_text_selection": false
+             },
+             {
+              "title": "Mixed: some data but mostly synthesized analysis",
+              "description": "",
+              "is_free_text_selection": false
+             },
+             {
+              "is_free_text_selection": true,
+              "title_type": "OTHER"
+             }
+            ],
+            "allow_multichoice": false,
+            "allow_free_text": true
+           },
+           {
+            "field_name": "How should the timeline since 2020 be structured?",
+            "options": [
+             {
+              "title": "Phase-based (COVID, post-COVID, inflation surge, disinflation) (Recommended)",
+              "description": "",
+              "is_free_text_selection": false
+             },
+             {
+              "title": "Strict year-by-year comparison",
+              "description": "",
+              "is_free_text_selection": false
+             },
+             {
+              "title": "Only focus on the last 2\u20133 years (2023\u20132026)",
+              "description": "",
+              "is_free_text_selection": false
+             },
+             {
+              "is_free_text_selection": true,
+              "title_type": "OTHER"
+             }
+            ],
+            "allow_multichoice": false,
+            "allow_free_text": true
+           },
+           {
+            "field_name": "What output format would you prefer?",
+            "options": [
+             {
+              "title": "Report (Recommended)",
+              "description": "",
+              "is_free_text_selection": false
+             },
+             {
+              "title": "Slides",
+              "description": "",
+              "is_free_text_selection": false
+             },
+             {
+              "title": "App",
+              "description": "",
+              "is_free_text_selection": false
+             },
+             {
+              "title": "Spreadsheet",
+              "description": "",
+              "is_free_text_selection": false
+             },
+             {
+              "is_free_text_selection": true,
+              "title_type": "OTHER"
+             }
+            ],
+            "allow_multichoice": false,
+            "allow_free_text": true
+           }
+          ],
+          "answer_submission_uuid": "3897e35c-ea9d-4ba7-98b5-00f109904294",
+          "response_endpoint": "handle_perplexity_research_clarifying_answers"
+         }
+        }
+       }
+      },
+      {
+       "op": "add",
+       "path": "/steps/0/icon",
+       "value": "default"
+      },
+      {
+       "op": "add",
+       "path": "/steps/0/tool_name",
+       "value": "clarifying_questions"
+      }
+     ]
+    }
+   }
+  ],
+  "message_mode": "STREAMING",
+  "answer_modes": [],
+  "structured_answer_block_usages": [
+   "workflow_root",
+   "ask_text"
+  ],
+  "reconnectable": true,
+  "cursor": "06a6cd01-0182-7acf-8000-6ac28fae0c91",
+  "classifier_results": {
+   "personal_search": false,
+   "skip_search": false,
+   "widget_type": "GENERAL",
+   "hide_nav": false,
+   "hide_sources": false,
+   "image_generation": false,
+   "time_widget": false,
+   "mhe_predictions": {
+    "skip_search": false,
+    "image_generation_intent": false,
+    "time_widget": false,
+    "places_search_intent": false,
+    "shopping_intent": false,
+    "image_preview": false,
+    "video_preview": false,
+    "nav_intent": false,
+    "personal_search": false,
+    "weather_widget": false,
+    "finance_widget_gating": false,
+    "calculator_widget": false,
+    "comet_nav_widget_combined_target": false,
+    "finance_agent_gating": false
+   },
+   "mhe_predictions_full": {
+    "skip_search": {
+     "is_true": false,
+     "probability": 0.0015029907,
+     "threshold": 0.4
+    },
+    "image_generation_intent": {
+     "is_true": false,
+     "probability": 0.0004310608,
+     "threshold": 0.98
+    },
+    "time_widget": {
+     "is_true": false,
+     "probability": 0.00047302246,
+     "threshold": 0.8
+    },
+    "places_search_intent": {
+     "is_true": false,
+     "probability": 0.034179688,
+     "threshold": 0.85
+    },
+    "shopping_intent": {
+     "is_true": false,
+     "probability": 0.0012435913,
+     "threshold": 0.8
+    },
+    "image_preview": {
+     "is_true": false,
+     "probability": 0.0016479492,
+     "threshold": 0.42
+    },
+    "video_preview": {
+     "is_true": false,
+     "probability": 0.0008049011,
+     "threshold": 0.5
+    },
+    "nav_intent": {
+     "is_true": false,
+     "probability": 0.00029563904,
+     "threshold": 0.5
+    },
+    "personal_search": {
+     "is_true": false,
+     "probability": 0.0078125,
+     "threshold": 0.050000000000000044
+    },
+    "skip_personal_search": {
+     "is_true": true,
+     "probability": 0.9921875,
+     "threshold": 0.95
+    },
+    "weather_widget": {
+     "is_true": false,
+     "probability": 0.011657715,
+     "threshold": 0.4
+    },
+    "finance_widget_gating": {
+     "is_true": false,
+     "probability": 0.10986328,
+     "threshold": 0.53
+    },
+    "calculator_widget": {
+     "is_true": false,
+     "probability": 0.0016479492,
+     "threshold": 0.3
+    },
+    "comet_nav_widget_combined_target": {
+     "is_true": false,
+     "probability": 0.0154418945,
+     "threshold": 0.5
+    },
+    "domain_subdomain": {
+     "label": "FINANCE/ECONOMIC_ANALYSIS",
+     "probability": 0.55078125
+    },
+    "finance_agent_gating": {
+     "is_true": false,
+     "probability": 0.0012054443,
+     "threshold": 0.7
+    }
+   }
+  },
+  "search_implementation_mode": "multi_step",
+  "search_mode": "RESEARCH",
+  "status": "PENDING",
+  "final_sse_message": false
+ },
+ "released": {
+  "backend_uuid": "9f977224-96c8-483f-bdb2-1525fc2acfa2",
+  "context_uuid": "1a247b9b-53f0-4388-8038-89b7b9b96644",
+  "uuid": "0808b060-0bbd-4616-8490-16c6e03307d8",
+  "frontend_context_uuid": "9085c79c-46ac-451c-bf0c-a4afa4bb322d",
+  "display_model": "pplx_alpha",
+  "mode": "COPILOT",
+  "search_focus": "internet",
+  "source": "default",
+  "attachments": [],
+  "read_write_token": "REDACTED",
+  "thread_url_slug": "9f977224-96c8-483f-bdb2-1525fc2acfa2",
+  "expect_search_results": "false",
+  "gpt4": false,
+  "text_completed": false,
+  "blocks": [
+   {
+    "intended_usage": "workflow_root",
+    "diff_block": {
+     "field": "workflow_block",
+     "patches": [
+      {
+       "op": "replace",
+       "path": "/status",
+       "value": "WORKFLOW_AWAITING_NEXT_STEPS"
+      },
+      {
+       "op": "replace",
+       "path": "/steps/0/status",
+       "value": "WORKFLOW_COMPLETED"
+      },
+      {
+       "op": "add",
+       "path": "/steps/0/items/1",
+       "value": {
+        "id": "3897e35c-ea9d-4ba7-98b5-00f109904294",
+        "type": "WORKFLOW_ITEM_USER_RESPONSE",
+        "payload": {
+         "user_response_payload": {
+          "title": "Help me focus the Australia vs New Zealand economic policy comparison",
+          "responses": []
+         }
+        }
+       }
+      }
+     ]
+    }
+   }
+  ],
+  "message_mode": "STREAMING",
+  "answer_modes": [],
+  "structured_answer_block_usages": [
+   "workflow_root",
+   "ask_text"
+  ],
+  "reconnectable": true,
+  "cursor": "06a6cd05-11a3-724b-8000-6d66a0b556dc",
+  "classifier_results": {
+   "personal_search": false,
+   "skip_search": false,
+   "widget_type": "GENERAL",
+   "hide_nav": false,
+   "hide_sources": false,
+   "image_generation": false,
+   "time_widget": false,
+   "mhe_predictions": {
+    "skip_search": false,
+    "image_generation_intent": false,
+    "time_widget": false,
+    "places_search_intent": false,
+    "shopping_intent": false,
+    "image_preview": false,
+    "video_preview": false,
+    "nav_intent": false,
+    "personal_search": false,
+    "weather_widget": false,
+    "finance_widget_gating": false,
+    "calculator_widget": false,
+    "comet_nav_widget_combined_target": false,
+    "finance_agent_gating": false
+   },
+   "mhe_predictions_full": {
+    "skip_search": {
+     "is_true": false,
+     "probability": 0.0015029907,
+     "threshold": 0.4
+    },
+    "image_generation_intent": {
+     "is_true": false,
+     "probability": 0.0004310608,
+     "threshold": 0.98
+    },
+    "time_widget": {
+     "is_true": false,
+     "probability": 0.00047302246,
+     "threshold": 0.8
+    },
+    "places_search_intent": {
+     "is_true": false,
+     "probability": 0.034179688,
+     "threshold": 0.85
+    },
+    "shopping_intent": {
+     "is_true": false,
+     "probability": 0.0012435913,
+     "threshold": 0.8
+    },
+    "image_preview": {
+     "is_true": false,
+     "probability": 0.0016479492,
+     "threshold": 0.42
+    },
+    "video_preview": {
+     "is_true": false,
+     "probability": 0.0008049011,
+     "threshold": 0.5
+    },
+    "nav_intent": {
+     "is_true": false,
+     "probability": 0.00029563904,
+     "threshold": 0.5
+    },
+    "personal_search": {
+     "is_true": false,
+     "probability": 0.0078125,
+     "threshold": 0.050000000000000044
+    },
+    "skip_personal_search": {
+     "is_true": true,
+     "probability": 0.9921875,
+     "threshold": 0.95
+    },
+    "weather_widget": {
+     "is_true": false,
+     "probability": 0.011657715,
+     "threshold": 0.4
+    },
+    "finance_widget_gating": {
+     "is_true": false,
+     "probability": 0.10986328,
+     "threshold": 0.53
+    },
+    "calculator_widget": {
+     "is_true": false,
+     "probability": 0.0016479492,
+     "threshold": 0.3
+    },
+    "comet_nav_widget_combined_target": {
+     "is_true": false,
+     "probability": 0.0154418945,
+     "threshold": 0.5
+    },
+    "domain_subdomain": {
+     "label": "FINANCE/ECONOMIC_ANALYSIS",
+     "probability": 0.55078125
+    },
+    "finance_agent_gating": {
+     "is_true": false,
+     "probability": 0.0012054443,
+     "threshold": 0.7
+    }
+   }
+  },
+  "search_implementation_mode": "multi_step",
+  "search_mode": "RESEARCH",
+  "status": "PENDING",
+  "final_sse_message": false
+ }
+}
