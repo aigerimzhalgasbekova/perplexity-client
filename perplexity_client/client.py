@@ -13,7 +13,7 @@ from .adapter import HOME, Response
 from .chrome import chrome, profile_dir, save_session
 from .errors import (ChallengeEncounteredError, PplxError, QuotaExhaustedError,
                      SessionExpiredError)
-from .pacing import _env, default_interval
+from .pacing import default_interval, env_float
 
 LOGIN_TIMEOUT = 600.0
 # A ceiling, not an expectation: a search answer takes ~10-30s. It exists so a stream
@@ -102,7 +102,7 @@ class Client:
             stream = adapter.tee(ctx, page)
             try:
                 adapter.submit(page, query)
-                deadline = time.monotonic() + _env("PPLX_ASK_TIMEOUT", ANSWER_TIMEOUT)
+                deadline = time.monotonic() + env_float("PPLX_ASK_TIMEOUT", ANSWER_TIMEOUT)
                 # Yielding through Playwright, not time.sleep: CDP events only dispatch
                 # while the greenlet yields, so a sleeping loop would receive nothing at
                 # all and every answer would "time out".

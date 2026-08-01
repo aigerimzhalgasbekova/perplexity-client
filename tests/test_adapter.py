@@ -126,8 +126,11 @@ def test_stream_reassembles_across_arbitrary_chunk_boundaries():
     for i in range(0, len(COMPLETE), 997):
         s.feed(COMPLETE[i:i + 997])
     assert s.done
-    assert [f.get("uuid") for f in s.frames] == \
-           [f.get("uuid") for f in adapter.frames(COMPLETE)]
+    # Structural equality, not a count and not a key: `uuid` is the message id and is
+    # the same on every frame, so comparing it would pass on a stream whose frames were
+    # reordered or duplicated in place -- which is precisely what the diff replay would
+    # then assemble wrongly.
+    assert s.frames == adapter.frames(COMPLETE)
 
 
 def test_stream_is_not_done_until_the_terminal_frame_lands():

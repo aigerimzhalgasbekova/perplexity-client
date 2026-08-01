@@ -40,7 +40,7 @@ BACKOFF_BASE = 5.0
 BACKOFF_CAP = 60.0
 
 
-def _env(name: str, default: float) -> float:
+def env_float(name: str, default: float) -> float:
     """Read at call time, not import time -- otherwise tests and shells that set the
     variable after import silently get the default."""
     try:
@@ -50,7 +50,7 @@ def _env(name: str, default: float) -> float:
 
 
 def default_interval() -> float:
-    return _env("PPLX_MIN_INTERVAL", INTERVAL)
+    return env_float("PPLX_MIN_INTERVAL", INTERVAL)
 
 
 def wait_for(state: dict, interval: float, now: float) -> float:
@@ -94,7 +94,7 @@ def _acquire(fd: int, path: pathlib.Path) -> None:
         print("warning: no cross-process lock on this platform -- concurrent pplx "
               "runs are not serialized", file=sys.stderr)
         return
-    deadline = time.monotonic() + _env("PPLX_LOCK_TIMEOUT", LOCK_TIMEOUT)
+    deadline = time.monotonic() + env_float("PPLX_LOCK_TIMEOUT", LOCK_TIMEOUT)
     notified = False
     while True:
         try:
