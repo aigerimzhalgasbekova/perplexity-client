@@ -17,8 +17,9 @@ import pathlib
 import shutil
 import subprocess
 import time
+from collections.abc import Iterator
 
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import BrowserContext, Page, sync_playwright
 
 from .errors import ChromeNotFoundError, PplxError, ProfileInUseError
 from .pacing import paced
@@ -40,7 +41,11 @@ PORT_TIMEOUT = 30.0
 
 def config_dir() -> pathlib.Path:
     env = os.environ.get("PPLX_CONFIG_DIR")
-    return pathlib.Path(env) if env else pathlib.Path.home() / ".config" / "perplexity-client"
+    return (
+        pathlib.Path(env)
+        if env
+        else pathlib.Path.home() / ".config" / "perplexity-client"
+    )
 
 
 def profile_dir() -> pathlib.Path:
@@ -67,7 +72,8 @@ def find_chrome() -> str:
     raise ChromeNotFoundError(
         "Google Chrome not found. Install it, or set PPLX_CHROME to the binary. "
         "Chrome is a prerequisite: the tool drives your own Chrome rather than "
-        "downloading a browser.")
+        "downloading a browser."
+    )
 
 
 def chrome_version() -> str:
@@ -103,7 +109,7 @@ def _read_port(path: pathlib.Path) -> int | None:
         return None
 
 
-def save_session(ctx) -> bool:
+def save_session(ctx: BrowserContext) -> bool:
     """Write storage_state atomically at mode 600. Returns whether it wrote.
 
     Refuses to write an unauthenticated state: a run that got logged out must not
@@ -130,7 +136,9 @@ def save_session(ctx) -> bool:
 
 
 @contextlib.contextmanager
-def chrome(headless: bool = True, url: str = "about:blank", interval: float = 0.0):
+def chrome(
+    headless: bool = True, url: str = "about:blank", interval: float = 0.0
+) -> Iterator[tuple[BrowserContext, Page]]:
     """Launch Chrome on the tool's profile, attach over CDP, yield (context, page).
 
     Runs under the advisory lock for its whole life. That is not only pacing: two
@@ -146,13 +154,14 @@ def chrome(headless: bool = True, url: str = "about:blank", interval: float = 0.
 
 
 @contextlib.contextmanager
-def _launched(headless: bool, url: str):
+def _launched(headless: bool, url: str) -> Iterator[tuple[BrowserContext, Page]]:
     # Checked inside the lock, so this can no longer be one of our own runs: it is a
     # Chrome someone opened on the profile by hand, which no amount of waiting fixes.
     if pid := profile_owner_pid():
         raise ProfileInUseError(
             f"Chrome is already using {profile_dir()} (pid {pid}). "
-            f"Quit that Chrome window, or run: kill {pid}")
+            f"Quit that Chrome window, or run: kill {pid}"
+        )
     profile_dir().mkdir(parents=True, exist_ok=True)
     os.chmod(config_dir(), 0o700)
     # Let Chrome pick the port and tell us: binding one ourselves first would be a
@@ -160,18 +169,27 @@ def _launched(headless: bool, url: str):
     port_file = profile_dir() / "DevToolsActivePort"
     port_file.unlink(missing_ok=True)
     proc = subprocess.Popen(
-        [find_chrome(), "--remote-debugging-port=0",
-         f"--user-data-dir={profile_dir()}", *COMMON_ARGS,
-         *(HEADLESS_ARGS if headless else ()), url],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+        [
+            find_chrome(),
+            "--remote-debugging-port=0",
+            f"--user-data-dir={profile_dir()}",
+            *COMMON_ARGS,
+            *(HEADLESS_ARGS if headless else ()),
+            url,
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
     try:
         deadline = time.monotonic() + PORT_TIMEOUT
         while (port := _read_port(port_file)) is None:
             if proc.poll() is not None:
                 raise PplxError(f"Chrome exited immediately (code {proc.returncode})")
             if time.monotonic() > deadline:
-                raise PplxError(f"Chrome did not open a debugging port within "
-                                f"{PORT_TIMEOUT:.0f}s")
+                raise PplxError(
+                    f"Chrome did not open a debugging port within {PORT_TIMEOUT:.0f}s"
+                )
             time.sleep(0.2)
         with sync_playwright() as p:
             browser = p.chromium.connect_over_cdp(f"http://127.0.0.1:{port}")

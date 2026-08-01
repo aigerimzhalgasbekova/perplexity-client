@@ -18,13 +18,18 @@ import os
 import pathlib
 import sys
 import time
+from collections.abc import Iterator
 
 from .errors import LocalError, LockTimeoutError
 
 try:
     import fcntl
 except ImportError:  # Windows: no flock. Degrade to pre-M2 behaviour, loudly.
-    fcntl = None
+    fcntl = None  # type: ignore[assignment]
+
+# Via a flag rather than `fcntl is None` at the use site: mypy types the name from the
+# successful import and would call the Windows branch dead code.
+HAVE_FLOCK = fcntl is not None
 
 # A guess, and documented as one: M2 established that Perplexity states no rate to its
 # own account (docs/M2-findings.md), so there is nothing better to derive it from. An
@@ -53,7 +58,7 @@ def default_interval() -> float:
     return env_float("PPLX_MIN_INTERVAL", INTERVAL)
 
 
-def wait_for(state: dict, interval: float, now: float) -> float:
+def wait_for(state: dict[str, float], interval: float, now: float) -> float:
     """Seconds to sleep before the next run may start."""
     floor = interval
     # `interval and ...`: the backoff may raise a floor, never create one. A lock-only
@@ -70,11 +75,14 @@ def wait_for(state: dict, interval: float, now: float) -> float:
     return max(0.0, min(floor, state.get("last", 0.0) + floor - now))
 
 
-def _read(fd: int) -> dict:
+def _read(fd: int) -> dict[str, float]:
     """`{last, fails}`, normalised. A file half-written by a crash reads as empty."""
     try:
         state = json.loads(os.pread(fd, 4096, 0) or b"{}")
-        return {"last": float(state.get("last", 0)), "fails": int(state.get("fails", 0))}
+        return {
+            "last": float(state.get("last", 0)),
+            "fails": int(state.get("fails", 0)),
+        }
     except (ValueError, TypeError, AttributeError, OSError):
         return {"last": 0.0, "fails": 0}
 
@@ -87,12 +95,15 @@ def _write(fd: int, last: float, fails: int) -> None:
 
 
 def _acquire(fd: int, path: pathlib.Path) -> None:
-    if fcntl is None:
+    if not HAVE_FLOCK:
         # Shipping an untested msvcrt implementation of the thing that protects the
         # session file would be worse than saying so. The floor and the backoff below
         # still work (they are just file I/O), they are merely racy.
-        print("warning: no cross-process lock on this platform -- concurrent pplx "
-              "runs are not serialized", file=sys.stderr)
+        print(
+            "warning: no cross-process lock on this platform -- concurrent pplx "
+            "runs are not serialized",
+            file=sys.stderr,
+        )
         return
     deadline = time.monotonic() + env_float("PPLX_LOCK_TIMEOUT", LOCK_TIMEOUT)
     notified = False
@@ -106,7 +117,8 @@ def _acquire(fd: int, path: pathlib.Path) -> None:
             if time.monotonic() > deadline:
                 raise LockTimeoutError(
                     f"another pplx run has held {path} for too long. If none is "
-                    f"running, delete that file.") from e
+                    f"running, delete that file."
+                ) from e
             if not notified:  # a silent multi-minute wait reads as a hang
                 print("waiting for another pplx run to finish...", file=sys.stderr)
                 notified = True
@@ -114,7 +126,7 @@ def _acquire(fd: int, path: pathlib.Path) -> None:
 
 
 @contextlib.contextmanager
-def paced(path, interval: float = 0.0):
+def paced(path: str | pathlib.Path, interval: float = 0.0) -> Iterator[None]:
     """Hold the lock for the whole block, after waiting out the interval floor.
 
     `interval=0` is lock-only, which is what a page load (`status`, `login`) wants;
@@ -130,10 +142,12 @@ def paced(path, interval: float = 0.0):
         state = _read(fd)
         if wait := wait_for(state, interval, time.time()):
             if state["fails"]:  # the floor is expected and silent; a backoff is not
-                print(f"backing off {wait:.0f}s after {state['fails']} failed "
-                      f"run(s)...", file=sys.stderr)
+                print(
+                    f"backing off {wait:.0f}s after {state['fails']} failed run(s)...",
+                    file=sys.stderr,
+                )
             time.sleep(wait)
-        fails = state["fails"]
+        fails = int(state["fails"])
         # Stamped again on release below; this one is for the run that never gets
         # there. SIGTERM -- what `timeout` and any supervisor send, and the agent loop
         # is exactly where those live -- skips `finally` entirely, which used to leave
@@ -146,7 +160,7 @@ def paced(path, interval: float = 0.0):
             raise  # this machine, not the account: see errors.LocalError
         except Exception:
             fails += 1  # a fresh process each iteration is the agent case, so the
-            raise       # count has to outlive us to mean anything
+            raise  # count has to outlive us to mean anything
         else:
             # Only a run that actually spent a query may clear the debt. A lock-only
             # page load is already exempt from *waiting out* a backoff (see `wait_for`),

@@ -21,7 +21,9 @@ THREAD = json.loads((FIXTURES / "research-thread-resume-2026-07-31.json").read_t
 
 
 def finished():
-    return adapter.answer_from(adapter.terminal(adapter.frames(COMPLETE)), complete=True)
+    return adapter.answer_from(
+        adapter.terminal(adapter.frames(COMPLETE)), complete=True
+    )
 
 
 def test_answer_from_reads_the_terminal_frame():
@@ -31,7 +33,9 @@ def test_answer_from_reads_the_terminal_frame():
     assert r.model == "pplx_pro"
     assert r.mode == "search"
     assert r.thread_id and r.complete is True
-    assert all(isinstance(c, adapter.Citation) and c.url and c.title for c in r.citations)
+    assert all(
+        isinstance(c, adapter.Citation) and c.url and c.title for c in r.citations
+    )
 
 
 def test_citation_markers_all_resolve():
@@ -52,11 +56,20 @@ def test_empty_snippet_becomes_none():
 def test_a_marker_past_the_citation_list_is_an_error():
     # PRD §5: an unmapped marker is surfaced, never silently dropped -- it is how a
     # real URL ends up attached to a claim it does not support.
-    entry = {"blocks": [
-        {"intended_usage": "ask_text", "markdown_block": {"answer": "claim [3]"}},
-        {"intended_usage": "web_results",
-         "web_result_block": {"web_results": [{"url": "u", "name": "t", "snippet": ""}]}}],
-        "display_model": "pplx_pro", "search_mode": "SEARCH", "backend_uuid": "id"}
+    entry = {
+        "blocks": [
+            {"intended_usage": "ask_text", "markdown_block": {"answer": "claim [3]"}},
+            {
+                "intended_usage": "web_results",
+                "web_result_block": {
+                    "web_results": [{"url": "u", "name": "t", "snippet": ""}]
+                },
+            },
+        ],
+        "display_model": "pplx_pro",
+        "search_mode": "SEARCH",
+        "backend_uuid": "id",
+    }
     with pytest.raises(CitationError):
         adapter.answer_from(entry, complete=True)
 
@@ -67,8 +80,10 @@ def test_a_complete_answer_with_no_text_is_refused():
     # check then passes vacuously. An agent reads `complete=True, text=""` as
     # "Perplexity found nothing" -- plausible, actionable and wrong.
     fin = adapter.terminal(adapter.frames(COMPLETE))
-    moved = {**fin, "blocks": [b for b in fin["blocks"]
-                               if b.get("intended_usage") != "ask_text"]}
+    moved = {
+        **fin,
+        "blocks": [b for b in fin["blocks"] if b.get("intended_usage") != "ask_text"],
+    }
     with pytest.raises(IncompleteAnswerError):
         adapter.answer_from(moved, complete=True)
 
@@ -76,8 +91,12 @@ def test_a_complete_answer_with_no_text_is_refused():
 def test_an_answer_block_that_only_holds_a_diff_is_refused_too():
     # The other shape of the same drift: the block is there but never assembled.
     fin = adapter.terminal(adapter.frames(COMPLETE))
-    blocks = [{"intended_usage": "ask_text", "diff_block": {"field": "markdown_block"}}
-              if b.get("intended_usage") == "ask_text" else b for b in fin["blocks"]]
+    blocks = [
+        {"intended_usage": "ask_text", "diff_block": {"field": "markdown_block"}}
+        if b.get("intended_usage") == "ask_text"
+        else b
+        for b in fin["blocks"]
+    ]
     with pytest.raises(IncompleteAnswerError):
         adapter.answer_from({**fin, "blocks": blocks}, complete=True)
 
@@ -89,10 +108,15 @@ def test_an_empty_partial_answer_is_still_allowed():
 
 def test_zero_is_not_a_citation_marker():
     # citations[n-1] has no meaning for n == 0, and Python would happily index [-1].
-    entry = {"blocks": [
-        {"intended_usage": "ask_text", "markdown_block": {"answer": "claim [0]"}},
-        {"intended_usage": "web_results",
-         "web_result_block": {"web_results": [{"url": "u", "name": "t"}]}}]}
+    entry = {
+        "blocks": [
+            {"intended_usage": "ask_text", "markdown_block": {"answer": "claim [0]"}},
+            {
+                "intended_usage": "web_results",
+                "web_result_block": {"web_results": [{"url": "u", "name": "t"}]},
+            },
+        ]
+    }
     with pytest.raises(CitationError):
         adapter.answer_from(entry, complete=True)
 
@@ -141,7 +165,7 @@ def test_truncated_stream_opted_into_returns_what_arrived():
 def test_a_frame_cut_mid_json_is_skipped_not_fatal():
     # The wire cuts wherever it cuts. make_fixtures cuts on frame boundaries, so slice
     # the bytes to get the shape a killed stream actually leaves behind.
-    cut = adapter.frames(COMPLETE[:len(COMPLETE) // 3])
+    cut = adapter.frames(COMPLETE[: len(COMPLETE) // 3])
     assert cut and adapter.terminal(cut) is None
 
 
@@ -150,7 +174,7 @@ def test_stream_reassembles_across_arbitrary_chunk_boundaries():
     # routinely spans two dataReceived events.
     s = adapter.Stream()
     for i in range(0, len(COMPLETE), 997):
-        s.feed(COMPLETE[i:i + 997])
+        s.feed(COMPLETE[i : i + 997])
     assert s.done
     # Structural equality, not a count and not a key: `uuid` is the message id and is
     # the same on every frame, so comparing it would pass on a stream whose frames were
@@ -166,16 +190,29 @@ def test_stream_is_not_done_until_the_terminal_frame_lands():
 
 
 def patched(*patches, **top):
-    fs = [{"backend_uuid": "id", "display_model": "m", "search_mode": "SEARCH", **top,
-           "blocks": [{"intended_usage": "ask_text", "diff_block": {
-               "field": "markdown_block", "patches": list(patches)}}]}]
+    fs = [
+        {
+            "backend_uuid": "id",
+            "display_model": "m",
+            "search_mode": "SEARCH",
+            **top,
+            "blocks": [
+                {
+                    "intended_usage": "ask_text",
+                    "diff_block": {"field": "markdown_block", "patches": list(patches)},
+                }
+            ],
+        }
+    ]
     return adapter._partial(fs)
 
 
 def test_chunks_append_in_order():
-    r = patched({"op": "replace", "path": "", "value": {"chunks": ["a", "b"]}},
-                {"op": "add", "path": "/chunks/2", "value": "c"},
-                {"op": "add", "path": "/chunks/3", "value": "d"})
+    r = patched(
+        {"op": "replace", "path": "", "value": {"chunks": ["a", "b"]}},
+        {"op": "add", "path": "/chunks/2", "value": "c"},
+        {"op": "add", "path": "/chunks/3", "value": "d"},
+    )
     assert r.text == "abcd"
     assert r.thread_id == "id" and r.model == "m" and r.complete is False
 
@@ -184,9 +221,14 @@ def test_a_patch_before_the_start_never_rewrites_delivered_text():
     # int() takes "-1" happily, the padding is then a no-op, and chunks[-1] = value
     # overwrites the last token that really arrived -- producing text the server never
     # sent, which is exactly what this replay exists not to do.
-    r = patched({"op": "replace", "path": "",
-                 "value": {"chunks": ["Canberra ", "is the capital."]}},
-                {"op": "add", "path": "/chunks/-1", "value": "is NOT the capital."})
+    r = patched(
+        {
+            "op": "replace",
+            "path": "",
+            "value": {"chunks": ["Canberra ", "is the capital."]},
+        },
+        {"op": "add", "path": "/chunks/-1", "value": "is NOT the capital."},
+    )
     assert r.text == "Canberra is the capital."
 
 
@@ -194,34 +236,76 @@ def test_a_patch_past_the_end_is_refused():
     # Beyond the array's length is an error per RFC 6902, and the observed wire never
     # does it -- every index in both captures is the next one. Honouring it would mean
     # padding with tokens nobody sent, and a hostile index would allocate without bound.
-    r = patched({"op": "replace", "path": "", "value": {"chunks": ["a"]}},
-                {"op": "add", "path": "/chunks/20000000", "value": "x"})
+    r = patched(
+        {"op": "replace", "path": "", "value": {"chunks": ["a"]}},
+        {"op": "add", "path": "/chunks/20000000", "value": "x"},
+    )
     assert r.text == "a"
 
 
 def test_unknown_patch_operations_are_ignored_not_guessed():
     # A guess here invents text that was never sent -- worse than a short answer.
-    fs = [{"blocks": [{"intended_usage": "ask_text", "diff_block": {
-        "field": "markdown_block",
-        "patches": [{"op": "replace", "path": "", "value": {"chunks": ["a"]}},
-                    {"op": "remove", "path": "/chunks/0"},
-                    {"op": "copy", "from": "/x", "path": "/chunks/9"}]}}]}]
+    fs = [
+        {
+            "blocks": [
+                {
+                    "intended_usage": "ask_text",
+                    "diff_block": {
+                        "field": "markdown_block",
+                        "patches": [
+                            {"op": "replace", "path": "", "value": {"chunks": ["a"]}},
+                            {"op": "remove", "path": "/chunks/0"},
+                            {"op": "copy", "from": "/x", "path": "/chunks/9"},
+                        ],
+                    },
+                }
+            ]
+        }
+    ]
     assert adapter._partial(fs).text == "a"
 
 
 def test_partial_ignores_diffs_aimed_at_other_fields():
-    fs = [{"blocks": [{"intended_usage": "ask_text", "diff_block": {
-        "field": "plan_block",
-        "patches": [{"op": "replace", "path": "", "value": {"chunks": ["nope"]}}]}}]}]
+    fs = [
+        {
+            "blocks": [
+                {
+                    "intended_usage": "ask_text",
+                    "diff_block": {
+                        "field": "plan_block",
+                        "patches": [
+                            {"op": "replace", "path": "", "value": {"chunks": ["nope"]}}
+                        ],
+                    },
+                }
+            ]
+        }
+    ]
     assert adapter._partial(fs).text == ""
 
 
 def test_partial_does_not_enforce_the_citation_contract():
     # The sources for a marker may simply not have arrived yet. Raising on output the
     # caller explicitly opted into would be a false alarm (docs/M3-findings.md).
-    fs = [{"blocks": [{"intended_usage": "ask_text", "diff_block": {
-        "field": "markdown_block",
-        "patches": [{"op": "replace", "path": "", "value": {"chunks": ["claim [9]"]}}]}}]}]
+    fs = [
+        {
+            "blocks": [
+                {
+                    "intended_usage": "ask_text",
+                    "diff_block": {
+                        "field": "markdown_block",
+                        "patches": [
+                            {
+                                "op": "replace",
+                                "path": "",
+                                "value": {"chunks": ["claim [9]"]},
+                            }
+                        ],
+                    },
+                }
+            ]
+        }
+    ]
     assert adapter._partial(fs).text == "claim [9]"
 
 
@@ -238,7 +322,7 @@ def test_stream_flushes_a_terminal_frame_the_connection_ended_on():
     blocks = COMPLETE.split(adapter.FRAME_SEP)
     term = next(i for i, b in enumerate(blocks) if b'"final_sse_message": true' in b)
     s = adapter.Stream()
-    s.feed(adapter.FRAME_SEP.join(blocks[:term + 1]))
+    s.feed(adapter.FRAME_SEP.join(blocks[: term + 1]))
     assert not s.done  # still held back: more bytes could always follow
     s.close()
     assert s.done and s.ended
@@ -246,7 +330,7 @@ def test_stream_flushes_a_terminal_frame_the_connection_ended_on():
 
 def test_closing_a_stream_cut_mid_frame_admits_nothing():
     s = adapter.Stream()
-    s.feed(COMPLETE[:len(COMPLETE) // 3])
+    s.feed(COMPLETE[: len(COMPLETE) // 3])
     before = len(s.frames)
     s.close()
     # The tail is half-written JSON, not a frame. Flushing must not invent one.
@@ -281,7 +365,9 @@ def test_resume_path_has_no_final_sse_message_and_does_not_need_one():
 
 def test_resume_path_of_an_unfinished_thread_raises():
     with pytest.raises(IncompleteAnswerError):
-        adapter.parse_thread({"entries": [{"status": "PENDING"}]}, allow_incomplete=False)
+        adapter.parse_thread(
+            {"entries": [{"status": "PENDING"}]}, allow_incomplete=False
+        )
 
 
 def test_resume_path_with_no_entries_raises():
@@ -293,12 +379,27 @@ def test_a_bracketed_number_inside_code_is_not_a_citation_marker():
     # Perplexity is used for programming questions, and `nums[0]` is not a citation.
     # Reading markers out of the raw markdown throws away a complete, correct answer
     # -- after the query is already spent, with a message blaming the frontend.
-    entry = {"blocks": [
-        {"intended_usage": "ask_text", "markdown_block": {"answer":
-            "Index from zero.[1]\n\n```python\nprint(nums[0], nums[10])\n```\n\n"
-            "Or use `arr[3]` directly.[2]"}},
-        {"intended_usage": "web_results", "web_result_block": {"web_results": [
-            {"url": "u1", "name": "t1"}, {"url": "u2", "name": "t2"}]}}]}
+    entry = {
+        "blocks": [
+            {
+                "intended_usage": "ask_text",
+                "markdown_block": {
+                    "answer": "Index from zero.[1]\n\n"
+                    "```python\nprint(nums[0], nums[10])\n```\n\n"
+                    "Or use `arr[3]` directly.[2]"
+                },
+            },
+            {
+                "intended_usage": "web_results",
+                "web_result_block": {
+                    "web_results": [
+                        {"url": "u1", "name": "t1"},
+                        {"url": "u2", "name": "t2"},
+                    ]
+                },
+            },
+        ]
+    }
     r = adapter.answer_from(entry, complete=True)
     assert r.text.count("nums[0]") == 1  # left in the answer, just not read as a marker
 
@@ -306,11 +407,20 @@ def test_a_bracketed_number_inside_code_is_not_a_citation_marker():
 def test_stripping_code_does_not_disable_the_citation_contract():
     # The other half of the fix: an unmapped marker in prose still raises, code or no
     # code. Without this the fix above could pass by never checking anything.
-    entry = {"blocks": [
-        {"intended_usage": "ask_text", "markdown_block": {"answer":
-            "```python\nnums[0]\n```\n\nSee the spec.[7]"}},
-        {"intended_usage": "web_results",
-         "web_result_block": {"web_results": [{"url": "u", "name": "t"}]}}]}
+    entry = {
+        "blocks": [
+            {
+                "intended_usage": "ask_text",
+                "markdown_block": {
+                    "answer": "```python\nnums[0]\n```\n\nSee the spec.[7]"
+                },
+            },
+            {
+                "intended_usage": "web_results",
+                "web_result_block": {"web_results": [{"url": "u", "name": "t"}]},
+            },
+        ]
+    }
     with pytest.raises(CitationError, match=r"\[7\]"):
         adapter.answer_from(entry, complete=True)
 
