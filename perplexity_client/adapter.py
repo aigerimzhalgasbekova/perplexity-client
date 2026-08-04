@@ -10,6 +10,7 @@ against recorded fixtures instead of the live site (PRD §7).
 """
 
 import base64
+import copy
 import dataclasses
 import json
 import re
@@ -239,10 +240,54 @@ def resolve(name: str, offers: dict[str, str]) -> tuple[str, str]:
     )
 
 
+# --- blocks --------------------------------------------------------------------------
+# An entry is a list of blocks tagged by `intended_usage`, each wrapping one payload
+# field. Everything below reads through these two, so a block that moved is found in
+# one place rather than in every reader.
+
+WORKFLOW = "workflow_root"
+
+
+def _block(entry: Json, usage: str, field: str) -> Json:
+    for b in entry.get("blocks") or ():
+        if isinstance(b, dict) and b.get("intended_usage") == usage:
+            value = b.get(field)
+            return value if isinstance(value, dict) else {}
+    return {}
+
+
+def _items(entry: Json) -> list[Json]:
+    return [
+        i
+        for step in _block(entry, WORKFLOW, "workflow_block").get("steps") or ()
+        if isinstance(step, dict)
+        for i in step.get("items") or ()
+        if isinstance(i, dict)
+    ]
+
+
 # --- the answer ------------------------------------------------------------------
 # One parser, two finders. The live stream's terminal frame and the resume endpoint's
 # entry carry the same `blocks` list -- verified byte-identical against the M0
 # fixtures, see docs/M3-findings.md -- so only *finding* the payload differs.
+#
+# Where the markdown lives moved on 2026-08-04. It used to be an `ask_text` block
+# holding an assembled `markdown_block.answer`; it now arrives as `WORKFLOW_ITEM_TEXT`
+# items inside the workflow every answer already ran through, and the entry's own
+# `structured_answer_block_usages` -- its list of the blocks that make up its answer --
+# names `workflow_root` alone. Both shapes are read: threads answered before that date
+# still resume, and the fixtures they were parsed from are the regression test.
+#
+# The items are matched on `variant`, not on merely carrying text: research has always
+# narrated itself through this same workflow (`WORKFLOW_ITEM_CONTENT`), and reading
+# its running commentary back as the answer is exactly the plausible-but-wrong output
+# PRD §10 rates critical.
+ANSWER_ITEM = "WORKFLOW_ITEM_TEXT"
+ANSWER_VARIANT = "answer"
+# One item usually carries the whole answer, blank lines and all; a long one is split
+# across items with the blank line between sections dropped, so it is put back. A
+# single newline would run a section's last paragraph into the next one's heading.
+SECTION_SEP = "\n\n"
 
 
 @dataclasses.dataclass(frozen=True)
@@ -288,6 +333,30 @@ def markers_in(text: str) -> set[int]:
     return {int(n) for n in re.findall(r"\[(\d+)\]", CODE.sub("", text))}
 
 
+def _text_of(payload: Json, field: str = "text") -> str:
+    """The assembled string, or the tokens it was assembled from.
+
+    Mid-stream there is no assembled field at all -- it lands on the item's last patch
+    -- so `chunks` is the only text there is until then. On the terminal frame the two
+    agree (verified against the 2026-08-04 capture).
+    """
+    return str(payload.get(field) or "") or "".join(
+        str(c) for c in payload.get("chunks") or ()
+    )
+
+
+def answer_text(entry: Json) -> str:
+    """The answer's markdown, from whichever block this frontend keeps it in."""
+    if sections := [
+        text
+        for item in _items(entry)
+        if item.get("type") == ANSWER_ITEM and item.get("variant") == ANSWER_VARIANT
+        if (text := _text_of((item.get("payload") or {}).get("text_payload") or {}))
+    ]:
+        return SECTION_SEP.join(sections)
+    return _text_of(_block(entry, "ask_text", "markdown_block"), "answer")
+
+
 def answer_from(entry: Json, complete: bool) -> Response:
     """A `Response` from one terminal SSE frame, or one resume entry -- same shape.
 
@@ -295,18 +364,9 @@ def answer_from(entry: Json, complete: bool) -> Response:
     invariant asks for: Perplexity renumbers and appends sources while an answer
     streams, so sampling the two a moment apart is how markers come to misattribute.
     """
-    blocks = {
-        b.get("intended_usage"): b
-        for b in entry.get("blocks") or ()
-        if isinstance(b, dict)
-    }
-    text = ((blocks.get("ask_text") or {}).get("markdown_block") or {}).get(
-        "answer"
-    ) or ""
+    text = answer_text(entry)
     cites = _citations(
-        ((blocks.get("web_results") or {}).get("web_result_block") or {}).get(
-            "web_results"
-        )
+        _block(entry, "web_results", "web_result_block").get("web_results")
     )
     if complete:
         if not text:
@@ -361,7 +421,6 @@ def answer_from(entry: Json, complete: bool) -> Response:
 # The trap PRD §5 names is real: the entry's own `status` stays PENDING while research
 # waits for an answer, so only the workflow block can tell waiting from working.
 
-WORKFLOW = "workflow_root"
 AWAITING = "WORKFLOW_AWAITING_USER"
 ASKED = "WORKFLOW_ITEM_USER_QUESTIONS"
 ANSWERED = "WORKFLOW_ITEM_USER_RESPONSE"
@@ -376,24 +435,6 @@ class Question:
     options: list[str]
     multi: bool
     free_text: bool
-
-
-def _block(entry: Json, usage: str, field: str) -> Json:
-    for b in entry.get("blocks") or ():
-        if isinstance(b, dict) and b.get("intended_usage") == usage:
-            value = b.get(field)
-            return value if isinstance(value, dict) else {}
-    return {}
-
-
-def _items(entry: Json) -> list[Json]:
-    return [
-        i
-        for step in _block(entry, WORKFLOW, "workflow_block").get("steps") or ()
-        if isinstance(step, dict)
-        for i in step.get("items") or ()
-        if isinstance(i, dict)
-    ]
 
 
 def plan_of(entry: Json) -> list[tuple[str, str]] | None:
@@ -681,71 +722,108 @@ def _snapshot(block: Json, field: str) -> Json | None:
     return None
 
 
-def _apply(chunks: list[str], patch: Json) -> list[str]:
-    """One `markdown_block` patch.
+def _child(node: Any, key: str) -> Any:
+    if isinstance(node, dict):
+        return node.get(key)
+    if isinstance(node, list) and key.isdecimal() and int(key) < len(node):
+        return node[int(key)]
+    return None
 
-    Two operations exist in the wild and only two are handled -- `replace` at the root
-    (a whole snapshot) and `add` at /chunks/<n> (one token). Anything else is ignored
-    rather than guessed at: a guess invents text that was never sent, which is worse
-    than a short answer the caller already knows is incomplete.
+
+def _patch(root: Json, patch: Json) -> None:
+    """One RFC 6902 `add` or `replace`, applied to `root` in place.
+
+    Those two operations are the only ones the stream sends, and they are honoured only
+    where the container the path names already exists. Anything else is ignored rather
+    than guessed at -- a guess invents text that was never sent, which is worse than a
+    short answer the caller already knows is incomplete.
     """
-    path, op = patch.get("path", ""), patch.get("op")
-    if op == "replace" and path == "":
-        return [str(c) for c in (patch.get("value") or {}).get("chunks") or ()]
-    if op == "add" and path.startswith("/chunks/"):
-        try:
-            i = int(path.rsplit("/", 1)[1])
-        except ValueError:
-            return chunks
-        # Append or overwrite, never outside the array. Both bounds guard real harm on
-        # a path fed straight from the network: `int("-1")` makes the padding a no-op
-        # and `chunks[-1] = ...` rewrites a token that really arrived -- inventing text
-        # the server never sent -- while a large index pads without limit (a 2e7 index
-        # measured at 320MB). Past the end is an error in RFC 6902 anyway, and every
-        # index in both captures is simply the next one.
-        if not 0 <= i <= len(chunks):
-            return chunks
-        chunks += [""] * (i + 1 - len(chunks))
-        chunks[i] = str(patch.get("value", ""))
-    return chunks
+    op, path = patch.get("op"), patch.get("path")
+    if op not in ("add", "replace") or not isinstance(path, str):
+        return
+    if not path.startswith("/"):
+        return  # `replace` at the root is a whole snapshot; `_snapshot` takes that one
+    *parents, last = [
+        p.replace("~1", "/").replace("~0", "~") for p in path[1:].split("/")
+    ]
+    node: Any = root
+    for key in parents:
+        if (node := _child(node, key)) is None:
+            return
+    # Copied, not referenced: the value belongs to a frame the caller keeps, and a
+    # later patch aimed inside it would otherwise edit that frame. Every poll re-reads
+    # the same frame list, so the next pass would start from this pass's leftovers and
+    # the answer would grow a copy of itself each time.
+    value = copy.deepcopy(patch.get("value"))
+    if isinstance(node, dict):
+        node[last] = value
+    elif isinstance(node, list) and last.isdecimal():
+        # Inside the array, never outside it. Both bounds guard real harm on a path fed
+        # straight from the network: an index before the start rewrites a token that
+        # really arrived -- inventing text the server never sent -- while one past the
+        # end pads without limit (a 2e7 index measured at 320MB). Past the end is an
+        # error in RFC 6902 anyway, and every index observed is simply the next one.
+        i = int(last)
+        if op == "add" and i <= len(node):
+            node.insert(i, value)
+        elif op == "replace" and i < len(node):
+            node[i] = value
+
+
+def _replay(frames: list[Json], usage: str, field: str) -> Json:
+    """One block field as the stream last left it: newest snapshot, then every patch.
+
+    Deep-copied before patching: the frame list is re-read on every poll, so mutating
+    the payloads in place would make each pass start from the last one's leftovers.
+    """
+    out: Json = {}
+    for f in frames:
+        for block in f.get("blocks") or ():
+            if not isinstance(block, dict) or block.get("intended_usage") != usage:
+                continue
+            if snap := _snapshot(block, field):
+                out = copy.deepcopy(snap)
+            diff = block.get("diff_block") or {}
+            if diff.get("field") == field:
+                for patch in diff.get("patches") or ():
+                    if isinstance(patch, dict):
+                        _patch(out, patch)
+    return out
 
 
 def _partial(frames: list[Json]) -> Response:
     """What arrived, replayed.
 
-    The assembled answer only ever appears on the terminal frame; before it, `ask_text`
-    streams as JSON-patch fragments. Without replaying them an `allow_incomplete=True`
-    caller gets an empty string instead of the partial answer US-3 promises.
+    The assembled answer only ever appears on the terminal frame; before it the text
+    streams as JSON-patch fragments, one token per patch. Without replaying them an
+    `allow_incomplete=True` caller gets an empty string instead of the partial answer
+    US-3 promises.
     """
-    chunks: list[str] = []
-    web: Json | None = None
     latest: Json = {}
     for f in frames:
         latest.update({k: v for k, v in f.items() if k in _CARRIED})
-        for block in f.get("blocks") or ():
-            if not isinstance(block, dict):
-                continue
-            usage = block.get("intended_usage")
-            if usage == "web_results":
-                # Citations stream as a diff as well, but only ever as one whole-value
-                # replace -- they are settled in one go rather than token by token.
-                web = _snapshot(block, "web_result_block") or web
-            elif usage == "ask_text":
-                if snap := _snapshot(block, "markdown_block"):
-                    chunks = [str(c) for c in snap.get("chunks") or ()]
-                diff = block.get("diff_block") or {}
-                if diff.get("field") == "markdown_block":
-                    for patch in diff.get("patches") or ():
-                        if isinstance(patch, dict):
-                            chunks = _apply(chunks, patch)
-    # An entry assembled by hand, because a cut stream never sent one. Citations are
-    # whatever had been delivered, and the index contract is deliberately not enforced
-    # over them -- see answer_from.
+    # An entry assembled by hand, because a cut stream never sent one. Both answer
+    # shapes are rebuilt -- see the note above `ANSWER_ITEM` -- and citations are
+    # whatever had been delivered, with the index contract deliberately not enforced
+    # over them (see answer_from).
     entry = {
         **latest,
-        "blocks": [{"intended_usage": "web_results", "web_result_block": web or {}}],
+        "blocks": [
+            {
+                "intended_usage": WORKFLOW,
+                "workflow_block": _replay(frames, WORKFLOW, "workflow_block"),
+            },
+            {
+                "intended_usage": "ask_text",
+                "markdown_block": _replay(frames, "ask_text", "markdown_block"),
+            },
+            {
+                "intended_usage": "web_results",
+                "web_result_block": _replay(frames, "web_results", "web_result_block"),
+            },
+        ],
     }
-    return dataclasses.replace(answer_from(entry, complete=False), text="".join(chunks))
+    return answer_from(entry, complete=False)
 
 
 def parse_stream(frames: list[Json], allow_incomplete: bool) -> Response:

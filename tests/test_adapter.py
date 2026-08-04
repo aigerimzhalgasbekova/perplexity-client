@@ -18,6 +18,11 @@ FIXTURES = pathlib.Path(__file__).parent.parent / "spike" / "fixtures"
 COMPLETE = (FIXTURES / "search-complete-2026-07-31.sse").read_bytes()
 TRUNCATED = (FIXTURES / "search-truncated-2026-07-31.sse").read_bytes()
 THREAD = json.loads((FIXTURES / "research-thread-resume-2026-07-31.json").read_text())
+# The same query, captured after the answer moved out of `ask_text` and into the
+# workflow's own text items (2026-08-04). Both dates are kept and both are parsed:
+# threads answered before the move still resume.
+COMPLETE_08_04 = (FIXTURES / "search-complete-2026-08-04.sse").read_bytes()
+TRUNCATED_08_04 = (FIXTURES / "search-truncated-2026-08-04.sse").read_bytes()
 
 
 def finished():
@@ -122,6 +127,112 @@ def test_an_answer_block_that_only_holds_a_diff_is_refused_too():
 def test_an_empty_partial_answer_is_still_allowed():
     # `allow_incomplete=True` over a stream cut before any text is legitimately empty.
     assert adapter.answer_from({}, complete=False).text == ""
+
+
+# --- the answer's move out of ask_text (2026-08-04) --------------------------------
+
+
+def finished_08_04():
+    return adapter.parse_stream(adapter.frames(COMPLETE_08_04), allow_incomplete=False)
+
+
+def test_the_answer_is_read_out_of_the_workflow_text_items():
+    # What broke live: `ask_text` is simply gone from this capture, and every lookup
+    # into it is `or {}`-guarded, so the parser reported a complete answer with no
+    # text -- PRD §10's critical row -- rather than reading where the text went.
+    fin = adapter.terminal(adapter.frames(COMPLETE_08_04))
+    assert not adapter._block(fin, "ask_text", "markdown_block")
+    assert fin["structured_answer_block_usages"] == ["workflow_root"]
+    r = finished_08_04()
+    assert r.text.startswith("The capital of Australia")
+    assert r.citations and r.model == "pplx_pro" and r.mode == "search"
+    assert all(1 <= n <= len(r.citations) for n in adapter.markers_in(r.text))
+
+
+def test_research_narration_is_not_mistaken_for_the_answer():
+    # Research has always narrated itself through this same workflow, so "an item with
+    # text in it" is not the test -- `variant` is. Reading the commentary back as the
+    # answer would be plausible, wrong, and indistinguishable downstream.
+    entry = {
+        "blocks": [
+            {
+                "intended_usage": adapter.WORKFLOW,
+                "workflow_block": {
+                    "steps": [
+                        {
+                            "items": [
+                                {
+                                    "type": "WORKFLOW_ITEM_CONTENT",
+                                    "payload": {"text_payload": {"text": "Searching…"}},
+                                }
+                            ]
+                        }
+                    ]
+                },
+            }
+        ]
+    }
+    assert adapter.answer_text(entry) == ""
+    with pytest.raises(IncompleteAnswerError):
+        adapter.answer_from(entry, complete=True)
+
+
+def test_sections_split_across_items_keep_their_blank_line():
+    # A long answer arrives as one item per section with the blank line between them
+    # dropped. Rejoining on a single newline runs a paragraph into the next heading.
+    entry = {
+        "blocks": [
+            {
+                "intended_usage": adapter.WORKFLOW,
+                "workflow_block": {
+                    "steps": [
+                        {
+                            "items": [
+                                {
+                                    "type": "WORKFLOW_ITEM_TEXT",
+                                    "variant": "answer",
+                                    "payload": {"text_payload": {"text": t}},
+                                }
+                            ]
+                        }
+                        for t in ("Canberra.", "## Why", "It was a compromise.")
+                    ]
+                },
+            }
+        ]
+    }
+    assert adapter.answer_text(entry) == "Canberra.\n\n## Why\n\nIt was a compromise."
+
+
+def test_a_stream_cut_before_the_text_field_still_replays_its_chunks():
+    # The assembled `text` lands on the item's last patch; before that `chunks` is the
+    # only text there is, one token per patch.
+    r = adapter.parse_stream(adapter.frames(TRUNCATED_08_04), allow_incomplete=True)
+    assert r.complete is False
+    assert r.text.startswith("The capital of Australia")
+    assert finished_08_04().text.startswith(r.text)
+
+
+def test_replaying_the_same_frames_twice_gives_the_same_answer():
+    # A running task is polled by re-reading one growing frame list, so a replay that
+    # patched those frames in place would compound: each pass would start from the last
+    # pass's leftovers and the answer would grow a copy of itself every time.
+    fs = adapter.frames(TRUNCATED_08_04)
+    first = adapter._partial(fs).text
+    assert adapter._partial(fs).text == first
+    assert fs == adapter.frames(TRUNCATED_08_04)
+
+
+def test_partial_text_only_ever_grows_by_appending():
+    # Replayed prefix by prefix, each step must extend the last: text that shrinks or
+    # rewrites itself means the patches were applied to the wrong place.
+    fs = adapter.frames(COMPLETE_08_04)
+    seen = ""
+    for i in range(1, len(fs) + 1):
+        text = adapter._partial(fs[:i]).text
+        assert text.startswith(seen)
+        seen = text
+    assert seen == finished_08_04().text
 
 
 def test_zero_is_not_a_citation_marker():
