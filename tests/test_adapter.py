@@ -23,6 +23,11 @@ THREAD = json.loads((FIXTURES / "research-thread-resume-2026-07-31.json").read_t
 # threads answered before the move still resume.
 COMPLETE_08_04 = (FIXTURES / "search-complete-2026-08-04.sse").read_bytes()
 TRUNCATED_08_04 = (FIXTURES / "search-truncated-2026-08-04.sse").read_bytes()
+# The only capture in the repo holding an answer split across sections, and so the only
+# evidence for what separator Perplexity itself rejoins them with.
+MULTITURN_08_01 = json.loads(
+    (FIXTURES / "thread-multiturn-2026-08-01.json").read_text()
+)
 
 
 def finished():
@@ -177,9 +182,12 @@ def test_research_narration_is_not_mistaken_for_the_answer():
         adapter.answer_from(entry, complete=True)
 
 
-def test_sections_split_across_items_keep_their_blank_line():
-    # A long answer arrives as one item per section with the blank line between them
-    # dropped. Rejoining on a single newline runs a paragraph into the next heading.
+def test_sections_split_across_items_rejoin_the_way_perplexity_joins_them():
+    # Pinned to observed assembly, not to a guess: in thread-multiturn-2026-08-01 the
+    # sectioned `ask_text_<n>_markdown` blocks rejoin into the assembled `ask_text`
+    # answer on exactly one character each, and the boundaries read
+    # "…Sydney.[1][2][3]\n## Why Canberra". A blank line here would be text the server
+    # never sent, returned with complete=True and nothing downstream to catch it.
     entry = {
         "blocks": [
             {
@@ -201,7 +209,32 @@ def test_sections_split_across_items_keep_their_blank_line():
             }
         ]
     }
-    assert adapter.answer_text(entry) == "Canberra.\n\n## Why\n\nIt was a compromise."
+    assert adapter.answer_text(entry) == "Canberra.\n## Why\nIt was a compromise."
+
+
+def test_the_observed_section_join_is_the_one_we_use():
+    # The evidence the constant above is pinned to, read back out of the fixture rather
+    # than restated: sections rejoin on SECTION_SEP to the assembled answer's length.
+    # (Not byte-equality -- the assembled copy reorders some citation markers, which is
+    # a separate question from where the sections meet.)
+    checked = 0
+    for entry in MULTITURN_08_01["entries"]:
+        blocks = entry["blocks"]
+        secs = [
+            b["markdown_block"]["answer"]
+            for b in blocks
+            if re.fullmatch(r"ask_text_\d+_markdown", b["intended_usage"])
+        ]
+        if len(secs) < 2:
+            continue
+        whole = next(
+            b["markdown_block"]["answer"]
+            for b in blocks
+            if b["intended_usage"] == "ask_text"
+        )
+        assert len(adapter.SECTION_SEP.join(secs)) == len(whole)
+        checked += 1
+    assert checked, "the fixture stopped carrying a sectioned answer"
 
 
 def test_a_stream_cut_before_the_text_field_still_replays_its_chunks():
@@ -370,6 +403,29 @@ def test_a_patch_past_the_end_is_refused():
         {"op": "add", "path": "/chunks/20000000", "value": "x"},
     )
     assert r.text == "a"
+
+
+def test_an_index_too_long_to_convert_is_ignored_not_raised():
+    # `isdecimal()` says yes to any number of digits; CPython's int() raises ValueError
+    # past 4300 of them. parse_stream runs outside the PplxError contract, so a path of
+    # nines off the network would surface as a traceback rather than a diagnosis --
+    # after the query was already spent.
+    r = patched(
+        {"op": "replace", "path": "", "value": {"chunks": ["a"]}},
+        {"op": "add", "path": "/chunks/" + "9" * 5000, "value": "x"},
+        {"op": "replace", "path": "/" + "9" * 5000 + "/chunks/0", "value": "x"},
+    )
+    assert r.text == "a"
+
+
+def test_a_frame_delivered_twice_does_not_double_the_answer():
+    # Replay is idempotent by construction: `add` over an index that already holds a
+    # token assigns rather than shifting. The stream only ever names the next index, so
+    # a repeat is a re-delivery -- inserting would hand back an answer containing itself
+    # twice, well-formed and complete-looking, with nothing downstream to catch it.
+    fs = adapter.frames(TRUNCATED_08_04)
+    once = adapter._partial(fs).text
+    assert adapter._partial(fs + fs[1:]).text == once
 
 
 def test_unknown_patch_operations_are_ignored_not_guessed():

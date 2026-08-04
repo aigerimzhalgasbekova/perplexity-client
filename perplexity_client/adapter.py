@@ -284,10 +284,16 @@ def _items(entry: Json) -> list[Json]:
 # PRD §10 rates critical.
 ANSWER_ITEM = "WORKFLOW_ITEM_TEXT"
 ANSWER_VARIANT = "answer"
-# One item usually carries the whole answer, blank lines and all; a long one is split
-# across items with the blank line between sections dropped, so it is put back. A
-# single newline would run a section's last paragraph into the next one's heading.
-SECTION_SEP = "\n\n"
+# One item usually carries the whole answer, blank lines and all. Both 08-04 captures
+# hold the whole answer in a single item, so the boundary between items has never been
+# observed -- but the older sectioned shape has, and it is the same answer split the
+# same way: in `thread-multiturn-2026-08-01` the `ask_text_<n>_markdown` sections rejoin
+# into the assembled `ask_text` answer on exactly one character each (1463 -> 1467 over
+# five sections, 1014 -> 1017 over four), and the boundaries read `…Sydney.[1][2][3]\n##
+# Why Canberra`. A heading may interrupt a paragraph in CommonMark, which is why the
+# live assembly gets away with it. Matching that is also the recoverable direction: a
+# missing blank line renders the same, an invented one splits a paragraph in two.
+SECTION_SEP = "\n"
 
 
 @dataclasses.dataclass(frozen=True)
@@ -722,11 +728,23 @@ def _snapshot(block: Json, field: str) -> Json | None:
     return None
 
 
+def _index(key: str) -> int | None:
+    """One path segment as a list index, or None if it does not name one.
+
+    Length-capped before converting, not just checked for digits: CPython raises
+    `ValueError` converting more than 4300 of them, and the path comes straight off the
+    network. `parse_stream` runs outside the `PplxError` contract, so a segment of nines
+    would reach the caller as a traceback rather than a diagnosis -- after the query was
+    already spent. Nine digits is past any list this protocol produces.
+    """
+    return int(key) if key.isdecimal() and len(key) <= 9 else None
+
+
 def _child(node: Any, key: str) -> Any:
     if isinstance(node, dict):
         return node.get(key)
-    if isinstance(node, list) and key.isdecimal() and int(key) < len(node):
-        return node[int(key)]
+    if isinstance(node, list) and (i := _index(key)) is not None and i < len(node):
+        return node[i]
     return None
 
 
@@ -757,17 +775,23 @@ def _patch(root: Json, patch: Json) -> None:
     value = copy.deepcopy(patch.get("value"))
     if isinstance(node, dict):
         node[last] = value
-    elif isinstance(node, list) and last.isdecimal():
+    elif isinstance(node, list) and (i := _index(last)) is not None:
         # Inside the array, never outside it. Both bounds guard real harm on a path fed
         # straight from the network: an index before the start rewrites a token that
         # really arrived -- inventing text the server never sent -- while one past the
         # end pads without limit (a 2e7 index measured at 320MB). Past the end is an
         # error in RFC 6902 anyway, and every index observed is simply the next one.
-        i = int(last)
-        if op == "add" and i <= len(node):
-            node.insert(i, value)
-        elif op == "replace" and i < len(node):
+        #
+        # Which is why `add` over a slot that already exists assigns instead of
+        # inserting, where RFC 6902 would shift: the stream only ever names the next
+        # index, so a repeat is a frame re-delivered, not a token inserted. Shifting
+        # would leave the answer holding a second copy of itself -- the same
+        # invented-text failure the deep copy below guards -- while assigning makes
+        # replaying a frame twice a no-op, which is what polling actually needs.
+        if i < len(node):
             node[i] = value
+        elif i == len(node) and op == "add":
+            node.append(value)
 
 
 def _replay(frames: list[Json], usage: str, field: str) -> Json:
