@@ -18,6 +18,16 @@ FIXTURES = pathlib.Path(__file__).parent.parent / "spike" / "fixtures"
 COMPLETE = (FIXTURES / "search-complete-2026-07-31.sse").read_bytes()
 TRUNCATED = (FIXTURES / "search-truncated-2026-07-31.sse").read_bytes()
 THREAD = json.loads((FIXTURES / "research-thread-resume-2026-07-31.json").read_text())
+# The same query, captured after the answer moved out of `ask_text` and into the
+# workflow's own text items (2026-08-04). Both dates are kept and both are parsed:
+# threads answered before the move still resume.
+COMPLETE_08_04 = (FIXTURES / "search-complete-2026-08-04.sse").read_bytes()
+TRUNCATED_08_04 = (FIXTURES / "search-truncated-2026-08-04.sse").read_bytes()
+# The only capture in the repo holding an answer split across sections, and so the only
+# evidence for what separator Perplexity itself rejoins them with.
+MULTITURN_08_01 = json.loads(
+    (FIXTURES / "thread-multiturn-2026-08-01.json").read_text()
+)
 
 
 def finished():
@@ -122,6 +132,140 @@ def test_an_answer_block_that_only_holds_a_diff_is_refused_too():
 def test_an_empty_partial_answer_is_still_allowed():
     # `allow_incomplete=True` over a stream cut before any text is legitimately empty.
     assert adapter.answer_from({}, complete=False).text == ""
+
+
+# --- the answer's move out of ask_text (2026-08-04) --------------------------------
+
+
+def finished_08_04():
+    return adapter.parse_stream(adapter.frames(COMPLETE_08_04), allow_incomplete=False)
+
+
+def test_the_answer_is_read_out_of_the_workflow_text_items():
+    # What broke live: `ask_text` is simply gone from this capture, and every lookup
+    # into it is `or {}`-guarded, so the parser reported a complete answer with no
+    # text -- PRD §10's critical row -- rather than reading where the text went.
+    fin = adapter.terminal(adapter.frames(COMPLETE_08_04))
+    assert not adapter._block(fin, "ask_text", "markdown_block")
+    assert fin["structured_answer_block_usages"] == ["workflow_root"]
+    r = finished_08_04()
+    assert r.text.startswith("The capital of Australia")
+    assert r.citations and r.model == "pplx_pro" and r.mode == "search"
+    assert all(1 <= n <= len(r.citations) for n in adapter.markers_in(r.text))
+
+
+def test_research_narration_is_not_mistaken_for_the_answer():
+    # Research has always narrated itself through this same workflow, so "an item with
+    # text in it" is not the test -- `variant` is. Reading the commentary back as the
+    # answer would be plausible, wrong, and indistinguishable downstream.
+    entry = {
+        "blocks": [
+            {
+                "intended_usage": adapter.WORKFLOW,
+                "workflow_block": {
+                    "steps": [
+                        {
+                            "items": [
+                                {
+                                    "type": "WORKFLOW_ITEM_CONTENT",
+                                    "payload": {"text_payload": {"text": "Searching…"}},
+                                }
+                            ]
+                        }
+                    ]
+                },
+            }
+        ]
+    }
+    assert adapter.answer_text(entry) == ""
+    with pytest.raises(IncompleteAnswerError):
+        adapter.answer_from(entry, complete=True)
+
+
+def test_sections_split_across_items_rejoin_the_way_perplexity_joins_them():
+    # Pinned to observed assembly, not to a guess: in thread-multiturn-2026-08-01 the
+    # sectioned `ask_text_<n>_markdown` blocks rejoin into the assembled `ask_text`
+    # answer on exactly one character each, and the boundaries read
+    # "…Sydney.[1][2][3]\n## Why Canberra". A blank line here would be text the server
+    # never sent, returned with complete=True and nothing downstream to catch it.
+    entry = {
+        "blocks": [
+            {
+                "intended_usage": adapter.WORKFLOW,
+                "workflow_block": {
+                    "steps": [
+                        {
+                            "items": [
+                                {
+                                    "type": "WORKFLOW_ITEM_TEXT",
+                                    "variant": "answer",
+                                    "payload": {"text_payload": {"text": t}},
+                                }
+                            ]
+                        }
+                        for t in ("Canberra.", "## Why", "It was a compromise.")
+                    ]
+                },
+            }
+        ]
+    }
+    assert adapter.answer_text(entry) == "Canberra.\n## Why\nIt was a compromise."
+
+
+def test_the_observed_section_join_is_the_one_we_use():
+    # The evidence the constant above is pinned to, read back out of the fixture rather
+    # than restated: sections rejoin on SECTION_SEP to the assembled answer's length.
+    # (Not byte-equality -- the assembled copy reorders some citation markers, which is
+    # a separate question from where the sections meet.)
+    checked = 0
+    for entry in MULTITURN_08_01["entries"]:
+        blocks = entry["blocks"]
+        secs = [
+            b["markdown_block"]["answer"]
+            for b in blocks
+            if re.fullmatch(r"ask_text_\d+_markdown", b["intended_usage"])
+        ]
+        if len(secs) < 2:
+            continue
+        whole = next(
+            b["markdown_block"]["answer"]
+            for b in blocks
+            if b["intended_usage"] == "ask_text"
+        )
+        assert len(adapter.SECTION_SEP.join(secs)) == len(whole)
+        checked += 1
+    assert checked, "the fixture stopped carrying a sectioned answer"
+
+
+def test_a_stream_cut_before_the_text_field_still_replays_its_chunks():
+    # The assembled `text` lands on the item's last patch; before that `chunks` is the
+    # only text there is, one token per patch.
+    r = adapter.parse_stream(adapter.frames(TRUNCATED_08_04), allow_incomplete=True)
+    assert r.complete is False
+    assert r.text.startswith("The capital of Australia")
+    assert finished_08_04().text.startswith(r.text)
+
+
+def test_replaying_the_same_frames_twice_gives_the_same_answer():
+    # A running task is polled by re-reading one growing frame list, so a replay that
+    # patched those frames in place would compound: each pass would start from the last
+    # pass's leftovers and the answer would grow a copy of itself every time.
+    fs = adapter.frames(TRUNCATED_08_04)
+    first = adapter._partial(fs).text
+    assert adapter._partial(fs).text == first
+    assert fs == adapter.frames(TRUNCATED_08_04)
+
+
+def test_partial_text_only_ever_grows_by_appending():
+    # Replayed prefix by prefix, each step must extend the last: text that shrinks or
+    # rewrites itself means the patches were applied to the wrong place.
+    fs = adapter.frames(COMPLETE_08_04)
+    seen = ""
+    for i in range(1, len(fs) + 1):
+        text = adapter._partial(fs[:i]).text
+        assert text.startswith(seen)
+        seen = text
+    assert seen == finished_08_04().text
 
 
 def test_zero_is_not_a_citation_marker():
@@ -259,6 +403,29 @@ def test_a_patch_past_the_end_is_refused():
         {"op": "add", "path": "/chunks/20000000", "value": "x"},
     )
     assert r.text == "a"
+
+
+def test_an_index_too_long_to_convert_is_ignored_not_raised():
+    # `isdecimal()` says yes to any number of digits; CPython's int() raises ValueError
+    # past 4300 of them. parse_stream runs outside the PplxError contract, so a path of
+    # nines off the network would surface as a traceback rather than a diagnosis --
+    # after the query was already spent.
+    r = patched(
+        {"op": "replace", "path": "", "value": {"chunks": ["a"]}},
+        {"op": "add", "path": "/chunks/" + "9" * 5000, "value": "x"},
+        {"op": "replace", "path": "/" + "9" * 5000 + "/chunks/0", "value": "x"},
+    )
+    assert r.text == "a"
+
+
+def test_a_frame_delivered_twice_does_not_double_the_answer():
+    # Replay is idempotent by construction: `add` over an index that already holds a
+    # token assigns rather than shifting. The stream only ever names the next index, so
+    # a repeat is a re-delivery -- inserting would hand back an answer containing itself
+    # twice, well-formed and complete-looking, with nothing downstream to catch it.
+    fs = adapter.frames(TRUNCATED_08_04)
+    once = adapter._partial(fs).text
+    assert adapter._partial(fs + fs[1:]).text == once
 
 
 def test_unknown_patch_operations_are_ignored_not_guessed():
