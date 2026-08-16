@@ -158,3 +158,7 @@ No CAPTCHA or bot-detection bypass, ever. If Perplexity challenges the session, 
 tool reports `challenged` and stops. No multi-account use, no resale, no parallel
 hammering of one account — same-account runs are serialized on purpose. You are
 responsible for your own account's compliance with Perplexity's terms.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
