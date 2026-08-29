@@ -87,3 +87,29 @@ uv run ruff check . && uv run ruff format --check .
 uv run mypy perplexity_client
 uv run pytest
 ```
+
+## Continuous integration and releases
+
+Continuous integration (CI) — checks run automatically on the project's servers rather
+than on your machine — runs on GitHub Actions, defined in `.github/workflows/`.
+
+`ci.yml` runs on every push to `main` and every pull request. It runs the three checks
+above and nothing else: no browser is installed and no query is spent, because every
+test drives a fake Chrome DevTools Protocol (CDP) context — the protocol the tool uses
+to talk to a running Chrome — and reads the recorded fixtures. `pplx doctor` is not run
+there, for the reasons above.
+
+`release.yml` is manual (**Actions → Release → Run workflow**), so that a maintainer can
+run `pplx doctor` against a real account first and confirm the live site still works.
+It uses [commitizen](https://commitizen-tools.github.io/commitizen/), already a dev
+dependency and already enforcing conventional commit messages through the `commit-msg`
+hook. `cz bump` reads the commits since the last tag and picks the new version from
+them — a `fix:` commit bumps the patch number, a `feat:` the minor, a breaking change
+the major — then writes it into `pyproject.toml`, updates `CHANGELOG.md`, commits, tags
+`vX.Y.Z`, and opens a GitHub Release with that version's changelog section.
+
+So the commit message *is* the version bump. `chore:` and `docs:` commits release
+nothing; a `feat:` that lands as `chore:` is a release that never happens.
+
+The workflow pushes a commit and a tag to `main`. If `main` is protected, its token
+needs permission to push, or the branch rule needs to allow it.

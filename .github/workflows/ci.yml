@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+
+      # No setup-python step: uv reads requires-python from pyproject.toml and
+      # fetches the 3.14 interpreter itself.
+      - run: uv sync --locked
+
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy perplexity_client
+
+      # No Chrome and no browser install: every test drives a fake CDP context and
+      # reads recorded fixtures. `pplx doctor` is the live check and is never run
+      # here -- CI has no Perplexity account and no business spending a query.
+      - run: uv run pytest

@@ -1,0 +1,41 @@
+name: Release
+
+# Manual on purpose: CONTRIBUTING says to run `pplx doctor` against a real account
+# before a release, and CI cannot do that. A human confirms the site still works,
+# then presses this.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # commitizen reads the full history back to the last tag
+
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+
+      - run: uv sync --locked
+
+      # Derives the new version from the conventional commits since the last tag,
+      # rewrites it in pyproject.toml, updates CHANGELOG.md, commits and tags.
+      - name: Bump, changelog, tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          uv run cz bump --yes --changelog
+          git push --follow-tags
+
+      - name: GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=$(uv run cz version --project)
+          uv run cz changelog "$v" --dry-run > notes.md
+          gh release create "v$v" --title "v$v" --notes-file notes.md
