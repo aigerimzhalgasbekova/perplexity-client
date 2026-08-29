@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0   # commitizen reads the full history back to the last tag
 
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
 
