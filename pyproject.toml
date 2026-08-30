@@ -1,6 +1,6 @@
 [project]
 name = "perplexity-client"
-version = "0.1.0"
+version = "0.2.0"
 description = "Automate your own Perplexity Pro account from Python and the shell."
 readme = "README.md"
 requires-python = ">=3.14"
@@ -60,7 +60,7 @@ addopts = "--cov=perplexity_client --cov-report=term-missing"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.1.0"
+version = "0.2.0"
 tag_format = "v$version"
 # Without version_files, `cz bump` rewrites only the line above and [project].version
 # stays 0.1.0 in every release ever cut -- the tag says v0.2.0, the installed package
