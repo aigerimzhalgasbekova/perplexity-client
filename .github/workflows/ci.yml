@@ -7,7 +7,9 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Superseded pull request pushes are worth cancelling; a superseded main is not.
+  # Cancelling there leaves a commit on main that no run ever finished checking.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   checks:
@@ -23,8 +25,21 @@ jobs:
       # fetches the 3.14 interpreter itself.
       - run: uv sync --locked
 
-      - run: uv run ruff check .
-      - run: uv run ruff format --check .
+      # pre-commit builds a virtualenv per hook on first use, which is about two
+      # minutes. Keyed on the config, so it rebuilds only when a hook or rev changes.
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      # pre-commit rather than `ruff check` + `ruff format --check` directly: it covers
+      # both, plus the hygiene hooks that otherwise run only for contributors who
+      # remembered `pre-commit install` -- detect-private-key above all, which is this
+      # repo's only guard against a committed secret.
+      - run: uv run pre-commit run --all-files
+
+      # Still run separately: the pre-commit mypy hook is the looser one, with
+      # --ignore-missing-imports and its own pinned dependency set.
       - run: uv run mypy perplexity_client
 
       # No Chrome and no browser install: every test drives a fake CDP context and

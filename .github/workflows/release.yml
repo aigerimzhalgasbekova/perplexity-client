@@ -13,6 +13,21 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      # workflow_dispatch lets the runner pick any ref, and nothing else here looks at
+      # which one. Without this a feature branch would get bumped, tagged and published
+      # as a release. A failing step rather than a job-level `if:`, because a skipped
+      # job renders as a green run and reads like the release happened.
+      - name: Release only from main
+        if: github.ref != 'refs/heads/main'
+        # Through env, not interpolated into the script: a ref name can legally contain
+        # shell metacharacters. Running this needs write access anyway, so it buys
+        # little, but it costs nothing.
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          echo "::error::Release runs only from main; got $REF"
+          exit 1
+
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0   # commitizen reads the full history back to the last tag
@@ -23,13 +38,44 @@ jobs:
 
       - run: uv sync --locked
 
+      # pre-commit builds a virtualenv per hook on first use, which is about two
+      # minutes. Keyed on the config, so it rebuilds only when a hook or rev changes.
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      # The same gate as ci.yml. CI runs on pushes to main, but this job neither waits
+      # for it nor reads its result, so without this a release can be cut from a red
+      # commit. Cheap, and it keeps "a tag is a verified commit" true by construction.
+      - run: uv run pre-commit run --all-files
+      - run: uv run mypy perplexity_client
+      - run: uv run pytest
+
       # Derives the new version from the conventional commits since the last tag,
       # rewrites it in pyproject.toml, updates CHANGELOG.md, commits and tags.
       - name: Bump, changelog, tag
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          uv run cz bump --yes --changelog
+
+          # Exit 3 is commitizen's NO_COMMITS_FOUND. That is the resume path: a previous
+          # run already pushed the bump and tag but failed before publishing, so there is
+          # nothing left to bump and the job should carry on to the release step.
+          uv run cz bump --yes --changelog || [ $? -eq 3 ]
+
+          # commitizen does not know about uv.lock, which pins this package's own
+          # version. Amended into the bump commit rather than added as a follow-up, so
+          # that the tagged commit is one where `uv sync --locked` actually passes.
+          # `uv lock` is conservative -- it rewrites the version line, not the resolution.
+          uv lock
+          if ! git diff --quiet uv.lock; then
+            v=$(uv run cz version --project)
+            git add uv.lock
+            git commit --amend --no-edit
+            git tag -f -a "v$v" -m "v$v"   # move the tag onto the amended commit
+          fi
+
           git push --follow-tags
 
       - name: GitHub Release
@@ -37,5 +83,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           v=$(uv run cz version --project)
+
+          # Idempotent: re-running after a partial failure fills in a release that was
+          # never created and does nothing if it was.
+          if gh release view "v$v" >/dev/null 2>&1; then
+            echo "v$v is already released."
+            exit 0
+          fi
+
           uv run cz changelog "$v" --dry-run > notes.md
-          gh release create "v$v" --title "v$v" --notes-file notes.md
+          # --verify-tag: refuse to invent a tag if the push above did not land one,
+          # rather than silently creating it at whatever main points to right now.
+          gh release create "v$v" --verify-tag --title "v$v" --notes-file notes.md

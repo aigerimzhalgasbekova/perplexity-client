@@ -62,6 +62,15 @@ addopts = "--cov=perplexity_client --cov-report=term-missing"
 name = "cz_conventional_commits"
 version = "0.1.0"
 tag_format = "v$version"
+# Without version_files, `cz bump` rewrites only the line above and [project].version
+# stays 0.1.0 in every release ever cut -- the tag says v0.2.0, the installed package
+# says 0.1.0. uv.lock pins this package's own version too, so release.yml re-locks
+# inside the bump commit; leaving it stale fails `uv sync --locked` on main.
+version_files = ["pyproject.toml:^version"]
+# Lightweight tags are invisible to `git push --follow-tags`, which would push the bump
+# commit without its tag and let `gh release create` invent one at whatever main points
+# to at that moment.
+annotated_tag = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["perplexity_client"]
