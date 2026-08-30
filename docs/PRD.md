@@ -87,7 +87,7 @@ Rationale: the stream carries structured payloads with an explicit terminal sign
 | CLI | Python stdlib `argparse` | No CLI framework dependency at this command count |
 | Cross-process coordination | stdlib `fcntl.flock` on a lock file | Serializes concurrent runs; carries the last-request timestamp |
 | Session storage | The Chrome profile directory itself | Chrome owns it; the tool exports no second copy of the session |
-| Packaging | `pyproject.toml` (PEP 621) | `pip install git+https://github.com/<org>/perplexity-client` — GitHub-only for v1 |
+| Packaging | `pyproject.toml` (PEP 621) | `pip install git+https://github.com/aigerimzhalgasbekova/perplexity-client` — GitHub-only for v1 |
 | Testing | `pytest` over dated fixtures, plus `pplx doctor` live check | Fixtures never run against the live site; see §7 |
 
 ## 3. User Stories

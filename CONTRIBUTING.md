@@ -48,8 +48,9 @@ python spike/fetch_fixtures.py <thread_slug>        # models, clarifiers, thread
 ```
 
 Captures themselves are gitignored — they contain a whole session's traffic. Only the
-redacted fixtures are committed, and `make_fixtures.py` checks its own redaction
-(`author_id`, `author_username`, `author_image`, `read_write_token`) before writing.
+redacted fixtures are committed. `make_fixtures.py` checks its own redaction
+(`author_id`, `author_username`, `author_image`, `read_write_token`) before it writes
+anything, and exits without writing if a real value survived.
 
 **Never delete an old fixture when adding a new one just because it is older.** A
 fixture is evidence about a date. If a behaviour changed between two dates, both files

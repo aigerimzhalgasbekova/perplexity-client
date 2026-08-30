@@ -26,9 +26,20 @@ REDACT = ("author_id", "author_username", "author_image", "read_write_token")
 
 
 def redact(text: str) -> str:
+    """Redact, then refuse to return anything still carrying a real value.
+
+    Every write goes through here, so a value the substitution missed (a capture cut
+    mid-value, a value that is not a JSON string) stops the run instead of landing in
+    a committed file.
+    """
     for key in REDACT:
-        # SSE frames are pretty-printed, the REST body is compact -- match both.
-        text = re.sub(rf'"{key}":\s*"[^"]*"', f'"{key}": "REDACTED"', text)
+        # \s* : SSE frames are pretty-printed, the REST body is compact -- match both.
+        # The value pattern is a whole JSON string, escapes included, so a value
+        # containing \" is replaced entirely rather than up to its first quote.
+        text = re.sub(rf'"{key}":\s*"[^"\\]*(?:\\.[^"\\]*)*"', f'"{key}": "REDACTED"', text)
+    leaked = [k for k in REDACT if re.search(rf'"{k}":\s*"(?!REDACTED)', text)]
+    if leaked:
+        sys.exit(f"LEAK: {leaked} survived redaction -- nothing written")
     return text
 
 
@@ -43,7 +54,6 @@ def thread_fixture(events, name: str) -> bool:
             body = redact(p["body"])
             out.write_text(body)
             print(f"{out.name}: {len(body)}B")
-            check_redaction(body)
             return True
     return False
 
@@ -75,12 +85,6 @@ def main(path: str) -> None:
         "\r\n\r\n".join(blocks[:terminal // 2]).encode())
     print(f"terminal frame at block {terminal}/{len(blocks)}")
     print(f"complete: {len(text)}B, truncated: {terminal // 2} blocks")
-    check_redaction(text)
-
-
-def check_redaction(text: str) -> None:
-    leaked = [k for k in REDACT if re.search(rf'"{k}":\s*"(?!REDACTED)', text)]
-    print("LEAK:" if leaked else "redaction clean:", leaked or "ok")
 
 
 if __name__ == "__main__":
