@@ -25,6 +25,23 @@ jobs:
       # fetches the 3.14 interpreter itself.
       - run: uv sync --locked
 
+      # Pull requests land on main as squash commits whose subject is this title, and
+      # nothing else ever checks it: the `commitizen` pre-commit hook runs at the
+      # commit-msg stage, so it only sees commits made locally, and `pre-commit run
+      # --all-files` below skips it. An unrecognised type ("Fix:", "deps:", "security:")
+      # is not rejected anywhere else -- it is silently dropped from CHANGELOG.md and
+      # contributes nothing to the version bump, which is the failure this repo's
+      # commitizen config exists to prevent.
+      - name: Pull request title is a conventional commit
+        if: github.event_name == 'pull_request'
+        # Through env, not interpolated into the script: a title is arbitrary user text
+        # and can legally contain shell metacharacters.
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          printf '%s\n' "$TITLE" > "$RUNNER_TEMP/pr-title.txt"
+          uv run cz check --commit-msg-file "$RUNNER_TEMP/pr-title.txt"
+
       # pre-commit builds a virtualenv per hook on first use -- 16s of a 56s job on
       # the runner. Keyed on the config, so it rebuilds only when a hook or rev changes.
       - uses: actions/cache@v6

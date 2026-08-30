@@ -8,3 +8,12 @@
 ### Fix
 
 - read the answer from where perplexity.ai now puts it (#7)
+
+### CI
+
+- add GitHub Actions checks and a manual commitizen release (#9)
+
+### Chore
+
+- add MIT LICENSE (#8)
+- project toolchain (uv, ruff, mypy strict, pytest-cov, pre-commit, commitizen) (#5)

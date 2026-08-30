@@ -88,13 +88,41 @@ uv run mypy perplexity_client
 uv run pytest
 ```
 
+## Commit messages
+
+The commit message is the version bump (see the release section below), so the format
+is enforced rather than suggested. Three things about how, because each of them has a
+failure mode that is silent rather than loud:
+
+- **Write the message by hand; `cz commit` is not wired up here.** This repo sets
+  commitizen's `cz_customize` plugin, which builds its interactive questionnaire from
+  the config file, and the questionnaire is deliberately not in there — the built-in
+  one cannot be expressed in configuration, because its questions carry Python
+  validation callables. `cz commit` therefore exits with a `KeyError`. The `commit-msg`
+  hook is what enforces the format; run `pre-commit install --hook-type commit-msg` once
+  and it checks every commit as you make it. `cz example` and `cz info` print nothing
+  for the same reason; `uv run cz schema` still works.
+- **Do not begin a paragraph of the commit *body* with `<type>:`.** commitizen reads
+  each body paragraph with the same parser it uses on the subject, so a body paragraph
+  starting `test: …` becomes its own entry under a **Test** heading in the release
+  notes, and a body *line* starting `chore: …` is enough on its own to bump a patch
+  version. Ordinary prose is safe — the parser only recognises the twelve conventional
+  types, not any word — but those twelve words are not safe at the start of a paragraph.
+  Reword as "the test suite now covers…" rather than "test: …".
+- **The pull request title has to be a conventional commit too.** Pull requests are
+  squash-merged, so the title becomes the commit subject on `main`, and the `commit-msg`
+  hook never sees it — it runs only on commits made locally. `ci.yml` checks the title
+  with `cz check` for that reason. Without it, a title such as `Fix:` (wrong case) or
+  `deps:` (not a type) passes every other check, is dropped from `CHANGELOG.md` without
+  a warning, and contributes nothing to the version bump.
+
 ## Continuous integration and releases
 
 Continuous integration (CI) — checks run automatically on the project's servers rather
 than on your machine — runs on GitHub Actions, defined in `.github/workflows/`.
 
-`ci.yml` runs on every push to `main` and every pull request. It runs
-`pre-commit run --all-files`, then `mypy`, then `pytest`. `pre-commit` covers the two
+`ci.yml` runs on every push to `main` and every pull request. It checks the pull request
+title (above), then runs `pre-commit run --all-files`, then `mypy`, then `pytest`. `pre-commit` covers the two
 ruff checks above and also the hygiene hooks — `detect-private-key` above all, which is
 this repo's only guard against a committed secret. Those hooks otherwise run only for
 people who remembered `pre-commit install`, so CI runs them for everyone. `mypy` still
@@ -115,14 +143,19 @@ without that gate a release could be cut from a red commit.
 It uses [commitizen](https://commitizen-tools.github.io/commitizen/), already a dev
 dependency and already enforcing conventional commit messages through the `commit-msg`
 hook. `cz bump` reads the commits since the last tag and picks the new version from
-them — a `fix:` commit bumps the patch number, a `feat:` the minor, a breaking change
-the major — then writes it into `pyproject.toml`, updates `CHANGELOG.md`, commits, tags
-`vX.Y.Z`, and opens a GitHub Release with that version's changelog section.
+them — a `fix:`, `refactor:`, `perf:` or `chore:` commit bumps the patch number, a
+`feat:` the minor, a breaking change the major — then writes it into `pyproject.toml`,
+updates `CHANGELOG.md`, commits, tags `vX.Y.Z`, and opens a GitHub Release with that
+version's changelog section.
 
-So the commit message *is* the version bump. `chore:` and `docs:` commits release
-nothing; a `feat:` that lands as `chore:` is a release that never happens.
+So the commit message *is* the version bump. `chore:` counts as a patch here, which is
+not commitizen's default: a chore is usually a dependency or toolchain move, and that
+does reach the installed package. `docs:`, `ci:`, `test:`, `style:` and `build:` still
+release nothing — they are listed in the changelog but do not move the version, and a
+release run with only those commits fails rather than cutting an empty one. A `feat:`
+that lands as `chore:` is a minor release that becomes a patch.
 
-### Three things the release job gets right on purpose
+### Four things the release job gets right on purpose
 
 Each of these is a way it silently produced a wrong release before, so do not simplify
 them away:
@@ -137,6 +170,30 @@ them away:
   `0.1.0` in every release ever cut. Because `uv.lock` pins this package's own version
   too, the job runs `uv lock` and amends it into the bump commit; left stale it fails
   `uv sync --locked` on `main`, which is the first step of both workflows.
+- **`name = "cz_customize"`**, not `cz_conventional_commits`. The setting that decides
+  which commits reach the changelog is `commit_parser`, and commitizen reads it only off
+  the plugin class, never off `pyproject.toml`. The built-in conventional-commits plugin
+  hardcodes it to `feat|fix|refactor|perf`, so `ci:`, `chore:`, `docs:` and `test:`
+  commits passed the changelog filter and were then dropped by the parser — v0.2.0's
+  release notes listed three of the ten commits in it. `cz_customize` is the only place
+  that key is configurable, and it ships inside commitizen, so the `commit-msg`
+  pre-commit hook — which runs commitizen in its own isolated environment, without this
+  package installed — can still find it. A plugin of our own could not.
+
+  The price is that every other setting is now a hand-copy of the built-in plugin's
+  defaults rather than an inheritance: how a version is bumped, and how a commit message
+  is validated. `tests/test_commitizen_config.py` asserts each copied value against the
+  original, so a commitizen upgrade that moves a default fails a test instead of quietly
+  changing release behaviour. The one deliberate difference from stock — `^chore` mapped
+  to `PATCH` — is pinned by name in the same test, so a second divergence cannot be
+  added without the test being updated to say so.
+
+  A setting that is *dropped* rather than copied is the harder half, because there is no
+  changed value to compare: it just takes `cz_customize`'s own fallback. That is how the
+  interactive questionnaire was lost. So the same file enumerates every key
+  `cz_customize` reads, straight out of commitizen's source, and requires each one to be
+  either set in `pyproject.toml` or named as deliberately left out. A commitizen upgrade
+  that adds a key fails there rather than in a release.
 - **Exit code 3 is tolerated** on `cz bump`. That is commitizen's `NO_COMMITS_FOUND`,
   which is the resume path: if a previous run pushed the bump and tag but failed before
   publishing, there is nothing left to bump and the job should carry on to the release
