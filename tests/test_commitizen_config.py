@@ -121,3 +121,49 @@ def test_a_breaking_change_still_parses():
     cz = committer_factory(read_cfg())
     m = re.compile(cz.commit_parser).match("feat(api)!: drop the old endpoint")
     assert m and m.group("change_type") == "feat" and m.group("breaking") == "!"
+
+
+def test_the_settings_cz_customize_falls_back_on_are_dropped_on_purpose():
+    """`cz commit` is not wired up here: write commit messages by hand.
+
+    `cz_customize` falls back to an empty questionnaire for anything the config does
+    not set, and `cz commit` then dies on it with a KeyError. Not restored, because
+    the stock questionnaire cannot be expressed in TOML -- its questions carry Python
+    filter callables (`_parse_subject` is what makes a subject required) and its
+    `message()` is Python logic. A TOML copy would be a lossy fifth hand-copy, of a
+    command this repo does not use; the `commit-msg` hook is what enforces the format.
+    Pinned here so the choice stays visible rather than being rediscovered.
+    """
+    cz = committer_factory(read_cfg())
+    assert cz.questions() == [{}]
+    assert cz.message({}) == ""
+    assert cz.example() == ""
+    assert cz.info() == ""
+
+
+def test_cz_customize_has_not_grown_a_setting_this_config_ignores():
+    """The alarm above covers what was *copied*. This one covers what was *dropped*.
+
+    Every key `cz_customize` reads must be either set in `pyproject.toml` or named
+    below as deliberately left out. A commitizen upgrade that adds a key would
+    otherwise take its own default silently -- exactly how the five below were lost.
+    """
+    import inspect
+    import re
+
+    from commitizen.cz.customize import CustomizeCommitsCz
+
+    src = inspect.getsource(CustomizeCommitsCz)
+    keys = set(re.findall(r'custom_settings\.get\(\s*"(\w+)"', src)) | set(
+        re.findall(r'^\s+"(\w+)",$', src, re.M)
+    )
+    deliberately_unset = {
+        # `cz commit` only; see the test above.
+        "questions",
+        "message_template",
+        # `cz example` / `cz info`, which print nothing as a result.
+        "example",
+        "info",
+        "info_path",
+    }
+    assert keys - set(CUSTOM) == deliberately_unset

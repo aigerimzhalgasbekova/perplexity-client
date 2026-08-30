@@ -72,6 +72,12 @@ addopts = "--cov=perplexity_client --cov-report=term-missing"
 # ConventionalCommitsCz. tests/test_commitizen_config.py asserts that, so a commitizen
 # upgrade that changes a default fails a test instead of quietly changing how versions
 # are bumped or commit messages validated.
+#
+# Not copied, on purpose: `questions` and `message_template` (they drive `cz commit`,
+# whose built-in questionnaire carries Python validation callables that no TOML file can
+# express), and `example`/`info`. `cz commit` therefore exits with a KeyError -- write
+# commit messages by hand; the commit-msg hook is what enforces the format. The same test
+# file pins that, and fails if commitizen grows another key this config ignores.
 name = "cz_customize"
 version = "0.2.0"
 tag_format = "v$version"
