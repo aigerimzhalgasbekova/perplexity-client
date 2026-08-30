@@ -99,9 +99,10 @@ def _write(fd: int, last: float, fails: int) -> None:
 
 def _acquire(fd: int, path: pathlib.Path) -> None:
     if not HAVE_FLOCK:
-        # Shipping an untested msvcrt implementation of the thing that protects the
-        # session file would be worse than saying so. The floor and the backoff below
-        # still work (they are just file I/O), they are merely racy.
+        # Shipping an untested msvcrt implementation of the thing that serializes runs
+        # on one Chrome profile would be worse than saying so -- and that is now the
+        # only thing this lock protects, so the gap costs more, not less. The floor and
+        # the backoff below still work (they are just file I/O), they are merely racy.
         print(
             "warning: no cross-process lock on this platform -- concurrent pplx "
             "runs are not serialized",

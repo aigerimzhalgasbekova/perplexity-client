@@ -12,7 +12,7 @@ import json
 import sys
 
 from .adapter import Response
-from .chrome import session_path
+from .chrome import profile_dir
 from .client import Client
 from .errors import (
     ChallengeEncounteredError,
@@ -167,7 +167,7 @@ def main(argv: list[str] | None = None) -> int:
                 "this waits up to 10 minutes."
             )
             Client().login()
-            print(f"logged in; session saved to {session_path()}")
+            print(f"logged in; the session lives in {profile_dir()}")
             return 0
         if args.cmd == "ask":
             return _ask(args)
