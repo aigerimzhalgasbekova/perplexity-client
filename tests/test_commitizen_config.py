@@ -20,15 +20,46 @@ CUSTOM = read_cfg().settings["customize"]
 
 
 def test_copied_settings_still_match_the_stock_plugin():
-    """Everything we copied is still what commitizen itself would have used."""
+    """Everything we copied verbatim is still what commitizen itself would have used."""
     stock = Stock(read_cfg())
     assert CUSTOM["schema"] == stock.schema()
     assert CUSTOM["schema_pattern"] == stock.schema_pattern()
     assert CUSTOM["bump_pattern"] == stock.bump_pattern
-    assert CUSTOM["bump_map"] == dict(stock.bump_map)
-    assert CUSTOM["bump_map_major_version_zero"] == dict(
-        stock.bump_map_major_version_zero
-    )
+
+
+def test_the_bump_maps_are_stock_plus_the_chore_rule_and_nothing_else():
+    """The one divergence, pinned so a second one cannot slip in unnoticed."""
+    stock = Stock(read_cfg())
+    for ours, theirs in (
+        (CUSTOM["bump_map"], stock.bump_map),
+        (CUSTOM["bump_map_major_version_zero"], stock.bump_map_major_version_zero),
+    ):
+        assert ours == dict(theirs) | {"^chore": "PATCH"}
+        # First match wins, so a rule added ahead of the breaking-change keys would
+        # quietly downgrade a major release.
+        assert list(ours)[:-1] == list(theirs)
+
+
+def test_a_chore_alone_is_enough_to_release():
+    """`^chore` has to be reachable, not just present: an earlier key that also matches
+    a chore subject would shadow it and the version would never move."""
+    from commitizen.bump import find_increment
+    from commitizen.git import GitCommit
+
+    cz = committer_factory(read_cfg())
+
+    def increment(*subjects: str) -> str | None:
+        return find_increment(
+            [GitCommit(rev="0" * 40, title=s) for s in subjects],
+            regex=cz.bump_pattern,
+            increments_map=cz.bump_map,
+        )
+
+    assert increment("chore: bump playwright to 1.50") == "PATCH"
+    assert increment("chore!: drop Python 3.13") == "MAJOR"
+    assert increment("docs: reword the readme") is None
+    # A chore must not be able to hold back a bigger increment.
+    assert increment("chore: x", "feat: y") == "MINOR"
 
 
 def test_changelog_pattern_differs_from_stock_only_by_the_bump_guard():

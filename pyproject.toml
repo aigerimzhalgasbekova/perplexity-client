@@ -99,7 +99,7 @@ changelog_pattern = "^(?!bump)((BREAKING[\\-\\ ]CHANGE|\\w+)(\\(.+\\))?!?):"
 # Sections come out in this order regardless of the order the commits landed in.
 change_type_order = ["BREAKING CHANGE", "Feat", "Fix", "Perf", "Refactor", "Docs", "Test", "CI", "Build", "Chore", "Style", "Revert"]
 
-# --- verbatim from ConventionalCommitsCz below this line ---
+# --- verbatim from ConventionalCommitsCz below this line, except the `^chore` rows ---
 schema = """<type>(<scope>): <subject>
 <BLANK LINE>
 <body>
@@ -115,6 +115,10 @@ bump_pattern = "^((BREAKING[\\-\\ ]CHANGE|\\w+)(\\(.+\\))?!?):"
 "^fix" = "PATCH"
 "^refactor" = "PATCH"
 "^perf" = "PATCH"
+# Not stock. A chore is usually a dependency or toolchain move, which does reach the
+# installed package, so it earns a patch rather than sitting unreleased until the next
+# fix happens along. Last, because the first matching key wins.
+"^chore" = "PATCH"
 
 [tool.commitizen.customize.bump_map_major_version_zero]
 "^.+!$" = "MINOR"
@@ -123,8 +127,12 @@ bump_pattern = "^((BREAKING[\\-\\ ]CHANGE|\\w+)(\\(.+\\))?!?):"
 "^fix" = "PATCH"
 "^refactor" = "PATCH"
 "^perf" = "PATCH"
+# Not stock. A chore is usually a dependency or toolchain move, which does reach the
+# installed package, so it earns a patch rather than sitting unreleased until the next
+# fix happens along. Last, because the first matching key wins.
+"^chore" = "PATCH"
 
-# --- end verbatim ---
+# --- end copied block ---
 
 # Headings only; with the parser above, a type missing from this map still appears, under
 # its own raw name.

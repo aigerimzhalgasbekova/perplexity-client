@@ -115,13 +115,17 @@ without that gate a release could be cut from a red commit.
 It uses [commitizen](https://commitizen-tools.github.io/commitizen/), already a dev
 dependency and already enforcing conventional commit messages through the `commit-msg`
 hook. `cz bump` reads the commits since the last tag and picks the new version from
-them — a `fix:` commit bumps the patch number, a `feat:` the minor, a breaking change
-the major — then writes it into `pyproject.toml`, updates `CHANGELOG.md`, commits, tags
-`vX.Y.Z`, and opens a GitHub Release with that version's changelog section.
+them — a `fix:`, `refactor:`, `perf:` or `chore:` commit bumps the patch number, a
+`feat:` the minor, a breaking change the major — then writes it into `pyproject.toml`,
+updates `CHANGELOG.md`, commits, tags `vX.Y.Z`, and opens a GitHub Release with that
+version's changelog section.
 
-So the commit message *is* the version bump. `chore:` and `docs:` commits release
-nothing; a `feat:` that lands as `chore:` is a release that never happens. They are
-still listed in the changelog — they just do not move the version.
+So the commit message *is* the version bump. `chore:` counts as a patch here, which is
+not commitizen's default: a chore is usually a dependency or toolchain move, and that
+does reach the installed package. `docs:`, `ci:`, `test:`, `style:` and `build:` still
+release nothing — they are listed in the changelog but do not move the version, and a
+release run with only those commits fails rather than cutting an empty one. A `feat:`
+that lands as `chore:` is a minor release that becomes a patch.
 
 ### Four things the release job gets right on purpose
 
@@ -152,7 +156,9 @@ them away:
   defaults rather than an inheritance: how a version is bumped, and how a commit message
   is validated. `tests/test_commitizen_config.py` asserts each copied value against the
   original, so a commitizen upgrade that moves a default fails a test instead of quietly
-  changing release behaviour.
+  changing release behaviour. The one deliberate difference from stock — `^chore` mapped
+  to `PATCH` — is pinned by name in the same test, so a second divergence cannot be
+  added without the test being updated to say so.
 - **Exit code 3 is tolerated** on `cz bump`. That is commitizen's `NO_COMMITS_FOUND`,
   which is the resume path: if a previous run pushed the bump and tag but failed before
   publishing, there is nothing left to bump and the job should carry on to the release
