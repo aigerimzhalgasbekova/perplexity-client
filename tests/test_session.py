@@ -1,4 +1,4 @@
-"""Milestone 1: session file writes and status classification.
+"""Milestone 1: status classification and profile-lock handling.
 
 Fixture-free by design -- these cover the logic that must not break silently. Live
 behaviour (does Chrome attach, does perplexity.ai answer) is `pplx status`'s job,
@@ -6,9 +6,7 @@ not pytest's; see the testing posture in PRD §7.
 """
 
 import contextlib
-import json
 import os
-import stat
 
 import pytest
 
@@ -23,9 +21,6 @@ class FakeCtx:
     def __init__(self, state, pages=()):
         self.state = state
         self.pages = list(pages)
-
-    def storage_state(self):
-        return self.state
 
     def cookies(self):
         return self.state["cookies"]
@@ -50,38 +45,6 @@ class FakePage:
 def config(tmp_path, monkeypatch):
     monkeypatch.setenv("PPLX_CONFIG_DIR", str(tmp_path / "cfg"))
     return tmp_path / "cfg"
-
-
-def test_save_session_writes_owner_only(config):
-    assert chrome.save_session(FakeCtx(GOOD_STATE)) is True
-    path = chrome.session_path()
-    assert json.loads(path.read_text()) == GOOD_STATE
-    assert stat.S_IMODE(path.stat().st_mode) == 0o600
-    assert not list(config.glob("*.tmp"))  # the temp file was renamed, not left behind
-
-
-def test_save_session_does_not_write_through_another_writers_temp_file(config):
-    # The race this encodes: with one shared temp name, two overlapping writers use the
-    # same path and the loser's os.replace dies with ENOENT after the winner renames it
-    # away. A per-pid name makes another writer's temp none of our business.
-    chrome.save_session(FakeCtx(GOOD_STATE))
-    other = chrome.session_path().with_name("session.json.999999.tmp")
-    other.write_text("another process, mid-write")
-    assert chrome.save_session(FakeCtx(GOOD_STATE)) is True
-    assert other.read_text() == "another process, mid-write"
-
-
-def test_save_session_refuses_to_clobber_with_anonymous_state(config):
-    chrome.save_session(FakeCtx(GOOD_STATE))
-    assert chrome.save_session(FakeCtx(ANON_STATE)) is False
-    assert json.loads(chrome.session_path().read_text()) == GOOD_STATE
-
-
-def test_save_session_overwrites_rotated_cookies(config):
-    chrome.save_session(FakeCtx(GOOD_STATE))
-    rotated = {"cookies": [{"name": "__Secure-next-auth.session-token", "value": "y"}]}
-    assert chrome.save_session(FakeCtx(rotated)) is True
-    assert json.loads(chrome.session_path().read_text()) == rotated
 
 
 @pytest.mark.parametrize(
@@ -125,8 +88,8 @@ def test_status_without_profile_never_launches_a_browser():
 
 def test_status_reports_no_session_for_a_profile_that_never_logged_in(monkeypatch):
     # An abandoned `pplx login` leaves the profile dir behind. That empty profile
-    # draws a Cloudflare interstitial, so deciding on session.json (which nothing
-    # reads back) would report `challenged` to a user who simply never logged in.
+    # draws a Cloudflare interstitial, so deciding on the dir's existence would
+    # report `challenged` to a user who simply never logged in.
     chrome.profile_dir().mkdir(parents=True)
     monkeypatch.setattr(client, "chrome", fake_chrome(FakeCtx(ANON_STATE)))
     assert client.Client().status() == "no-session"

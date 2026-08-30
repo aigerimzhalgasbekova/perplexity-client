@@ -6,12 +6,11 @@ sight, while a normally-launched Chrome is not (docs/M0-findings.md). We add no
 automation switches; we just attach to a browser started the ordinary way.
 
 Chrome 136+ refuses --remote-debugging-port on the default profile, so the tool
-keeps its own profile directory. That directory, not session.json, is what
-actually carries the login.
+keeps its own profile directory. That directory is what carries the login: no
+copy of the session is exported, so there is no second credential to protect.
 """
 
 import contextlib
-import json
 import os
 import pathlib
 import shutil
@@ -50,10 +49,6 @@ def config_dir() -> pathlib.Path:
 
 def profile_dir() -> pathlib.Path:
     return config_dir() / "chrome-profile"
-
-
-def session_path() -> pathlib.Path:
-    return config_dir() / "session.json"
 
 
 def lock_path() -> pathlib.Path:
@@ -109,32 +104,6 @@ def _read_port(path: pathlib.Path) -> int | None:
         return None
 
 
-def save_session(ctx: BrowserContext) -> bool:
-    """Write storage_state atomically at mode 600. Returns whether it wrote.
-
-    Refuses to write an unauthenticated state: a run that got logged out must not
-    clobber a good session file. The file is credential-equivalent, so it is
-    created 600 rather than chmod'ed after the fact.
-    """
-    state = ctx.storage_state()
-    if not any("session-token" in c["name"] for c in state.get("cookies", ())):
-        return False
-    config_dir().mkdir(parents=True, exist_ok=True, mode=0o700)
-    path = session_path()
-    # Per-pid temp name: two overlapping writers sharing one temp path race, and the
-    # loser's os.replace dies with ENOENT after the winner renames it away (verified,
-    # docs/M2-findings.md). The lock makes that impossible between our own runs, but
-    # this is the platform-independent half -- and Windows has no lock at all.
-    tmp = path.with_name(f"{path.name}.{os.getpid()}.tmp")
-    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, "w") as f:
-        json.dump(state, f)
-        f.flush()
-        os.fsync(f.fileno())
-    os.replace(tmp, path)
-    return True
-
-
 @contextlib.contextmanager
 def chrome(
     headless: bool = True, url: str = "about:blank", interval: float = 0.0
@@ -146,8 +115,9 @@ def chrome(
     collides rather than queues. `interval` is the pacing floor -- 0 for a page load,
     `pacing.default_interval()` for a caller that spends a query.
 
-    Saves rotated cookies back on clean exit only, then always reaps the Chrome it
-    started -- browser.close() over a CDP connection merely disconnects.
+    Chrome rotates cookies in its own profile directory, so nothing here has to
+    save them. Always reaps the Chrome it started -- browser.close() over a CDP
+    connection merely disconnects.
     """
     with paced(lock_path(), interval), _launched(headless, url) as attached:
         yield attached
@@ -196,7 +166,6 @@ def _launched(headless: bool, url: str) -> Iterator[tuple[BrowserContext, Page]]
             ctx = browser.contexts[0]
             page = ctx.pages[0] if ctx.pages else ctx.new_page()
             yield ctx, page
-            save_session(ctx)
     finally:
         proc.terminate()
         try:

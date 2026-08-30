@@ -145,10 +145,10 @@ Under `~/.config/perplexity-client/` (override with `PPLX_CONFIG_DIR`):
 | Path | What |
 |---|---|
 | `chrome-profile/` | The Chrome profile that carries your login |
-| `session.json` | Exported `storage_state`, mode 600 |
 | `pplx.lock` | Advisory lock, plus the last-run timestamp and failure count |
 
-**Both are password-equivalent.** Anyone who can read them can use your account.
+**The profile directory is password-equivalent.** Anyone who can read it can use
+your account. The tool keeps no second copy of the session anywhere else.
 The tool never sees, types or stores a password, 2FA code or SSO credential — login
 is always manual, in a real browser window.
 

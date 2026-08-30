@@ -12,7 +12,7 @@ from playwright.sync_api import BrowserContext, Page
 
 from . import adapter
 from .adapter import HOME, Response
-from .chrome import chrome, chrome_version, profile_dir, save_session
+from .chrome import chrome, chrome_version, profile_dir
 from .errors import (
     ChallengeEncounteredError,
     ModelMismatchError,
@@ -396,9 +396,9 @@ class Client:
                     time.sleep(
                         2
                     )  # let the post-login redirects land before snapshotting
-                    if not save_session(ctx):
+                    if not _has_session_cookie(ctx):
                         raise PplxError(
-                            "logged in, but no session cookie was left to save; "
+                            "logged in, but the session cookie was gone again; "
                             "re-run: pplx login"
                         )
                     return
@@ -410,10 +410,10 @@ class Client:
         if not profile_dir().exists():
             return "no-session"
         with chrome(headless=True) as (ctx, page):
-            # Judged on the profile's own cookies, not on session.json: that file is
-            # a write-only export in M1, and any abandoned `pplx login` leaves the
-            # profile dir behind -- whose empty profile then draws a Cloudflare
-            # interstitial and would report `challenged` to a user who never logged in.
+            # Judged on the profile's own cookies, not on the profile dir existing:
+            # an abandoned `pplx login` leaves that dir behind -- whose empty profile
+            # then draws a Cloudflare interstitial and would report `challenged` to a
+            # user who never logged in.
             if not _has_session_cookie(ctx):
                 return "no-session"
             try:
