@@ -55,6 +55,20 @@ def lock_path() -> pathlib.Path:
     return config_dir() / "pplx.lock"
 
 
+def _clean_config_dir() -> None:
+    """Make the profile dir, lock the config dir to the owner, drop the stale export.
+
+    Versions up to 0.2.0 wrote a credential-equivalent `session.json` here that
+    nothing ever read back. Dropping the writer left that file sitting on every
+    install that had run one, so every run deletes it -- otherwise the removal
+    only ever protects installs that were never exposed in the first place.
+    ponytail: the unlink goes once no 0.2.x install is plausibly still out there.
+    """
+    profile_dir().mkdir(parents=True, exist_ok=True)
+    os.chmod(config_dir(), 0o700)
+    (config_dir() / "session.json").unlink(missing_ok=True)
+
+
 def find_chrome() -> str:
     if env := os.environ.get("PPLX_CHROME"):
         return env
@@ -132,8 +146,7 @@ def _launched(headless: bool, url: str) -> Iterator[tuple[BrowserContext, Page]]
             f"Chrome is already using {profile_dir()} (pid {pid}). "
             f"Quit that Chrome window, or run: kill {pid}"
         )
-    profile_dir().mkdir(parents=True, exist_ok=True)
-    os.chmod(config_dir(), 0o700)
+    _clean_config_dir()
     # Let Chrome pick the port and tell us: binding one ourselves first would be a
     # race, and attaching to whatever won it means driving someone else's browser.
     port_file = profile_dir() / "DevToolsActivePort"

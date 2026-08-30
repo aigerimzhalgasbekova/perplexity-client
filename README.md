@@ -152,6 +152,10 @@ your account. The tool keeps no second copy of the session anywhere else.
 The tool never sees, types or stores a password, 2FA code or SSO credential — login
 is always manual, in a real browser window.
 
+Versions up to 0.2.0 also wrote a `session.json` export that nothing ever read back.
+Any run of a later version deletes it. If you copied or backed up your config
+directory before upgrading, **that copy still holds a usable session** — delete it.
+
 ## What it will not do
 
 No CAPTCHA or bot-detection bypass, ever. If Perplexity challenges the session, the

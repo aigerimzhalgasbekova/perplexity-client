@@ -21,7 +21,6 @@ request/response headers and cookies are never recorded.
 """
 
 import json
-import os
 import pathlib
 import socket
 import subprocess
@@ -32,7 +31,6 @@ from playwright.sync_api import sync_playwright
 
 CONFIG = pathlib.Path.home() / ".config" / "perplexity-client"
 PROFILE = CONFIG / "chrome-profile"
-SESSION = CONFIG / "session.json"
 CAPTURES = pathlib.Path(__file__).parent / "captures"
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 PORT = 9222
@@ -76,14 +74,6 @@ def logged_in(ctx) -> bool:
     return any("session-token" in c["name"] for c in ctx.cookies())
 
 
-def save_state(ctx) -> None:
-    tmp = SESSION.with_suffix(".tmp")
-    tmp.write_text(json.dumps(ctx.storage_state()))
-    os.chmod(tmp, 0o600)
-    os.replace(tmp, SESSION)
-    print(f"saved {SESSION}")
-
-
 def cmd_login() -> None:
     launch_chrome()
     with sync_playwright() as p:
@@ -92,7 +82,6 @@ def cmd_login() -> None:
         for _ in range(300):  # 10 min
             if logged_in(ctx):
                 time.sleep(2)  # not page-bound: login redirects may close the tab
-                save_state(ctx)
                 print("Leave this Chrome running; capture attaches to it.")
                 return
             time.sleep(2)

@@ -7,6 +7,7 @@ not pytest's; see the testing posture in PRD §7.
 
 import contextlib
 import os
+import stat
 
 import pytest
 
@@ -101,6 +102,25 @@ def test_status_reports_ok_when_the_profile_carries_a_session(monkeypatch):
         client, "chrome", fake_chrome(FakeCtx(GOOD_STATE, [FakePage()]))
     )
     assert client.Client().status() == "ok"
+
+
+def test_launch_prep_deletes_the_stale_session_export(config):
+    # Versions up to 0.2.0 wrote a credential-equivalent session.json that nothing read
+    # back. Dropping the writer left the file on every install that had run one, so
+    # every launch clears it -- without this the README's "no second copy of the
+    # session anywhere else" is false on exactly the machines already exposed.
+    config.mkdir(parents=True)
+    stale = config / "session.json"
+    stale.write_text('{"cookies": [{"name": "__Secure-next-auth.session-token"}]}')
+    chrome._clean_config_dir()
+    assert not stale.exists()
+    assert stat.S_IMODE(config.stat().st_mode) == 0o700
+
+
+def test_launch_prep_is_fine_with_nothing_to_clean(config):
+    chrome._clean_config_dir()  # no config dir, no stale file: still creates 0o700
+    assert chrome.profile_dir().is_dir()
+    assert stat.S_IMODE(config.stat().st_mode) == 0o700
 
 
 def test_find_chrome_honours_env(monkeypatch):
