@@ -59,7 +59,20 @@ testpaths = ["tests"]
 addopts = "--cov=perplexity_client --cov-report=term-missing"
 
 [tool.commitizen]
-name = "cz_conventional_commits"
+# cz_customize, not cz_conventional_commits, for one reason: `commit_parser` -- the regex
+# that decides which commits reach the changelog -- is read only off the plugin class,
+# never off this file (commitizen/commands/changelog.py: `commit_parser = self.cz.commit_parser`).
+# The stock plugin hardcodes it to feat|fix|refactor|perf, so ci/chore/docs/test commits
+# were matched by the changelog filter and then silently dropped by the parser: v0.2.0
+# listed three of the ten commits in it. cz_customize is the only place that key is
+# configurable, and it ships inside commitizen, so the isolated `commit-msg` pre-commit
+# hook can still find it -- a plugin of our own, in this package, could not.
+#
+# Everything below except `commit_parser` and `changelog_pattern` is copied verbatim from
+# ConventionalCommitsCz. tests/test_commitizen_config.py asserts that, so a commitizen
+# upgrade that changes a default fails a test instead of quietly changing how versions
+# are bumped or commit messages validated.
+name = "cz_customize"
 version = "0.2.0"
 tag_format = "v$version"
 # Without version_files, `cz bump` rewrites only the line above and [project].version
@@ -71,6 +84,63 @@ version_files = ["pyproject.toml:^version"]
 # commit without its tag and let `gh release create` invent one at whatever main points
 # to at that moment.
 annotated_tag = true
+
+[tool.commitizen.customize]
+# The one real change: the stock `feat|fix|refactor|perf` widened to every type the
+# commit-msg hook accepts, minus `bump` (the release job's own commit). Spelled out
+# rather than `\w+` on purpose -- commitizen runs this parser over each paragraph of the
+# commit *body* as well as the subject, so `\w+` turns any body line beginning "Note:"
+# or "Verified:" into a changelog section of its own.
+commit_parser = "^((?P<change_type>BREAKING CHANGE|build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(?:\\((?P<scope>[^()\\r\\n]*)\\)|\\()?(?P<breaking>!)?|\\w+!):\\s(?P<message>.*)?"
+# Stock, plus a negative lookahead: `bump:` is the release job's own version-bump commit,
+# which would otherwise list itself in the next release's notes.
+changelog_pattern = "^(?!bump)((BREAKING[\\-\\ ]CHANGE|\\w+)(\\(.+\\))?!?):"
+
+# Sections come out in this order regardless of the order the commits landed in.
+change_type_order = ["BREAKING CHANGE", "Feat", "Fix", "Perf", "Refactor", "Docs", "Test", "CI", "Build", "Chore", "Style", "Revert"]
+
+# --- verbatim from ConventionalCommitsCz below this line ---
+schema = """<type>(<scope>): <subject>
+<BLANK LINE>
+<body>
+<BLANK LINE>
+(BREAKING CHANGE: )<footer>"""
+schema_pattern = "(?s)(build|bump|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\\(\\S+\\))?!?: ([^\\n\\r]+)((\\n\\n.*)|(\\s*))?$"
+bump_pattern = "^((BREAKING[\\-\\ ]CHANGE|\\w+)(\\(.+\\))?!?):"
+
+[tool.commitizen.customize.bump_map]
+"^.+!$" = "MAJOR"
+"^BREAKING[\\-\\ ]CHANGE" = "MAJOR"
+"^feat" = "MINOR"
+"^fix" = "PATCH"
+"^refactor" = "PATCH"
+"^perf" = "PATCH"
+
+[tool.commitizen.customize.bump_map_major_version_zero]
+"^.+!$" = "MINOR"
+"^BREAKING[\\-\\ ]CHANGE" = "MINOR"
+"^feat" = "MINOR"
+"^fix" = "PATCH"
+"^refactor" = "PATCH"
+"^perf" = "PATCH"
+
+# --- end verbatim ---
+
+# Headings only; with the parser above, a type missing from this map still appears, under
+# its own raw name.
+[tool.commitizen.customize.change_type_map]
+feat = "Feat"
+fix = "Fix"
+perf = "Perf"
+refactor = "Refactor"
+docs = "Docs"
+test = "Test"
+ci = "CI"
+build = "Build"
+chore = "Chore"
+style = "Style"
+revert = "Revert"
+
 
 [tool.hatch.build.targets.wheel]
 packages = ["perplexity_client"]

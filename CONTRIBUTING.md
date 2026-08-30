@@ -120,9 +120,10 @@ the major — then writes it into `pyproject.toml`, updates `CHANGELOG.md`, comm
 `vX.Y.Z`, and opens a GitHub Release with that version's changelog section.
 
 So the commit message *is* the version bump. `chore:` and `docs:` commits release
-nothing; a `feat:` that lands as `chore:` is a release that never happens.
+nothing; a `feat:` that lands as `chore:` is a release that never happens. They are
+still listed in the changelog — they just do not move the version.
 
-### Three things the release job gets right on purpose
+### Four things the release job gets right on purpose
 
 Each of these is a way it silently produced a wrong release before, so do not simplify
 them away:
@@ -137,6 +138,21 @@ them away:
   `0.1.0` in every release ever cut. Because `uv.lock` pins this package's own version
   too, the job runs `uv lock` and amends it into the bump commit; left stale it fails
   `uv sync --locked` on `main`, which is the first step of both workflows.
+- **`name = "cz_customize"`**, not `cz_conventional_commits`. The setting that decides
+  which commits reach the changelog is `commit_parser`, and commitizen reads it only off
+  the plugin class, never off `pyproject.toml`. The built-in conventional-commits plugin
+  hardcodes it to `feat|fix|refactor|perf`, so `ci:`, `chore:`, `docs:` and `test:`
+  commits passed the changelog filter and were then dropped by the parser — v0.2.0's
+  release notes listed three of the ten commits in it. `cz_customize` is the only place
+  that key is configurable, and it ships inside commitizen, so the `commit-msg`
+  pre-commit hook — which runs commitizen in its own isolated environment, without this
+  package installed — can still find it. A plugin of our own could not.
+
+  The price is that every other setting is now a hand-copy of the built-in plugin's
+  defaults rather than an inheritance: how a version is bumped, and how a commit message
+  is validated. `tests/test_commitizen_config.py` asserts each copied value against the
+  original, so a commitizen upgrade that moves a default fails a test instead of quietly
+  changing release behaviour.
 - **Exit code 3 is tolerated** on `cz bump`. That is commitizen's `NO_COMMITS_FOUND`,
   which is the resume path: if a previous run pushed the bump and tag but failed before
   publishing, there is nothing left to bump and the job should carry on to the release
