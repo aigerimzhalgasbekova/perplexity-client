@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # Superseded pull request pushes are worth cancelling; a superseded main is not.
+  # Cancelling there leaves a commit on main that no run ever finished checking.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+
+      # No setup-python step: uv reads requires-python from pyproject.toml and
+      # fetches the 3.14 interpreter itself.
+      - run: uv sync --locked
+
+      # pre-commit builds a virtualenv per hook on first use -- 16s of a 56s job on
+      # the runner. Keyed on the config, so it rebuilds only when a hook or rev changes.
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      # pre-commit rather than `ruff check` + `ruff format --check` directly: it covers
+      # both, plus the hygiene hooks that otherwise run only for contributors who
+      # remembered `pre-commit install` -- detect-private-key above all, which is this
+      # repo's only guard against a committed secret.
+      - run: uv run pre-commit run --all-files
+
+      # Still run separately: the pre-commit mypy hook is the looser one, with
+      # --ignore-missing-imports and its own pinned dependency set.
+      - run: uv run mypy perplexity_client
+
+      # No Chrome and no browser install: every test drives a fake CDP context and
+      # reads recorded fixtures. `pplx doctor` is the live check and is never run
+      # here -- CI has no Perplexity account and no business spending a query.
+      - run: uv run pytest
