@@ -22,7 +22,7 @@ as opposed to what it was assumed to do.
 ## Install
 
 ```sh
-pip install git+https://github.com/<org>/perplexity-client
+pip install git+https://github.com/aigerimzhalgasbekova/perplexity-client
 playwright install-deps   # not needed on macOS/Windows
 ```
 
