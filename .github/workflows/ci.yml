@@ -25,8 +25,8 @@ jobs:
       # fetches the 3.14 interpreter itself.
       - run: uv sync --locked
 
-      # pre-commit builds a virtualenv per hook on first use, which is about two
-      # minutes. Keyed on the config, so it rebuilds only when a hook or rev changes.
+      # pre-commit builds a virtualenv per hook on first use -- 16s of a 56s job on
+      # the runner. Keyed on the config, so it rebuilds only when a hook or rev changes.
       - uses: actions/cache@v6
         with:
           path: ~/.cache/pre-commit
