@@ -12,24 +12,24 @@
 
 ```
                      one-time, visible browser
-   ┌──────────┐      ┌─────────────────────────┐
+   ┌──────────┐      ┌──────────────────────────┐
    │  pplx    │ ---> │  Google Chrome, launched │ ---> user logs in manually
    │  login   │      │  as a normal process     │      (password/SSO/2FA —
    └──────────┘      │  + CDP attach            │       whatever the account needs)
-                     └─────────────────────────┘
+                     └──────────────────────────┘
                               │
                               ▼
                   ~/.config/perplexity-client/chrome-profile/  (the live session)
                   ~/.config/perplexity-client/pplx.lock        (advisory lock +
                                                                 last-request stamp)
 
-   ┌──────────────────┐        ┌────────────────────────────────┐
-   │ Python caller /   │ -----> │ Client                          │
-   │ CLI (`pplx ask`)  │        │  1. acquire flock on pplx.lock  │
+   ┌──────────────────┐        ┌─────────────────────────────────┐
+   │ Python caller /  │ -----> │ Client                          │
+   │ CLI (`pplx ask`) │        │  1. acquire flock on pplx.lock  │
    └──────────────────┘        │  2. enforce min-interval floor  │
-                                │  3. launch Chrome --headless=new│
-                                │     on the profile, attach CDP  │
-                                └───────────────┬─────────────────┘
+                               │  3. launch Chrome --headless=new│
+                               │     on the profile, attach CDP  │
+                               └────────────────┬────────────────┘
                                                 │
                     ┌───────────────────────────┴──────────────────┐
                     │                                              │
@@ -278,9 +278,9 @@ Default output is human-readable text plus a citations list; `--json` prints the
 | Search-mode latency | Comparable to the web UI; no overhead beyond browser automation itself |
 | Deep Research handling | Never blocks indefinitely by default; caller-configurable `.wait()` timeout; a timeout never cancels the underlying task |
 | Answer integrity | An incomplete answer never returns as if complete; citation markers never misattribute (§5 contracts) |
-| Concurrency safety | Concurrent same-account runs serialize via advisory lock; pacing floor holds across processes, not just within one `Client`. POSIX only: Windows has no `flock`, so runs there are unserialized and say so on stderr (M2). The session write is race-free on every platform regardless, via a per-pid temp name |
-| Session durability | Rotated cookies written back atomically on clean exit; a crashed run never corrupts the session file |
-| Security | Session file at mode 600; no credential ever touches tool code or logs; no CAPTCHA/bot-detection bypass under any circumstance |
+| Concurrency safety | Concurrent same-account runs serialize via advisory lock; pacing floor holds across processes, not just within one `Client`. POSIX only: Windows has no `flock`, so runs there are unserialized and say so on stderr (M2). There is no session write to race on: Chrome owns the profile directory and the tool writes no copy of it (§2, §4) |
+| Session durability | Chrome rotates and persists its own cookies inside the profile directory; the tool writes no copy, so there is no session file for a crashed run to corrupt. The lock file is the only thing the tool writes, and a half-written one reads as empty rather than raising |
+| Security | Config directory at mode 700 and the lock file at 600, both set at creation rather than changed afterwards; the Chrome profile directory is the only credential-equivalent artifact and the tool writes no second copy of it. No credential ever touches tool code or logs; no CAPTCHA/bot-detection bypass under any circumstance |
 | Breakage detection | `pplx doctor` catches live-site drift; fixtures carry a capture date so staleness is visible in review |
 | Cost | Zero hosting/API cost; no browser download — Google Chrome is a prerequisite the user already has |
 | Maintainability | No dependency beyond browser automation and packaging; all site-specific logic in one adapter module |
@@ -306,7 +306,7 @@ Unit and adapter tests run against **dated** recorded fixtures and cannot detect
 **M0 — Protocol spike (gates everything else). ✅ Done — `docs/M0-findings.md`.** All five §2 questions answered against a live Pro session; fixtures in `spike/fixtures/`, claims asserted by `spike/verify_findings.py`. The stream path was confirmed, so the DOM fallback is not in effect. §2, §5, §9 and §10 have been amended with what it found — chiefly that Playwright must not launch the browser, and that Deep Research can block on clarifying questions.
 
 **v1:**
-1. Session bootstrap — `pplx login` and `pplx status` with its four states. **✅ Done.** The tool launches Google Chrome itself on its own profile (a free port per run, no fixed 9222) and reaps it afterwards, since `browser.close()` over CDP only disconnects. A live Chrome holding the profile is detected via its `SingletonLock` pid and named in the error, because otherwise a second launch hands off silently and the only symptom is a port timeout. The planned `storage_state` export was dropped: nothing ever read it back, so it was a credential-equivalent file on disk with no consumer.
+1. Session bootstrap — `pplx login` and `pplx status` with its four states. **✅ Done.** The tool launches Google Chrome itself on its own profile (a free port per run, no fixed 9222) and reaps it afterwards, since `browser.close()` over CDP only disconnects. A live Chrome holding the profile is detected via its `SingletonLock` pid and named in the error, because otherwise a second launch hands off silently and the only symptom is a port timeout. The planned `storage_state` export was dropped: nothing ever read it back, so it was a credential-equivalent file on disk with no consumer. Dropping the writer alone would have protected only the installs that never ran it, so every launch also deletes a `session.json` left behind by an earlier version.
 2. Cross-process pacing — lock file, interval floor, backoff. **✅ Done — `docs/M2-findings.md`.** The premise that `GET /rest/rate-limit/status` states the server's own limit is **wrong**: probed live, it reports *availability per mode* and no rate, window or reset, and `remaining_detail.kind` is `"not_provided"` for exactly the two modes the tool uses. The interval floor is therefore a documented local default (20 s, `PPLX_MIN_INTERVAL`), and the endpoint is used as a pre-flight quota gate instead. The lock also fixes a real collision: two runs cannot share one Chrome profile, so they must queue rather than race.
 3. Search-mode `ask()` — text, citations, observed model, completion signal, with the §5 contracts enforced and tested. **✅ Done — `docs/M3-findings.md`.** The premise that **two parsers are needed is wrong**: the SSE terminal frame and the plain-JSON resume entry carry the same `blocks` list, so one parser serves both and the resume path costs four lines. Two things the fixtures forced that the milestone did not anticipate: a partial answer has to be assembled by replaying the stream's chunk diffs (the finished markdown only ever appears on the terminal frame, so `allow_incomplete=True` would otherwise return an empty string), and the citation-index contract binds complete answers only. The wait also ends on the connection closing, not just on the terminal frame — a dropped stream otherwise cost the full answer timeout to report what the close already had.
 4. Model selection with observed-model verification and `ModelMismatchError`. **✅ Done — `docs/M4-M8-findings.md`.** The premise that **entitlement is how you force a mismatch is wrong**: a model above the plan is not offered at all — it renders as a plain `menuitem` instead of a `menuitemradio` — so the request cannot be made, and is refused before a query is spent. A real mismatch turned up on the first legitimate attempt instead: Sonar 2 (`experimental`) was requested, confirmed selected, and `turbo` served the answer. Two further corrections: `GET /rest/models/config/v2` enumerates 87 search ids of which only ~12 are pickable (`search_config` is the menu, `models` is the registry), and the picker's button is named after the *selected* model, so it cannot be found by one name.
@@ -327,8 +327,8 @@ Unit and adapter tests run against **dated** recorded fixtures and cannot detect
 | Concurrent runs stampede the account | Medium-high — pacing defeated in exactly the agent use case the tool targets | Interval floor persisted in a lock file, enforced with `flock` across processes, not per-`Client`. Two runs also cannot share the Chrome profile at all, so the lock is what makes them queue instead of collide |
 | The pacing interval is a guess | Medium — too fast risks the account, too slow annoys; and there is no feedback signal | Accepted, not papered over: M2 confirmed the server states no rate, so nothing better exists. Chosen below the natural spacing of sequential use (~10–30 s per answer) so it only bites on rapid loops, documented as a guess, and overridable |
 | Bot detection / account flagged | Medium-high — irreversible loss of a paid account | Conservative pacing by default; serialized same-account access; hard rule against bypassing any challenge; README states the account-owner risk plainly |
-| Session file is credential-equivalent | Medium | Mode 600 set before atomic rename; documented in README as password-equivalent |
-| Session file corrupted by concurrent writes | Medium — bricks the tool until manual re-login | Atomic `os.replace` under the same advisory lock as pacing |
+| The Chrome profile directory is credential-equivalent | Medium | It is the *only* such artifact: the `storage_state` export was dropped in v1.1 (§9) and any copy an earlier version left behind is deleted on launch. Config directory created at mode 700. Documented in README as password-equivalent, including the warning that a backup taken before the upgrade still holds a usable session |
+| Chrome profile corrupted by two concurrent runs | Medium — bricks the tool until manual re-login | Two Chrome processes cannot share one profile directory at all, so the advisory lock is what makes runs queue instead of collide. A Chrome already holding the profile is detected via its `SingletonLock` pid and named in the error rather than surfacing as a port timeout (§9) |
 | Silent server-side model substitution | Medium — task-critical model swap goes unnoticed | `Response.model` strictly observed; mismatch raises when a specific model was requested |
 | Deep Research result lost with its process | Medium | **Resolved by M0** — `backend_uuid` arrives on the first frame and the thread is readable from a fresh process, so detach + resume-by-id (US-5) is buildable as specified |
 | Deep Research blocks on a clarifying question nobody answers | **Medium-high** — an unattended agent hangs to its timeout and the run is wasted; invisible because `status` still reads `PENDING` | Detect `WORKFLOW_AWAITING_NEXT_STEPS`, surface as `status == "awaiting_input"`, skip by default (§5) |
