@@ -237,6 +237,27 @@ def test_a_missing_picker_button_blames_the_frontend():
         adapter.pick_model(page, "Sonar 2")
 
 
+def test_a_composer_that_renders_late_is_waited_for():
+    # A thread page goes straight from `goto` to the picker and draws its composer
+    # about 1.5s later, so the first look finds nothing. Looking once blamed the
+    # frontend on every `--thread` run for a page that was still loading.
+    class Late(FakePage):
+        """Empty until the picker has waited three times."""
+
+        def __init__(self, items, waits):
+            super().__init__([])
+            self.pending, self.waits = items, waits
+
+        def wait_for_timeout(self, ms):
+            self.waits -= 1
+            if not self.waits:
+                self.items = self.pending
+
+    page = Late(composer(), waits=3)
+    adapter.pick_mode(page, "research")
+    assert ("press", "menuitemradio", "Deep research") in page.acted
+
+
 def test_mode_is_picked_by_its_menu_label():
     page = FakePage(
         [
