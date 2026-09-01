@@ -100,6 +100,10 @@ LINE_SPLIT = re.compile(rb"\r\n|\r|\n")
 # a stream with no recognised frames is indistinguishable from one that sent nothing.
 DATA = b"data:"
 BOX_TIMEOUT = 30_000  # ms; the homepage has ~40 REST calls to get through first
+# How long a composer menu button gets to appear: 15s in 500ms looks. Counted rather
+# than clocked so a page fake, whose waits are free, cannot spin here. See _open_menu.
+MENU_POLL_MS = 500
+MENU_TRIES = 30
 # Fenced and inline code, removed before the citation-marker scan. See answer_from.
 CODE = re.compile(r"```.*?```|`[^`\n]*`", re.S)
 
@@ -989,12 +993,19 @@ def _open_menu(page: Page, names: tuple[str, ...]) -> None:
     # click meant to open this one.
     page.keyboard.press("Escape")
     page.wait_for_timeout(200)
-    for name in names:
-        button = page.get_by_role("button", name=name, exact=True)
-        if button.count():
-            button.first.click(timeout=BOX_TIMEOUT)
-            page.wait_for_timeout(800)
-            return
+    # Polled rather than looked at once: a freshly navigated page draws its composer
+    # about 1.5s after `domcontentloaded`, and a single look lands before that. The
+    # homepage only ever got away with one because `_ready`'s probes spend the time
+    # first; a thread page goes straight from `goto` to here, and every `--thread` run
+    # blamed the frontend for a page that was still loading (observed 2026-09-01).
+    for _ in range(MENU_TRIES):
+        for name in names:
+            button = page.get_by_role("button", name=name, exact=True)
+            if button.count():
+                button.first.click(timeout=BOX_TIMEOUT)
+                page.wait_for_timeout(800)
+                return
+        page.wait_for_timeout(MENU_POLL_MS)
     raise PplxError(
         f"no composer menu button called any of {names} -- perplexity.ai's frontend "
         f"has most likely changed. Run: pplx doctor"
